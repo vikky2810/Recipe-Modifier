@@ -1,329 +1,440 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Health-Aware Recipe Modifier</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="{{ url_for('static', filename='styles.css') }}" rel="stylesheet">
-</head>
-<body>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="{{ url_for('static', filename='styles.css') }}"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
     <div class="container-fluid">
-        <!-- Header -->
-        <div class="row bg-primary text-white py-4">
+      <!-- Header -->
+      <div class="row bg-primary text-white py-4">
+        <div class="col-12">
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="text-start">
+              {% if current_user.is_authenticated %}
+              <div class="text-light">
+                <div>
+                  <i class="fas fa-user me-2"></i>Welcome, {{
+                  current_user.username }}!
+                </div>
+                {% if current_user.medical_condition %}
+                <small
+                  ><i class="fas fa-heartbeat me-1"></i>{{
+                  current_user.medical_condition.replace('_', ' ').title()
+                  }}</small
+                >
+                {% endif %}
+              </div>
+              {% endif %}
+            </div>
+            <div class="text-center">
+              <h1>
+                <i class="fas fa-heartbeat me-3"></i>Health-Aware Recipe
+                Modifier
+              </h1>
+              <p class="lead mb-0">
+                Transform your recipes for better health outcomes
+              </p>
+            </div>
+            <div class="text-end">
+              {% if current_user.is_authenticated %}
+              <div class="btn-group" role="group">
+                <a
+                  href="{{ url_for('profile') }}"
+                  class="btn btn-outline-light btn-sm"
+                >
+                  <i class="fas fa-user-circle me-1"></i>Profile
+                </a>
+                <a
+                  href="{{ url_for('logout') }}"
+                  class="btn btn-outline-light btn-sm"
+                >
+                  <i class="fas fa-sign-out-alt me-1"></i>Logout
+                </a>
+              </div>
+              {% else %}
+              <div class="btn-group" role="group">
+                <a
+                  href="{{ url_for('login') }}"
+                  class="btn btn-outline-light btn-sm"
+                >
+                  <i class="fas fa-sign-in-alt me-1"></i>Login
+                </a>
+                <a
+                  href="{{ url_for('register') }}"
+                  class="btn btn-outline-light btn-sm"
+                >
+                  <i class="fas fa-user-plus me-1"></i>Register
+                </a>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Flash Messages -->
+      <div class="row justify-content-center mt-3">
+        <div class="col-md-8 col-lg-6">
+          {% with messages = get_flashed_messages(with_categories=true) %} {% if
+          messages %} {% for category, message in messages %}
+          <div
+            class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show"
+            role="alert"
+          >
+            <i
+              class="fas fa-{{ 'exclamation-triangle' if category == 'error' else 'info-circle' }} me-2"
+            ></i>
+            {{ message }}
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="alert"
+            ></button>
+          </div>
+          {% endfor %} {% endif %} {% endwith %}
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div class="row justify-content-center mt-3">
+        <div class="col-md-8 col-lg-6">
+          <div class="card shadow-lg">
+            <div class="card-header bg-success text-white">
+              <h3 class="mb-0">
+                <i class="fas fa-utensils me-2"></i>Ingredient Checker
+              </h3>
+            </div>
+            <div class="card-body p-4">
+              <form
+                action="{{ url_for('check_ingredients_route') }}"
+                method="POST"
+              >
+                <div class="mb-4">
+                  <label for="recipeName" class="form-label fw-bold">
+                    <i class="fas fa-book me-2"></i>Enter Recipe Name (optional)
+                  </label>
+                  <div class="input-group">
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="recipeName"
+                      placeholder="e.g., Banana Bread, Pancakes"
+                    />
+                  </div>
+                  <div class="form-text">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Type a recipe name and click Auto-Fill to populate
+                    ingredients.
+                  </div>
+                </div>
+                <div class="mb-4">
+                  <label for="ingredients" class="form-label fw-bold">
+                    <i class="fas fa-list me-2"></i>Enter Your Ingredients
+                  </label>
+                  <textarea
+                    class="form-control"
+                    id="ingredients"
+                    name="ingredients"
+                    rows="4"
+                    placeholder="Enter ingredients separated by commas (e.g., sugar, flour, butter, banana)"
+                    required
+                  ></textarea>
+                  <div class="d-flex justify-content-end mt-2 gap-2">
+                    <button
+                      type="button"
+                      class="btn btn-outline-primary btn-sm"
+                      id="aiFillIngredients"
+                    >
+                      <i class="fas fa-wand-magic-sparkles me-1"></i>AI
+                      Auto-Fill
+                    </button>
+                  </div>
+                  <div class="form-text">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Separate multiple ingredients with commas
+                  </div>
+                </div>
+
+                {% if current_user.is_authenticated %}
+                <!-- For authenticated users, show their condition and make it read-only -->
+                <div class="mb-4">
+                  <label for="condition" class="form-label fw-bold">
+                    <i class="fas fa-user-md me-2"></i>Your Medical Condition
+                  </label>
+                  <div class="input-group">
+                    <span class="input-group-text bg-success text-white">
+                      <i class="fas fa-check-circle"></i>
+                    </span>
+                    <input
+                      type="text"
+                      class="form-control"
+                      value="{{ current_user.medical_condition.replace('_', ' ').title() if current_user.medical_condition else 'Not specified' }}"
+                      readonly
+                    />
+                    <input
+                      type="hidden"
+                      name="condition"
+                      value="{{ current_user.medical_condition or 'diabetes' }}"
+                    />
+                  </div>
+                  <div class="form-text">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Your condition is set from your profile.
+                    <a href="{{ url_for('profile') }}">Update profile</a> to
+                    change it.
+                  </div>
+                </div>
+                {% else %}
+                <!-- For non-authenticated users, show the dropdown -->
+                <div class="mb-4">
+                  <label for="condition" class="form-label fw-bold">
+                    <i class="fas fa-user-md me-2"></i>Select Your Medical
+                    Condition
+                  </label>
+                  <select
+                    class="form-select"
+                    id="condition"
+                    name="condition"
+                    required
+                  >
+                    <option value="">Choose your condition...</option>
+                    <option value="diabetes">Diabetes</option>
+                    <option value="hypertension">Hypertension</option>
+                    <option value="heart_disease">Heart Disease</option>
+                    <option value="celiac">Celiac Disease</option>
+                    <option value="gluten_intolerance">
+                      Gluten Intolerance
+                    </option>
+                    <option value="lactose_intolerance">
+                      Lactose Intolerance
+                    </option>
+                    <option value="egg_allergy">Egg Allergy</option>
+                    <option value="peanut_allergy">Peanut Allergy</option>
+                    <option value="soy_allergy">Soy Allergy</option>
+                    <option value="corn_allergy">Corn Allergy</option>
+                    <option value="obesity">Obesity</option>
+                    <option value="cholesterol">High Cholesterol</option>
+                  </select>
+                </div>
+                {% endif %}
+
+                <div class="d-grid">
+                  <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="fas fa-search me-2"></i>Check Ingredients &
+                    Generate Recipe
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- Information Cards -->
+          <div class="row mt-4">
+            <div class="col-md-6 mb-3">
+              <div class="card h-100 border-info">
+                <div class="card-body text-center">
+                  <i class="fas fa-shield-alt text-info fa-2x mb-2"></i>
+                  <h5 class="card-title">Safe Ingredients</h5>
+                  <p class="card-text">
+                    We'll identify harmful ingredients and suggest healthy
+                    alternatives.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <div class="card h-100 border-success">
+                <div class="card-body text-center">
+                  <i class="fas fa-utensils text-success fa-2x mb-2"></i>
+                  <h5 class="card-title">Modified Recipes</h5>
+                  <p class="card-text">
+                    Get personalized recipes tailored to your health condition.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Actions -->
+          <div class="row mt-4">
             <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div class="text-start">
-                        {% if current_user.is_authenticated %}
-                            <div class="text-light">
-                                <div><i class="fas fa-user me-2"></i>Welcome, {{ current_user.username }}!</div>
-                                {% if current_user.medical_condition %}
-                                    <small><i class="fas fa-heartbeat me-1"></i>{{ current_user.medical_condition.replace('_', ' ').title() }}</small>
-                                {% endif %}
-                            </div>
-                        {% endif %}
-                    </div>
-                    <div class="text-center">
-                        <h1><i class="fas fa-heartbeat me-3"></i>Health-Aware Recipe Modifier</h1>
-                        <p class="lead mb-0">Transform your recipes for better health outcomes</p>
-                    </div>
-                    <div class="text-end">
-                        {% if current_user.is_authenticated %}
-                            <div class="btn-group" role="group">
-                                <a href="{{ url_for('profile') }}" class="btn btn-outline-light btn-sm">
-                                    <i class="fas fa-user-circle me-1"></i>Profile
-                                </a>
-                                <a href="{{ url_for('logout') }}" class="btn btn-outline-light btn-sm">
-                                    <i class="fas fa-sign-out-alt me-1"></i>Logout
-                                </a>
-                            </div>
-                        {% else %}
-                            <div class="btn-group" role="group">
-                                <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-sm">
-                                    <i class="fas fa-sign-in-alt me-1"></i>Login
-                                </a>
-                                <a href="{{ url_for('register') }}" class="btn btn-outline-light btn-sm">
-                                    <i class="fas fa-user-plus me-1"></i>Register
-                                </a>
-                            </div>
-                        {% endif %}
-                    </div>
+              <div class="card border-warning">
+                <div class="card-header bg-warning text-dark">
+                  <h5 class="mb-0">
+                    <i class="fas fa-download me-2"></i>Quick Actions
+                  </h5>
                 </div>
-            </div>
-        </div>
-
-        <!-- Flash Messages -->
-        <div class="row justify-content-center mt-3">
-            <div class="col-md-8 col-lg-6">
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% if messages %}
-                        {% for category, message in messages %}
-                            <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
-                                <i class="fas fa-{{ 'exclamation-triangle' if category == 'error' else 'info-circle' }} me-2"></i>
-                                {{ message }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        {% endfor %}
+                <div class="card-body">
+                  <div
+                    class="d-flex justify-content-between align-items-center"
+                  >
+                    <span>Download your health report:</span>
+                    {% if current_user.is_authenticated %}
+                    <a
+                      href="{{ url_for('generate_report', patient_id=current_user.user_id) }}"
+                      class="btn btn-outline-warning"
+                    >
+                      <i class="fas fa-file-pdf me-2"></i>Generate PDF Report
+                    </a>
+                    {% else %}
+                    <a
+                      href="{{ url_for('login') }}"
+                      class="btn btn-outline-warning"
+                    >
+                      <i class="fas fa-sign-in-alt me-2"></i>Login to Generate
+                      Report
+                    </a>
                     {% endif %}
-                {% endwith %}
-            </div>
-        </div>
-
-        <!-- Main Content -->
-        <div class="row justify-content-center mt-3">
-            <div class="col-md-8 col-lg-6">
-                <div class="card shadow-lg">
-                    <div class="card-header bg-success text-white">
-                        <h3 class="mb-0"><i class="fas fa-utensils me-2"></i>Ingredient Checker</h3>
-                    </div>
-                    <div class="card-body p-4">
-                        <form action="{{ url_for('check_ingredients_route') }}" method="POST">
-                            <div class="mb-4">
-                                <label for="recipeName" class="form-label fw-bold">
-                                    <i class="fas fa-book me-2"></i>Enter Recipe Name (optional)
-                                </label>
-                                <div class="input-group">
-                                    <input 
-                                        type="text" 
-                                        class="form-control" 
-                                        id="recipeName" 
-                                        placeholder="e.g., Banana Bread, Pancakes">
-                                    <button class="btn btn-outline-secondary" type="button" id="fillFromRecipe">
-                                        <i class="fas fa-magic me-1"></i>Auto-Fill Ingredients
-                                    </button>
-                                </div>
-                                <div class="form-text">
-                                    <i class="fas fa-info-circle me-1"></i>
-                                    Type a recipe name and click Auto-Fill to populate ingredients.
-                                </div>
-                            </div>
-                            <div class="mb-4">
-                                <label for="ingredients" class="form-label fw-bold">
-                                    <i class="fas fa-list me-2"></i>Enter Your Ingredients
-                                </label>
-                                <textarea 
-                                    class="form-control" 
-                                    id="ingredients" 
-                                    name="ingredients" 
-                                    rows="4" 
-                                    placeholder="Enter ingredients separated by commas (e.g., sugar, flour, butter, banana)"
-                                    required></textarea>
-                                <div class="d-flex justify-content-end mt-2 gap-2">
-                                    <button type="button" class="btn btn-outline-primary btn-sm" id="aiFillIngredients">
-                                        <i class="fas fa-wand-magic-sparkles me-1"></i>AI Auto-Fill
-                                    </button>
-                                </div>
-                                <div class="form-text">
-                                    <i class="fas fa-info-circle me-1"></i>
-                                    Separate multiple ingredients with commas
-                                </div>
-                            </div>
-
-                            {% if current_user.is_authenticated %}
-                                <!-- For authenticated users, show their condition and make it read-only -->
-                                <div class="mb-4">
-                                    <label for="condition" class="form-label fw-bold">
-                                        <i class="fas fa-user-md me-2"></i>Your Medical Condition
-                                    </label>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-success text-white">
-                                            <i class="fas fa-check-circle"></i>
-                                        </span>
-                                        <input type="text" 
-                                               class="form-control" 
-                                               value="{{ current_user.medical_condition.replace('_', ' ').title() if current_user.medical_condition else 'Not specified' }}" 
-                                               readonly>
-                                        <input type="hidden" name="condition" value="{{ current_user.medical_condition or 'diabetes' }}">
-                                    </div>
-                                    <div class="form-text">
-                                        <i class="fas fa-info-circle me-1"></i>
-                                        Your condition is set from your profile. <a href="{{ url_for('profile') }}">Update profile</a> to change it.
-                                    </div>
-                                </div>
-                            {% else %}
-                                <!-- For non-authenticated users, show the dropdown -->
-                                <div class="mb-4">
-                                    <label for="condition" class="form-label fw-bold">
-                                        <i class="fas fa-user-md me-2"></i>Select Your Medical Condition
-                                    </label>
-                                    <select class="form-select" id="condition" name="condition" required>
-                                        <option value="">Choose your condition...</option>
-                                        <option value="diabetes">Diabetes</option>
-                                        <option value="hypertension">Hypertension</option>
-                                        <option value="heart_disease">Heart Disease</option>
-                                        <option value="celiac">Celiac Disease</option>
-                                        <option value="gluten_intolerance">Gluten Intolerance</option>
-                                        <option value="lactose_intolerance">Lactose Intolerance</option>
-                                        <option value="egg_allergy">Egg Allergy</option>
-                                        <option value="peanut_allergy">Peanut Allergy</option>
-                                        <option value="soy_allergy">Soy Allergy</option>
-                                        <option value="corn_allergy">Corn Allergy</option>
-                                        <option value="obesity">Obesity</option>
-                                        <option value="cholesterol">High Cholesterol</option>
-                                    </select>
-                                </div>
-                            {% endif %}
-
-                            <div class="d-grid">
-                                <button type="submit" class="btn btn-primary btn-lg">
-                                    <i class="fas fa-search me-2"></i>Check Ingredients & Generate Recipe
-                                </button>
-                            </div>
-                        </form>
-                    </div>
+                  </div>
                 </div>
-
-                <!-- Information Cards -->
-                <div class="row mt-4">
-                    <div class="col-md-6 mb-3">
-                        <div class="card h-100 border-info">
-                            <div class="card-body text-center">
-                                <i class="fas fa-shield-alt text-info fa-2x mb-2"></i>
-                                <h5 class="card-title">Safe Ingredients</h5>
-                                <p class="card-text">We'll identify harmful ingredients and suggest healthy alternatives.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <div class="card h-100 border-success">
-                            <div class="card-body text-center">
-                                <i class="fas fa-utensils text-success fa-2x mb-2"></i>
-                                <h5 class="card-title">Modified Recipes</h5>
-                                <p class="card-text">Get personalized recipes tailored to your health condition.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Quick Actions -->
-                <div class="row mt-4">
-                    <div class="col-12">
-                        <div class="card border-warning">
-                            <div class="card-header bg-warning text-dark">
-                                <h5 class="mb-0"><i class="fas fa-download me-2"></i>Quick Actions</h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span>Download your health report:</span>
-                                    {% if current_user.is_authenticated %}
-                                        <a href="{{ url_for('generate_report', patient_id=current_user.user_id) }}" class="btn btn-outline-warning">
-                                            <i class="fas fa-file-pdf me-2"></i>Generate PDF Report
-                                        </a>
-                                    {% else %}
-                                        <a href="{{ url_for('login') }}" class="btn btn-outline-warning">
-                                            <i class="fas fa-sign-in-alt me-2"></i>Login to Generate Report
-                                        </a>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+              </div>
             </div>
+          </div>
         </div>
+      </div>
 
-        <!-- Footer -->
-        <div class="row mt-5">
-            <div class="col-12 text-center text-muted">
-                <p><i class="fas fa-heart text-danger me-1"></i>Your health is our priority</p>
-                <small>This tool is for educational purposes. Always consult with your healthcare provider.</small>
-            </div>
+      <!-- Footer -->
+      <div class="row mt-5">
+        <div class="col-12 text-center text-muted">
+          <p>
+            <i class="fas fa-heart text-danger me-1"></i>Your health is our
+            priority
+          </p>
+          <small
+            >This tool is for educational purposes. Always consult with your
+            healthcare provider.</small
+          >
         </div>
+      </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Add some interactivity
-        document.addEventListener('DOMContentLoaded', function() {
-            const ingredientsTextarea = document.getElementById('ingredients');
-            const conditionSelect = document.getElementById('condition');
-            const recipeInput = document.getElementById('recipeName');
-            const fillButton = document.getElementById('fillFromRecipe');
-            const aiFillButton = document.getElementById('aiFillIngredients');
-            
-            // Auto-resize textarea
-            ingredientsTextarea.addEventListener('input', function() {
-                this.style.height = 'auto';
-                this.style.height = this.scrollHeight + 'px';
-            });
-            
-            // Add some helpful placeholder text based on condition
-            if (conditionSelect) {
-                conditionSelect.addEventListener('change', function() {
-                    const condition = this.value;
-                    let placeholder = "Enter ingredients separated by commas (e.g., sugar, flour, butter, banana)";
-                    
-                    if (condition === 'diabetes') {
-                        placeholder = "Enter ingredients separated by commas (e.g., sugar, flour, butter, banana) - We'll replace sugar with stevia!";
-                    } else if (condition === 'hypertension') {
-                        placeholder = "Enter ingredients separated by commas (e.g., salt, butter, flour) - We'll replace salt with low-sodium alternatives!";
-                    } else if (condition === 'celiac') {
-                        placeholder = "Enter ingredients separated by commas (e.g., flour, wheat, bread) - We'll replace gluten-containing ingredients!";
-                    }
-                    
-                    ingredientsTextarea.placeholder = placeholder;
-                });
-            }
+      // Add some interactivity
+      document.addEventListener("DOMContentLoaded", function () {
+        const ingredientsTextarea = document.getElementById("ingredients");
+        const conditionSelect = document.getElementById("condition");
+        const recipeInput = document.getElementById("recipeName");
+        const fillButton = document.getElementById("fillFromRecipe");
+        const aiFillButton = document.getElementById("aiFillIngredients");
 
-            // Auto-fill from recipe name
-            if (fillButton) {
-                fillButton.addEventListener('click', async function() {
-                    const name = (recipeInput.value || '').trim();
-                    if (!name) {
-                        recipeInput.focus();
-                        return;
-                    }
-                    try {
-                        const resp = await fetch(`/api/recipes/ingredients?name=${encodeURIComponent(name)}`);
-                        const data = await resp.json();
-                        const list = Array.isArray(data.ingredients) ? data.ingredients : [];
-                        if (list.length === 0) {
-                            // no match, keep as-is
-                            recipeInput.classList.add('is-invalid');
-                            setTimeout(() => recipeInput.classList.remove('is-invalid'), 1200);
-                            return;
-                        }
-                        ingredientsTextarea.value = list.join(', ');
-                        // trigger resize
-                        ingredientsTextarea.dispatchEvent(new Event('input'));
-                    } catch (e) {
-                        recipeInput.classList.add('is-invalid');
-                        setTimeout(() => recipeInput.classList.remove('is-invalid'), 1200);
-                    }
-                });
-            }
-
-            // AI Auto-Fill: uses Gemini to extract ingredients from the user's current text
-            if (aiFillButton) {
-                aiFillButton.addEventListener('click', async function() {
-                    const sourceText = (recipeInput && recipeInput.value.trim()) || ingredientsTextarea.value.trim();
-                    if (!sourceText) {
-                        (recipeInput || ingredientsTextarea).focus();
-                        return;
-                    }
-                    try {
-                        const resp = await fetch('/api/ai/extract-ingredients', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ text: sourceText })
-                        });
-                        const data = await resp.json();
-                        const list = Array.isArray(data.ingredients) ? data.ingredients : [];
-                        if (list.length === 0) {
-                            aiFillButton.classList.add('disabled');
-                            setTimeout(() => aiFillButton.classList.remove('disabled'), 800);
-                            return;
-                        }
-                        ingredientsTextarea.value = list.join(', ');
-                        ingredientsTextarea.dispatchEvent(new Event('input'));
-                    } catch (e) {
-                        aiFillButton.classList.add('disabled');
-                        setTimeout(() => aiFillButton.classList.remove('disabled'), 800);
-                    }
-                });
-            }
+        // Auto-resize textarea
+        ingredientsTextarea.addEventListener("input", function () {
+          this.style.height = "auto";
+          this.style.height = this.scrollHeight + "px";
         });
+
+        // Add some helpful placeholder text based on condition
+        if (conditionSelect) {
+          conditionSelect.addEventListener("change", function () {
+            const condition = this.value;
+            let placeholder =
+              "Enter ingredients separated by commas (e.g., sugar, flour, butter, banana)";
+
+            if (condition === "diabetes") {
+              placeholder =
+                "Enter ingredients separated by commas (e.g., sugar, flour, butter, banana) - We'll replace sugar with stevia!";
+            } else if (condition === "hypertension") {
+              placeholder =
+                "Enter ingredients separated by commas (e.g., salt, butter, flour) - We'll replace salt with low-sodium alternatives!";
+            } else if (condition === "celiac") {
+              placeholder =
+                "Enter ingredients separated by commas (e.g., flour, wheat, bread) - We'll replace gluten-containing ingredients!";
+            }
+
+            ingredientsTextarea.placeholder = placeholder;
+          });
+        }
+
+        // Auto-fill from recipe name
+        if (fillButton) {
+          fillButton.addEventListener("click", async function () {
+            const name = (recipeInput.value || "").trim();
+            if (!name) {
+              recipeInput.focus();
+              return;
+            }
+            try {
+              const resp = await fetch(
+                `/api/recipes/ingredients?name=${encodeURIComponent(name)}`
+              );
+              const data = await resp.json();
+              const list = Array.isArray(data.ingredients)
+                ? data.ingredients
+                : [];
+              if (list.length === 0) {
+                // no match, keep as-is
+                recipeInput.classList.add("is-invalid");
+                setTimeout(
+                  () => recipeInput.classList.remove("is-invalid"),
+                  1200
+                );
+                return;
+              }
+              ingredientsTextarea.value = list.join(", ");
+              // trigger resize
+              ingredientsTextarea.dispatchEvent(new Event("input"));
+            } catch (e) {
+              recipeInput.classList.add("is-invalid");
+              setTimeout(
+                () => recipeInput.classList.remove("is-invalid"),
+                1200
+              );
+            }
+          });
+        }
+
+        // AI Auto-Fill: uses Gemini to extract ingredients from the user's current text
+        if (aiFillButton) {
+          aiFillButton.addEventListener("click", async function () {
+            const sourceText =
+              (recipeInput && recipeInput.value.trim()) ||
+              ingredientsTextarea.value.trim();
+            if (!sourceText) {
+              (recipeInput || ingredientsTextarea).focus();
+              return;
+            }
+            try {
+              const resp = await fetch("/api/ai/extract-ingredients", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ text: sourceText }),
+              });
+              const data = await resp.json();
+              const list = Array.isArray(data.ingredients)
+                ? data.ingredients
+                : [];
+              if (list.length === 0) {
+                aiFillButton.classList.add("disabled");
+                setTimeout(
+                  () => aiFillButton.classList.remove("disabled"),
+                  800
+                );
+                return;
+              }
+              ingredientsTextarea.value = list.join(", ");
+              ingredientsTextarea.dispatchEvent(new Event("input"));
+            } catch (e) {
+              aiFillButton.classList.add("disabled");
+              setTimeout(() => aiFillButton.classList.remove("disabled"), 800);
+            }
+          });
+        }
+      });
     </script>
-</body>
+  </body>
 </html>
