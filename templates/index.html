@@ -80,6 +80,25 @@
                     <div class="card-body p-4">
                         <form action="{{ url_for('check_ingredients_route') }}" method="POST">
                             <div class="mb-4">
+                                <label for="recipeName" class="form-label fw-bold">
+                                    <i class="fas fa-book me-2"></i>Enter Recipe Name (optional)
+                                </label>
+                                <div class="input-group">
+                                    <input 
+                                        type="text" 
+                                        class="form-control" 
+                                        id="recipeName" 
+                                        placeholder="e.g., Banana Bread, Pancakes">
+                                    <button class="btn btn-outline-secondary" type="button" id="fillFromRecipe">
+                                        <i class="fas fa-magic me-1"></i>Auto-Fill Ingredients
+                                    </button>
+                                </div>
+                                <div class="form-text">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Type a recipe name and click Auto-Fill to populate ingredients.
+                                </div>
+                            </div>
+                            <div class="mb-4">
                                 <label for="ingredients" class="form-label fw-bold">
                                     <i class="fas fa-list me-2"></i>Enter Your Ingredients
                                 </label>
@@ -90,6 +109,11 @@
                                     rows="4" 
                                     placeholder="Enter ingredients separated by commas (e.g., sugar, flour, butter, banana)"
                                     required></textarea>
+                                <div class="d-flex justify-content-end mt-2 gap-2">
+                                    <button type="button" class="btn btn-outline-primary btn-sm" id="aiFillIngredients">
+                                        <i class="fas fa-wand-magic-sparkles me-1"></i>AI Auto-Fill
+                                    </button>
+                                </div>
                                 <div class="form-text">
                                     <i class="fas fa-info-circle me-1"></i>
                                     Separate multiple ingredients with commas
@@ -214,6 +238,9 @@
         document.addEventListener('DOMContentLoaded', function() {
             const ingredientsTextarea = document.getElementById('ingredients');
             const conditionSelect = document.getElementById('condition');
+            const recipeInput = document.getElementById('recipeName');
+            const fillButton = document.getElementById('fillFromRecipe');
+            const aiFillButton = document.getElementById('aiFillIngredients');
             
             // Auto-resize textarea
             ingredientsTextarea.addEventListener('input', function() {
@@ -222,20 +249,80 @@
             });
             
             // Add some helpful placeholder text based on condition
-            conditionSelect.addEventListener('change', function() {
-                const condition = this.value;
-                let placeholder = "Enter ingredients separated by commas (e.g., sugar, flour, butter, banana)";
-                
-                if (condition === 'diabetes') {
-                    placeholder = "Enter ingredients separated by commas (e.g., sugar, flour, butter, banana) - We'll replace sugar with stevia!";
-                } else if (condition === 'hypertension') {
-                    placeholder = "Enter ingredients separated by commas (e.g., salt, butter, flour) - We'll replace salt with low-sodium alternatives!";
-                } else if (condition === 'celiac') {
-                    placeholder = "Enter ingredients separated by commas (e.g., flour, wheat, bread) - We'll replace gluten-containing ingredients!";
-                }
-                
-                ingredientsTextarea.placeholder = placeholder;
-            });
+            if (conditionSelect) {
+                conditionSelect.addEventListener('change', function() {
+                    const condition = this.value;
+                    let placeholder = "Enter ingredients separated by commas (e.g., sugar, flour, butter, banana)";
+                    
+                    if (condition === 'diabetes') {
+                        placeholder = "Enter ingredients separated by commas (e.g., sugar, flour, butter, banana) - We'll replace sugar with stevia!";
+                    } else if (condition === 'hypertension') {
+                        placeholder = "Enter ingredients separated by commas (e.g., salt, butter, flour) - We'll replace salt with low-sodium alternatives!";
+                    } else if (condition === 'celiac') {
+                        placeholder = "Enter ingredients separated by commas (e.g., flour, wheat, bread) - We'll replace gluten-containing ingredients!";
+                    }
+                    
+                    ingredientsTextarea.placeholder = placeholder;
+                });
+            }
+
+            // Auto-fill from recipe name
+            if (fillButton) {
+                fillButton.addEventListener('click', async function() {
+                    const name = (recipeInput.value || '').trim();
+                    if (!name) {
+                        recipeInput.focus();
+                        return;
+                    }
+                    try {
+                        const resp = await fetch(`/api/recipes/ingredients?name=${encodeURIComponent(name)}`);
+                        const data = await resp.json();
+                        const list = Array.isArray(data.ingredients) ? data.ingredients : [];
+                        if (list.length === 0) {
+                            // no match, keep as-is
+                            recipeInput.classList.add('is-invalid');
+                            setTimeout(() => recipeInput.classList.remove('is-invalid'), 1200);
+                            return;
+                        }
+                        ingredientsTextarea.value = list.join(', ');
+                        // trigger resize
+                        ingredientsTextarea.dispatchEvent(new Event('input'));
+                    } catch (e) {
+                        recipeInput.classList.add('is-invalid');
+                        setTimeout(() => recipeInput.classList.remove('is-invalid'), 1200);
+                    }
+                });
+            }
+
+            // AI Auto-Fill: uses Gemini to extract ingredients from the user's current text
+            if (aiFillButton) {
+                aiFillButton.addEventListener('click', async function() {
+                    const sourceText = (recipeInput && recipeInput.value.trim()) || ingredientsTextarea.value.trim();
+                    if (!sourceText) {
+                        (recipeInput || ingredientsTextarea).focus();
+                        return;
+                    }
+                    try {
+                        const resp = await fetch('/api/ai/extract-ingredients', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ text: sourceText })
+                        });
+                        const data = await resp.json();
+                        const list = Array.isArray(data.ingredients) ? data.ingredients : [];
+                        if (list.length === 0) {
+                            aiFillButton.classList.add('disabled');
+                            setTimeout(() => aiFillButton.classList.remove('disabled'), 800);
+                            return;
+                        }
+                        ingredientsTextarea.value = list.join(', ');
+                        ingredientsTextarea.dispatchEvent(new Event('input'));
+                    } catch (e) {
+                        aiFillButton.classList.add('disabled');
+                        setTimeout(() => aiFillButton.classList.remove('disabled'), 800);
+                    }
+                });
+            }
         });
     </script>
 </body>

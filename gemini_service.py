@@ -145,5 +145,46 @@ Keep tips practical, encouraging, and specific to the condition. Format as a sim
             logger.error(f"Error generating health tips: {e}")
             return "Always consult with your healthcare provider for personalized dietary advice."
 
+    def extract_ingredients(self, text_or_name):
+        """Extract a concise, comma-separated ingredient list from a recipe name or text using Gemini.
+
+        Returns a Python list of lowercased ingredient names without quantities. Falls back to simple parsing.
+        """
+        # Fallback: split by commas if no model
+        if not self.model:
+            raw = [p.strip().lower() for p in text_or_name.split(',') if p.strip()]
+            return raw
+        try:
+            prompt = f"""
+You are an expert at reading recipes and listing only the ingredients.
+
+Input may be a recipe name or a block of text with steps. Extract only the ingredient NAMES as a simple comma-separated list. Do not include amounts, units, descriptors like chopped/minced, or brand names. Use lowercase. Example: "flour, sugar, butter, eggs, milk".
+
+Input:
+{text_or_name}
+
+Output (just the list, no extra words):
+"""
+            response = self.model.generate_content(prompt)
+            if not response or not response.text:
+                return []
+            # Parse the model output into a list
+            text = response.text.strip().lower()
+            # Remove bullets or numbering
+            lines = [l.strip('-* ').strip() for l in text.splitlines() if l.strip()]
+            csv = ', '.join(lines) if len(lines) > 1 else text
+            items = [p.strip() for p in csv.split(',') if p.strip()]
+            # De-duplicate while preserving order
+            seen = set()
+            cleaned = []
+            for it in items:
+                if it not in seen:
+                    seen.add(it)
+                    cleaned.append(it)
+            return cleaned
+        except Exception as e:
+            logger.error(f"Error extracting ingredients with Gemini: {e}")
+            return []
+
 # Global instance
 gemini_service = GeminiService()

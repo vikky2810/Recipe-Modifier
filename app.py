@@ -32,6 +32,7 @@ db = client[Config.DATABASE_NAME]
 ingredient_rules = db['ingredient_rules']
 food_entries = db['food_entries']
 patients = db['patients']
+recipes = db['recipes']
 
 # Initialize User Manager
 user_manager = UserManager(db)
@@ -121,6 +122,28 @@ def initialize_database():
         }
         patients.insert_one(sample_patient)
         print("Sample patient added to database")
+
+    # Seed sample recipes if empty
+    if recipes.count_documents({}) == 0:
+        sample_recipes = [
+            {
+                "name": "banana bread",
+                "ingredients": ["flour", "banana", "sugar", "butter", "eggs"],
+                "tags": ["dessert", "bread"]
+            },
+            {
+                "name": "pancakes",
+                "ingredients": ["flour", "milk", "eggs", "butter", "salt", "sugar"],
+                "tags": ["breakfast"]
+            },
+            {
+                "name": "peanut stir fry",
+                "ingredients": ["soy", "peanuts", "salt", "corn", "butter"],
+                "tags": ["dinner"]
+            }
+        ]
+        recipes.insert_many(sample_recipes)
+        print("Sample recipes added to database")
 
 def check_ingredients(ingredients, condition):
     """Check ingredients against patient condition and return harmful/safe lists"""
@@ -480,6 +503,35 @@ def get_ingredients():
     """API endpoint to get all available ingredients"""
     ingredients = list(ingredient_rules.find({}, {"ingredient": 1, "category": 1, "_id": 0}))
     return jsonify(ingredients)
+
+@app.route('/api/recipes/ingredients')
+def get_recipe_ingredients():
+    """API endpoint to get ingredients list by recipe name"""
+    name = request.args.get('name', '')
+    if not name:
+        return jsonify({"error": "Missing recipe name"}), 400
+    recipe_doc = recipes.find_one({"name": name.strip().lower()})
+    if not recipe_doc:
+        return jsonify({"ingredients": []})
+    return jsonify({"ingredients": recipe_doc.get("ingredients", [])})
+
+@app.route('/api/ai/extract-ingredients', methods=['POST'])
+def ai_extract_ingredients():
+    """Use Gemini to extract ingredients from a recipe name or free text.
+
+    Body: { "text": "..." }
+    Returns: { ingredients: [ ... ] }
+    """
+    try:
+        data = request.get_json(force=True, silent=True) or {}
+        text = (data.get('text') or '').strip()
+        if not text:
+            return jsonify({"ingredients": []}), 200
+        items = gemini_service.extract_ingredients(text)
+        return jsonify({"ingredients": items}), 200
+    except Exception as e:
+        print(f"AI extract ingredients error: {e}")
+        return jsonify({"ingredients": []}), 200
 
 @app.route('/api/conditions')
 def get_conditions():
