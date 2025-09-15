@@ -1,0 +1,28 @@
+
+# Environment variables (NEVER commit these!)
+.env
+.env.local
+.env.production
+.env.staging
+.env.backup
+
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Deployment
+.vercel
