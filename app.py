@@ -263,6 +263,12 @@ def generate_recipe(original_ingredients, safe_ingredients, replacements, condit
     
     return recipe
 
+def _reports_dir():
+    """Return a writable reports directory (handles Vercel /tmp)."""
+    base_dir = os.environ.get('VERCEL') and '/tmp/reports' or 'reports'
+    os.makedirs(base_dir, exist_ok=True)
+    return base_dir
+
 def generate_pdf_report(patient_id):
     """Generate PDF report for a patient with improved formatting"""
     
@@ -289,8 +295,8 @@ def generate_pdf_report(patient_id):
     entries = list(food_entries.find({"patient_id": patient_id}).sort("timestamp", -1))
     
     # Create PDF
-    filename = f"reports/patient_{patient_id}_report.pdf"
-    os.makedirs("reports", exist_ok=True)
+    reports_dir = _reports_dir()
+    filename = os.path.join(reports_dir, f"patient_{patient_id}_report.pdf")
     
     doc = SimpleDocTemplate(filename, pagesize=letter, 
                           leftMargin=0.75*inch, rightMargin=0.75*inch,
