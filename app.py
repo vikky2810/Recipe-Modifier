@@ -140,6 +140,16 @@ def initialize_database():
                 "name": "peanut stir fry",
                 "ingredients": ["soy", "peanuts", "salt", "corn", "butter"],
                 "tags": ["dinner"]
+            },
+            {
+                "name": "bread",
+                "ingredients": ["flour", "water", "yeast", "salt"],
+                "tags": ["bread", "basic"]
+            },
+            {
+                "name": "puran poli",
+                "ingredients": ["wheat flour", "chana dal", "jaggery", "ghee", "cardamom", "turmeric", "salt"],
+                "tags": ["indian", "sweet", "festive"]
             }
         ]
         recipes.insert_many(sample_recipes)
@@ -522,7 +532,11 @@ def get_recipe_ingredients():
     name = request.args.get('name', '')
     if not name:
         return jsonify({"error": "Missing recipe name"}), 400
-    recipe_doc = recipes.find_one({"name": name.strip().lower()})
+    # Try exact case-insensitive match first
+    recipe_doc = recipes.find_one({"name": {"$regex": f"^{name.strip()}$", "$options": "i"}})
+    if not recipe_doc:
+        # Fallback to partial case-insensitive contains match
+        recipe_doc = recipes.find_one({"name": {"$regex": name.strip(), "$options": "i"}})
     if not recipe_doc:
         return jsonify({"ingredients": []})
     return jsonify({"ingredients": recipe_doc.get("ingredients", [])})

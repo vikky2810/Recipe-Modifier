@@ -134,6 +134,15 @@
                       id="recipeName"
                       placeholder="e.g., Banana Bread, Pancakes"
                     />
+                    <button
+                      type="button"
+                      class="btn btn-outline-primary"
+                      id="aiFillIngredients"
+                      title="AI auto-fill ingredients"
+                      aria-label="AI auto-fill ingredients"
+                    >
+                      <i class="fas fa-wand-magic-sparkles me-1"></i>AI Auto‑Fill
+                    </button>
                   </div>
                   <div class="form-text">
                     <i class="fas fa-info-circle me-1"></i>
@@ -153,16 +162,7 @@
                     placeholder="Enter ingredients separated by commas (e.g., sugar, flour, butter, banana)"
                     required
                   ></textarea>
-                  <div class="d-flex justify-content-end mt-2 gap-2">
-                    <button
-                      type="button"
-                      class="btn btn-outline-primary btn-sm"
-                      id="aiFillIngredients"
-                    >
-                      <i class="fas fa-wand-magic-sparkles me-1"></i>AI
-                      Auto-Fill
-                    </button>
-                  </div>
+                  
                   <div class="form-text">
                     <i class="fas fa-info-circle me-1"></i>
                     Separate multiple ingredients with commas
@@ -329,7 +329,6 @@
         const ingredientsTextarea = document.getElementById("ingredients");
         const conditionSelect = document.getElementById("condition");
         const recipeInput = document.getElementById("recipeName");
-        const fillButton = document.getElementById("fillFromRecipe");
         const aiFillButton = document.getElementById("aiFillIngredients");
 
         // Auto-resize textarea
@@ -360,45 +359,9 @@
           });
         }
 
-        // Auto-fill from recipe name
-        if (fillButton) {
-          fillButton.addEventListener("click", async function () {
-            const name = (recipeInput.value || "").trim();
-            if (!name) {
-              recipeInput.focus();
-              return;
-            }
-            try {
-              const resp = await fetch(
-                `/api/recipes/ingredients?name=${encodeURIComponent(name)}`
-              );
-              const data = await resp.json();
-              const list = Array.isArray(data.ingredients)
-                ? data.ingredients
-                : [];
-              if (list.length === 0) {
-                // no match, keep as-is
-                recipeInput.classList.add("is-invalid");
-                setTimeout(
-                  () => recipeInput.classList.remove("is-invalid"),
-                  1200
-                );
-                return;
-              }
-              ingredientsTextarea.value = list.join(", ");
-              // trigger resize
-              ingredientsTextarea.dispatchEvent(new Event("input"));
-            } catch (e) {
-              recipeInput.classList.add("is-invalid");
-              setTimeout(
-                () => recipeInput.classList.remove("is-invalid"),
-                1200
-              );
-            }
-          });
-        }
+        
 
-        // AI Auto-Fill: uses Gemini to extract ingredients from the user's current text
+        // AI Auto-Fill: robust flow with fallback; keeps loading until textarea updates
         if (aiFillButton) {
           aiFillButton.addEventListener("click", async function () {
             const sourceText =
@@ -408,29 +371,107 @@
               (recipeInput || ingredientsTextarea).focus();
               return;
             }
+            let updated = false;
             try {
-              const resp = await fetch("/api/ai/extract-ingredients", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ text: sourceText }),
-              });
-              const data = await resp.json();
-              const list = Array.isArray(data.ingredients)
-                ? data.ingredients
-                : [];
-              if (list.length === 0) {
-                aiFillButton.classList.add("disabled");
-                setTimeout(
-                  () => aiFillButton.classList.remove("disabled"),
-                  800
-                );
-                return;
+              // Set loading state
+              aiFillButton.disabled = true;
+              aiFillButton.setAttribute("aria-busy", "true");
+              aiFillButton.dataset.originalHtml = aiFillButton.innerHTML;
+              aiFillButton.innerHTML =
+                '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Filling...';
+
+              // Build AI text candidates to improve extraction for names like "Puran Poli (indian dish)"
+              const candidates = [];
+              const pushCandidate = (t) => {
+                const v = (t || "").trim();
+                if (v && !candidates.includes(v)) candidates.push(v);
+              };
+              pushCandidate(sourceText);
+              if (recipeInput && recipeInput.value) {
+                const raw = recipeInput.value;
+                const cleaned = raw.replace(/\([^)]*\)/g, "").replace(/\s+/g, " ").trim();
+                pushCandidate(cleaned);
+                pushCandidate(`Ingredients for ${cleaned}`);
+                pushCandidate(`${cleaned} ingredients`);
+                pushCandidate(`Recipe: ${cleaned}. List ingredients only.`);
               }
-              ingredientsTextarea.value = list.join(", ");
-              ingredientsTextarea.dispatchEvent(new Event("input"));
+
+              for (const text of candidates) {
+                const resp = await fetch("/api/ai/extract-ingredients", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ text }),
+                });
+                const data = await resp.json();
+                const list = Array.isArray(data.ingredients) ? data.ingredients : [];
+                if (list.length > 0) {
+                  ingredientsTextarea.value = list.join(", ");
+                  ingredientsTextarea.dispatchEvent(new Event("input"));
+                  updated = true;
+                  break;
+                }
+              }
+
+              // Fallback: if AI returns nothing and a recipe name exists, try recipe DB endpoint
+              if (!updated && recipeInput && recipeInput.value.trim()) {
+                const name = recipeInput.value.trim();
+                const r2 = await fetch(
+                  `/api/recipes/ingredients?name=${encodeURIComponent(name)}`
+                );
+                const d2 = await r2.json();
+                const list2 = Array.isArray(d2.ingredients) ? d2.ingredients : [];
+                if (list2.length > 0) {
+                  ingredientsTextarea.value = list2.join(", ");
+                  ingredientsTextarea.dispatchEvent(new Event("input"));
+                  updated = true;
+                }
+              }
+
+              // Last resort: if still nothing, insert helpful message so loading can stop
+              if (!updated) {
+                ingredientsTextarea.value =
+                  "No ingredients found. Try another recipe name or type them manually.";
+                ingredientsTextarea.dispatchEvent(new Event("input"));
+                updated = true;
+              }
             } catch (e) {
-              aiFillButton.classList.add("disabled");
-              setTimeout(() => aiFillButton.classList.remove("disabled"), 800);
+              // If AI call fails, try recipe DB endpoint when a name is present
+              try {
+                if (recipeInput && recipeInput.value.trim()) {
+                  const name = recipeInput.value.trim();
+                  const r2 = await fetch(
+                    `/api/recipes/ingredients?name=${encodeURIComponent(name)}`
+                  );
+                  const d2 = await r2.json();
+                  const list2 = Array.isArray(d2.ingredients)
+                    ? d2.ingredients
+                    : [];
+                  if (list2.length > 0) {
+                    ingredientsTextarea.value = list2.join(", ");
+                    ingredientsTextarea.dispatchEvent(new Event("input"));
+                    updated = true;
+                  }
+                }
+              } catch (_) {
+                // ignore secondary failure
+              }
+              if (!updated) {
+                ingredientsTextarea.value =
+                  "Unable to fetch ingredients right now. Please try again.";
+                ingredientsTextarea.dispatchEvent(new Event("input"));
+                updated = true;
+              }
+            }
+            finally {
+              // Restore button state only after textarea has been updated
+              if (updated) {
+                aiFillButton.disabled = false;
+                aiFillButton.removeAttribute("aria-busy");
+                if (aiFillButton.dataset.originalHtml) {
+                  aiFillButton.innerHTML = aiFillButton.dataset.originalHtml;
+                  delete aiFillButton.dataset.originalHtml;
+                }
+              }
             }
           });
         }

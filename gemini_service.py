@@ -11,7 +11,7 @@ class GeminiService:
         """Initialize Gemini API service"""
         try:
             genai.configure(api_key=Config.GEMINI_API_KEY)
-            self.model = genai.GenerativeModel('gemini-1.5-flash')
+            self.model = genai.GenerativeModel('gemini-2.5-flash')
             logger.info("Gemini API service initialized successfully")
         except Exception as e:
             logger.error(f"Failed to initialize Gemini API: {e}")
@@ -155,11 +155,26 @@ Keep tips practical, encouraging, and specific to the condition. Format as a sim
             raw = [p.strip().lower() for p in text_or_name.split(',') if p.strip()]
             return raw
         try:
+            few_shots = (
+                "Example 1\n"
+                "Input: puran poli\n"
+                "Output: wheat flour, chana dal, jaggery, ghee, cardamom, turmeric, salt\n\n"
+                "Example 2\n"
+                "Input: bread\n"
+                "Output: flour, water, yeast, salt\n\n"
+                "Example 3\n"
+                "Input: Banana Bread recipe: 2 cups flour, 3 bananas (ripe), 1/2 cup sugar, 1/3 cup butter, 2 eggs.\n"
+                "Output: flour, banana, sugar, butter, eggs\n\n"
+            )
             prompt = f"""
-You are an expert at reading recipes and listing only the ingredients.
+You are an expert at reading recipes and listing only the ingredient names.
+- Input may be just a recipe name (e.g., "puran poli") or a block of text with steps.
+- Return ONLY a simple, comma-separated list of ingredient names.
+- Do NOT include amounts, units, adjectives (like chopped/minced), preparation notes, brands, or extraneous words.
+- Use singular nouns when reasonable (e.g., banana, egg) and lowercase all words.
+- If the input is a regional dish, infer common core ingredients.
 
-Input may be a recipe name or a block of text with steps. Extract only the ingredient NAMES as a simple comma-separated list. Do not include amounts, units, descriptors like chopped/minced, or brand names. Use lowercase. Example: "flour, sugar, butter, eggs, milk".
-
+{few_shots}
 Input:
 {text_or_name}
 
@@ -168,20 +183,38 @@ Output (just the list, no extra words):
             response = self.model.generate_content(prompt)
             if not response or not response.text:
                 return []
-            # Parse the model output into a list
+            # Parse and normalize model output
             text = response.text.strip().lower()
-            # Remove bullets or numbering
+            # Remove bullets/numbering and join lines
             lines = [l.strip('-* ').strip() for l in text.splitlines() if l.strip()]
             csv = ', '.join(lines) if len(lines) > 1 else text
-            items = [p.strip() for p in csv.split(',') if p.strip()]
-            # De-duplicate while preserving order
+            # Split, trim, remove units/descriptors
+            raw_items = [p.strip() for p in csv.split(',') if p.strip()]
+            cleaned_items = []
             seen = set()
-            cleaned = []
-            for it in items:
-                if it not in seen:
-                    seen.add(it)
-                    cleaned.append(it)
-            return cleaned
+            descriptor_tokens = [
+                'chopped', 'minced', 'sliced', 'diced', 'fresh', 'ground', 'powder',
+                'to taste', 'optional', 'ripe', 'large', 'small', 'medium'
+            ]
+            for item in raw_items:
+                # Remove parentheticals and extra spaces
+                base = item.split('(')[0].strip()
+                # Remove common descriptors
+                parts = [w for w in base.split() if w not in descriptor_tokens]
+                base = ' '.join(parts).strip()
+                # Strip quantities/units at start (e.g., '2 cups flour' -> 'flour')
+                tokens = base.split()
+                # Drop leading numeric tokens and units
+                units = {'cup', 'cups', 'tsp', 'tbsp', 'teaspoon', 'teaspoons', 'tablespoon', 'tablespoons', 'g', 'kg', 'ml', 'l', 'ounce', 'ounces', 'oz'}
+                while tokens and (tokens[0].replace('/', '').replace('-', '').isdigit() or tokens[0] in units):
+                    tokens.pop(0)
+                base = ' '.join(tokens).strip()
+                if not base:
+                    continue
+                if base not in seen:
+                    seen.add(base)
+                    cleaned_items.append(base)
+            return cleaned_items
         except Exception as e:
             logger.error(f"Error extracting ingredients with Gemini: {e}")
             return []
