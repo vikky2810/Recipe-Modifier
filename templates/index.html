@@ -127,7 +127,7 @@
                 action="{{ url_for('check_ingredients_route') }}"
                 method="POST"
               >
-                <div class="mb-4">
+                <div class="form-section mb-4">
                   <label for="recipeName" class="form-label fw-bold">
                     <i class="fas fa-book me-2"></i>Enter Recipe Name (optional)
                   </label>
@@ -154,7 +154,7 @@
                     ingredients.
                   </div>
                 </div>
-                <div class="mb-4">
+                <div class="form-section mb-4">
                   <label for="ingredients" class="form-label fw-bold">
                     <i class="fas fa-list me-2"></i>Enter Your Ingredients
                   </label>
@@ -175,7 +175,7 @@
 
                 {% if current_user.is_authenticated %}
                 <!-- For authenticated users, show their condition and make it read-only -->
-                <div class="mb-4">
+                <div class="form-section mb-4">
                   <label for="condition" class="form-label fw-bold">
                     <i class="fas fa-user-md me-2"></i>Your Medical Condition
                   </label>
@@ -204,7 +204,7 @@
                 </div>
                 {% else %}
                 <!-- For non-authenticated users, show the dropdown -->
-                <div class="mb-4">
+                <div class="form-section mb-4">
                   <label for="condition" class="form-label fw-bold">
                     <i class="fas fa-user-md me-2"></i>Select Your Medical
                     Condition
