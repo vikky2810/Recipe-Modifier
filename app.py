@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, send_file, jsonify, flash
+from flask import Flask, render_template, request, redirect, url_for, send_file, jsonify, flash, abort
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from pymongo import MongoClient
 from datetime import datetime
@@ -487,8 +487,11 @@ def check_ingredients_route():
                          moment=datetime.now().strftime('%B %d, %Y at %I:%M %p'))
 
 @app.route('/generate_report/<patient_id>')
+@login_required
 def generate_report(patient_id):
     """Generate and download PDF report"""
+    if str(current_user.user_id) != str(patient_id):
+        abort(403)
     filename = generate_pdf_report(patient_id)
     if filename and os.path.exists(filename):
         return send_file(filename, as_attachment=True, download_name=f"patient_{patient_id}_report.pdf")
@@ -496,8 +499,11 @@ def generate_report(patient_id):
         return "Report generation failed", 400
 
 @app.route('/view_report/<patient_id>')
+@login_required
 def view_report(patient_id):
     """View PDF report in browser"""
+    if str(current_user.user_id) != str(patient_id):
+        abort(403)
     filename = generate_pdf_report(patient_id)
     if filename and os.path.exists(filename):
         return send_file(filename, mimetype='application/pdf')
