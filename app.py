@@ -33,6 +33,15 @@ ingredient_rules = db['ingredient_rules']
 food_entries = db['food_entries']
 patients = db['patients']
 recipes = db['recipes']
+generated_recipes = db['generated_recipes']
+
+# Ensure indexes for fast lookups
+try:
+    ingredient_rules.create_index('ingredient', unique=True)
+    generated_recipes.create_index([('condition', 1), ('ingredients_key', 1)])
+except Exception:
+    # Index creation is best-effort; ignore if permissions/environment restrict this
+    pass
 
 # Initialize User Manager
 user_manager = UserManager(db)
@@ -156,23 +165,32 @@ def initialize_database():
         print("Sample recipes added to database")
 
 def check_ingredients(ingredients, condition):
-    """Check ingredients against patient condition and return harmful/safe lists"""
+    """Check ingredients against patient condition and return harmful/safe lists.
+
+    Optimized to perform a single batched MongoDB query instead of per-ingredient lookups.
+    """
     harmful_ingredients = []
     safe_ingredients = []
     replacements = {}
-    
-    for ingredient in ingredients:
-        ingredient_lower = ingredient.strip().lower()
-        
-        # Check if ingredient is harmful for the condition
-        rule = ingredient_rules.find_one({"ingredient": ingredient_lower})
-        
+
+    # Normalize and de-duplicate for query
+    normalized = [ingredient.strip().lower() for ingredient in ingredients if ingredient and ingredient.strip()]
+    unique_ingredients = list({i for i in normalized})
+
+    if unique_ingredients:
+        cursor = ingredient_rules.find({"ingredient": {"$in": unique_ingredients}}, {"ingredient": 1, "harmful_for": 1, "alternative": 1, "_id": 0})
+        rules_by_ingredient = {doc["ingredient"]: doc for doc in cursor}
+    else:
+        rules_by_ingredient = {}
+
+    for ingredient in normalized:
+        rule = rules_by_ingredient.get(ingredient)
         if rule and condition in rule.get("harmful_for", []):
-            harmful_ingredients.append(ingredient_lower)
-            replacements[ingredient_lower] = rule["alternative"]
+            harmful_ingredients.append(ingredient)
+            replacements[ingredient] = rule.get("alternative")
         else:
-            safe_ingredients.append(ingredient_lower)
-    
+            safe_ingredients.append(ingredient)
+
     return harmful_ingredients, safe_ingredients, replacements
 
 def format_recipe_html(recipe_text):
@@ -458,10 +476,7 @@ def check_ingredients_route():
     
     # Check ingredients
     harmful, safe, replacements = check_ingredients(ingredients, condition)
-    
-    # Generate modified recipe
-    recipe = generate_recipe(ingredients, safe, replacements, condition)
-    
+
     # Create modified ingredients list
     modified_ingredients = []
     for ingredient in ingredients:
@@ -470,6 +485,24 @@ def check_ingredients_route():
             modified_ingredients.append(replacements[ingredient_lower])
         else:
             modified_ingredients.append(ingredient)
+
+    # Try to serve from cache first to avoid a slow LLM call
+    ingredients_key = ",".join(sorted([i.strip().lower() for i in modified_ingredients if i and i.strip()]))
+    cached_doc = generated_recipes.find_one({"condition": condition, "ingredients_key": ingredients_key}, {"recipe": 1, "_id": 0})
+    if cached_doc and cached_doc.get("recipe"):
+        recipe = cached_doc["recipe"]
+    else:
+        # Generate modified recipe via Gemini
+        recipe = generate_recipe(ingredients, safe, replacements, condition)
+        try:
+            generated_recipes.update_one(
+                {"condition": condition, "ingredients_key": ingredients_key},
+                {"$set": {"recipe": recipe, "updated_at": datetime.now()}},
+                upsert=True
+            )
+        except Exception:
+            # Caching is best-effort; ignore failures
+            pass
     
     # Store in database
     patient_id = current_user.user_id if current_user.is_authenticated else "1"
