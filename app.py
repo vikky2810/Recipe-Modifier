@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, send_file,
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from pymongo import MongoClient
 from datetime import datetime
+from dotenv import load_dotenv
 import os
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
@@ -13,6 +14,12 @@ from config import Config
 from gemini_service import gemini_service
 from models import UserManager
 from forms import RegistrationForm, LoginForm, ProfileUpdateForm, ChangePasswordForm
+import requests
+
+load_dotenv()
+
+api_key = os.getenv("GEMINI_API_KEY")
+print("Gemini API Key:", api_key)
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -163,6 +170,27 @@ def initialize_database():
         ]
         recipes.insert_many(sample_recipes)
         print("Sample recipes added to database")
+
+def ensure_core_ingredients():
+    """Ensure critical common ingredients exist (for autocomplete and matching)."""
+    core_ingredients = [
+        {
+            "ingredient": "pasta",
+            "harmful_for": ["celiac", "gluten_intolerance"],
+            "alternative": "gluten-free pasta",
+            "category": "grain"
+        }
+    ]
+    for item in core_ingredients:
+        try:
+            ingredient_rules.update_one(
+                {"ingredient": item["ingredient"]},
+                {"$setOnInsert": item},
+                upsert=True
+            )
+        except Exception:
+            # Best-effort; ignore failures in restricted environments
+            pass
 
 def check_ingredients(ingredients, condition):
     """Check ingredients against patient condition and return harmful/safe lists.
@@ -586,8 +614,59 @@ def ai_extract_ingredients():
         text = (data.get('text') or '').strip()
         if not text:
             return jsonify({"ingredients": []}), 200
-        items = gemini_service.extract_ingredients(text)
-        return jsonify({"ingredients": items}), 200
+
+        # 1) Try AI extraction first
+        ai_items = gemini_service.extract_ingredients(text) or []
+        ai_items_normalized = [i.strip().lower() for i in ai_items if i and i.strip()]
+        input_normalized = text.lower()
+
+        # If AI returned a meaningful list (not just echoing the input), use it
+        if ai_items_normalized and not (len(ai_items_normalized) == 1 and ai_items_normalized[0] == input_normalized):
+            return jsonify({"ingredients": ai_items_normalized}), 200
+
+        # 2) Fallback to recipes DB lookup by name (exact, then partial)
+        recipe_doc = recipes.find_one({"name": {"$regex": f"^{text}$", "$options": "i"}})
+        if not recipe_doc:
+            recipe_doc = recipes.find_one({"name": {"$regex": text, "$options": "i"}})
+        if recipe_doc:
+            return jsonify({"ingredients": recipe_doc.get("ingredients", [])}), 200
+
+        # 3) External recipe API fallback (TheMealDB)
+        try:
+            api_url = f"https://www.themealdb.com/api/json/v1/1/search.php?s={requests.utils.quote(text)}"
+            resp = requests.get(api_url, timeout=6)
+            if resp.ok:
+                payload = resp.json() or {}
+                meals = payload.get("meals") or []
+                if meals:
+                    first = meals[0]
+                    api_ingredients = []
+                    for idx in range(1, 21):
+                        val = (first.get(f"strIngredient{idx}") or "").strip()
+                        if val:
+                            api_ingredients.append(val.lower())
+                    if api_ingredients:
+                        return jsonify({"ingredients": api_ingredients}), 200
+        except Exception:
+            pass
+
+        # 4) Last resort: parse comma-separated list; avoid echoing single term
+        guessed = [t.strip().lower() for t in text.split(',') if t.strip()]
+        if len(guessed) > 1:
+            return jsonify({"ingredients": guessed}), 200
+
+        # 5) Heuristic defaults for common single-term dishes
+        defaults = {
+            "pasta": ["pasta", "olive oil", "garlic", "salt", "water"],
+            "pizza": ["pizza dough", "tomato sauce", "mozzarella", "olive oil", "salt"],
+            "salad": ["lettuce", "tomato", "cucumber", "olive oil", "salt"],
+            "sandwich": ["bread", "lettuce", "tomato", "cheese", "mayonnaise"],
+        }
+        if input_normalized in defaults:
+            return jsonify({"ingredients": defaults[input_normalized]}), 200
+
+        # Nothing reliable
+        return jsonify({"ingredients": []}), 200
     except Exception as e:
         print(f"AI extract ingredients error: {e}")
         return jsonify({"ingredients": []}), 200
@@ -746,6 +825,7 @@ def change_password():
 if __name__ == '__main__':
     # Initialize database on startup
     initialize_database()
+    ensure_core_ingredients()
     
     # Create reports directory
     os.makedirs("reports", exist_ok=True)
