@@ -1,21 +1,25 @@
-import google.generativeai as genai
+from google import genai
 from config import Config
 import logging
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 class GeminiService:
     def __init__(self):
         """Initialize Gemini API service"""
         try:
-            genai.configure(api_key=Config.GEMINI_API_KEY)
-            self.model = genai.GenerativeModel('gemini-2.5-flash')
+            GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+            self.client = genai.Client(api_key=GEMINI_API_KEY)
             logger.info("Gemini API service initialized successfully")
         except Exception as e:
             logger.error(f"Failed to initialize Gemini API: {e}")
-            self.model = None
+            self.client = None
     
     def generate_recipe_instructions(self, original_ingredients, modified_ingredients, condition, harmful_ingredients=None):
         """
@@ -30,7 +34,7 @@ class GeminiService:
         Returns:
             str: Generated recipe instructions
         """
-        if not self.model:
+        if not self.client:
             return self._fallback_recipe_generation(modified_ingredients)
         
         try:
@@ -38,7 +42,7 @@ class GeminiService:
             prompt = self._create_recipe_prompt(original_ingredients, modified_ingredients, condition, harmful_ingredients)
             
             # Generate response
-            response = self.model.generate_content(prompt)
+            response = self.client.generate_content(prompt)
             
             if response and response.text:
                 return response.text.strip()
@@ -124,7 +128,7 @@ Serve warm and enjoy! This dish is perfect for a healthy meal that fits your die
     
     def generate_health_tips(self, condition, ingredients):
         """Generate personalized health tips based on condition and ingredients"""
-        if not self.model:
+        if not self.client:
             return "Always consult with your healthcare provider for personalized dietary advice."
         
         try:
@@ -135,7 +139,7 @@ who is cooking with these ingredients: {', '.join(ingredients)}.
 Keep tips practical, encouraging, and specific to the condition. Format as a simple list.
 """
             
-            response = self.model.generate_content(prompt)
+            response = self.client.generate_content(prompt)
             if response and response.text:
                 return response.text.strip()
             else:
@@ -150,9 +154,11 @@ Keep tips practical, encouraging, and specific to the condition. Format as a sim
 
         Returns a Python list of lowercased ingredient names without quantities. Falls back to simple parsing.
         """
-        # Fallback: split by commas if no model
-        if not self.model:
+        # Fallback: split by commas if no client
+    
+        if not self.client:
             raw = [p.strip().lower() for p in text_or_name.split(',') if p.strip()]
+            print("inside you .. ")
             return raw
         try:
             few_shots = (
@@ -167,20 +173,23 @@ Keep tips practical, encouraging, and specific to the condition. Format as a sim
                 "Output: flour, banana, sugar, butter, eggs\n\n"
             )
             prompt = f"""
-You are an expert at reading recipes and listing only the ingredient names.
-- Input may be just a recipe name (e.g., "puran poli") or a block of text with steps.
-- Return ONLY a simple, comma-separated list of ingredient names.
-- Do NOT include amounts, units, adjectives (like chopped/minced), preparation notes, brands, or extraneous words.
-- Use singular nouns when reasonable (e.g., banana, egg) and lowercase all words.
-- If the input is a regional dish, infer common core ingredients.
+                You are an expert at reading recipes and listing only the ingredient names.
+                - Input may be just a recipe name (e.g., "puran poli") or a block of text with steps.
+                - Return ONLY a simple, comma-separated list of ingredient names.
+                - Do NOT include amounts, units, adjectives (like chopped/minced), preparation notes, brands, or extraneous words.
+                - Use singular nouns when reasonable (e.g., banana, egg) and lowercase all words.
+                - If the input is a regional dish, infer common core ingredients.
 
-{few_shots}
-Input:
-{text_or_name}
+                {few_shots}
+                Input:
+                {text_or_name}
 
-Output (just the list, no extra words):
-"""
-            response = self.model.generate_content(prompt)
+                Output (just the list, no extra words):
+                """
+            response = self.client.models.generate_content(
+                model="gemini-2.5-flash", contents=prompt
+            )
+            print("response is :", response)
             if not response or not response.text:
                 return []
             # Parse and normalize model output

@@ -375,117 +375,70 @@
 
         
 
-        // AI Auto-Fill: robust flow with fallback; keeps loading until textarea updates
+        // AI Auto-Fill: simple flow with fallback
         if (aiFillButton) {
           aiFillButton.addEventListener("click", async function () {
+            // Get text from recipe name or ingredients field
             const sourceText =
               (recipeInput && recipeInput.value.trim()) ||
               ingredientsTextarea.value.trim();
+            
             if (!sourceText) {
               (recipeInput || ingredientsTextarea).focus();
               return;
             }
-            let updated = false;
+
+            // Show loading state
+            aiFillButton.disabled = true;
+            const originalHtml = aiFillButton.innerHTML;
+            aiFillButton.innerHTML =
+              '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Filling...';
+
             try {
-              // Set loading state
-              aiFillButton.disabled = true;
-              aiFillButton.setAttribute("aria-busy", "true");
-              aiFillButton.dataset.originalHtml = aiFillButton.innerHTML;
-              aiFillButton.innerHTML =
-                '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Filling...';
+              // Try AI extraction first
+              const resp = await fetch("/api/ai/extract-ingredients", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ text: sourceText }),
+              });
+              // console.log(sourceText);
+              const data = await resp.json();
+              console.log("your data is :", data);
+              
+              const ingredients = Array.isArray(data.ingredients) ? data.ingredients : [];
 
-              // Build AI text candidates to improve extraction for names like "Puran Poli (indian dish)"
-              const candidates = [];
-              const pushCandidate = (t) => {
-                const v = (t || "").trim();
-                if (v && !candidates.includes(v)) candidates.push(v);
-              };
-              pushCandidate(sourceText);
-              if (recipeInput && recipeInput.value) {
-                const raw = recipeInput.value;
-                const cleaned = raw.replace(/\([^)]*\)/g, "").replace(/\s+/g, " ").trim();
-                pushCandidate(cleaned);
-                pushCandidate(`Ingredients for ${cleaned}`);
-                pushCandidate(`${cleaned} ingredients`);
-                pushCandidate(`Recipe: ${cleaned}. List ingredients only.`);
-              }
-
-              for (const text of candidates) {
-                const resp = await fetch("/api/ai/extract-ingredients", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ text }),
-                });
-                const data = await resp.json();
-                const list = Array.isArray(data.ingredients) ? data.ingredients : [];
-                if (list.length > 0) {
-                  ingredientsTextarea.value = list.join(", ");
-                  ingredientsTextarea.dispatchEvent(new Event("input"));
-                  updated = true;
-                  break;
-                }
-              }
-
-              // Fallback: if AI returns nothing and a recipe name exists, try recipe DB endpoint
-              if (!updated && recipeInput && recipeInput.value.trim()) {
-                const name = recipeInput.value.trim();
-                const r2 = await fetch(
-                  `/api/recipes/ingredients?name=${encodeURIComponent(name)}`
+              // If AI worked, use those ingredients
+              if (ingredients.length > 0) {
+                ingredientsTextarea.value = ingredients.join(", ");
+                ingredientsTextarea.dispatchEvent(new Event("input"));
+              } 
+              // Fallback: try database lookup if recipe name exists
+              else if (recipeInput && recipeInput.value.trim()) {
+                const dbResp = await fetch(
+                  `/api/recipes/ingredients?name=${encodeURIComponent(recipeInput.value.trim())}`
                 );
-                const d2 = await r2.json();
-                const list2 = Array.isArray(d2.ingredients) ? d2.ingredients : [];
-                if (list2.length > 0) {
-                  ingredientsTextarea.value = list2.join(", ");
+                const dbData = await dbResp.json();
+                const dbIngredients = Array.isArray(dbData.ingredients) ? dbData.ingredients : [];
+                
+                if (dbIngredients.length > 0) {
+                  ingredientsTextarea.value = dbIngredients.join(", ");
                   ingredientsTextarea.dispatchEvent(new Event("input"));
-                  updated = true;
+                } else {
+                  ingredientsTextarea.value = "No ingredients found. Please type them manually.";
+                  ingredientsTextarea.dispatchEvent(new Event("input"));
                 }
-              }
-
-              // Last resort: if still nothing, insert helpful message so loading can stop
-              if (!updated) {
-                ingredientsTextarea.value =
-                  "No ingredients found. Try another recipe name or type them manually.";
+              } else {
+                ingredientsTextarea.value = "No ingredients found. Please type them manually.";
                 ingredientsTextarea.dispatchEvent(new Event("input"));
-                updated = true;
               }
-            } catch (e) {
-              // If AI call fails, try recipe DB endpoint when a name is present
-              try {
-                if (recipeInput && recipeInput.value.trim()) {
-                  const name = recipeInput.value.trim();
-                  const r2 = await fetch(
-                    `/api/recipes/ingredients?name=${encodeURIComponent(name)}`
-                  );
-                  const d2 = await r2.json();
-                  const list2 = Array.isArray(d2.ingredients)
-                    ? d2.ingredients
-                    : [];
-                  if (list2.length > 0) {
-                    ingredientsTextarea.value = list2.join(", ");
-                    ingredientsTextarea.dispatchEvent(new Event("input"));
-                    updated = true;
-                  }
-                }
-              } catch (_) {
-                // ignore secondary failure
-              }
-              if (!updated) {
-                ingredientsTextarea.value =
-                  "Unable to fetch ingredients right now. Please try again.";
-                ingredientsTextarea.dispatchEvent(new Event("input"));
-                updated = true;
-              }
-            }
-            finally {
-              // Restore button state only after textarea has been updated
-              if (updated) {
-                aiFillButton.disabled = false;
-                aiFillButton.removeAttribute("aria-busy");
-                if (aiFillButton.dataset.originalHtml) {
-                  aiFillButton.innerHTML = aiFillButton.dataset.originalHtml;
-                  delete aiFillButton.dataset.originalHtml;
-                }
-              }
+            } catch (error) {
+              // On error, show message
+              ingredientsTextarea.value = "Unable to fetch ingredients. Please try again or type them manually.";
+              ingredientsTextarea.dispatchEvent(new Event("input"));
+            } finally {
+              // Restore button
+              aiFillButton.disabled = false;
+              aiFillButton.innerHTML = originalHtml;
             }
           });
         }
