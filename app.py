@@ -18,10 +18,30 @@ import requests
 
 load_dotenv()
 
-api_key = os.getenv("GEMINI_API_KEY")
-print("Gemini API Key:", api_key)
+# Validate critical environment variables (warn but don't crash)
+def validate_env_vars():
+    """Validate that critical environment variables are set"""
+    missing = []
+    if not os.getenv("SECRET_KEY") or os.getenv("SECRET_KEY") == 'your-secret-key-change-this-in-production':
+        missing.append("SECRET_KEY")
+    if not os.getenv("MONGODB_URI") or os.getenv("MONGODB_URI") == 'mongodb://localhost:27017/':
+        missing.append("MONGODB_URI")
+    if not os.getenv("GEMINI_API_KEY") or os.getenv("GEMINI_API_KEY") == 'your-gemini-api-key-here':
+        missing.append("GEMINI_API_KEY")
+    
+    if missing:
+        print(f"WARNING: Missing or default environment variables: {', '.join(missing)}")
+        print("These should be set in Vercel project settings for production deployment.")
+    else:
+        print("✅ All critical environment variables are set")
 
-app = Flask(__name__)
+# Only validate in production/serverless (not local dev)
+if os.environ.get('VERCEL') or os.environ.get('VERCEL_ENV'):
+    validate_env_vars()
+
+app = Flask(__name__, 
+            static_folder='static',
+            template_folder='templates')
 app.config.from_object(Config)
 
 # Initialize Flask-Login
@@ -31,166 +51,265 @@ login_manager.login_view = 'login'
 login_manager.login_message = 'Please log in to access this page.'
 login_manager.login_message_category = 'info'
 
-# MongoDB Configuration
-client = MongoClient(Config.MONGODB_URI)
-db = client[Config.DATABASE_NAME]
+# MongoDB Configuration - Lazy initialization for serverless
+_client = None
+_db = None
+_ingredient_rules = None
+_food_entries = None
+_patients = None
+_recipes = None
+_generated_recipes = None
+_user_manager = None
 
-# Initialize collections
-ingredient_rules = db['ingredient_rules']
-food_entries = db['food_entries']
-patients = db['patients']
-recipes = db['recipes']
-generated_recipes = db['generated_recipes']
+def get_db():
+    """Lazy initialization of MongoDB connection"""
+    global _client, _db, _ingredient_rules, _food_entries, _patients, _recipes, _generated_recipes, _user_manager
+    
+    if _db is None:
+        try:
+            # Increased timeout for serverless cold starts (15 seconds)
+            _client = MongoClient(
+                Config.MONGODB_URI, 
+                serverSelectionTimeoutMS=15000,
+                connectTimeoutMS=15000,
+                socketTimeoutMS=30000
+            )
+            _db = _client[Config.DATABASE_NAME]
+            
+            # Initialize collections
+            _ingredient_rules = _db['ingredient_rules']
+            _food_entries = _db['food_entries']
+            _patients = _db['patients']
+            _recipes = _db['recipes']
+            _generated_recipes = _db['generated_recipes']
+            
+            # Ensure indexes for fast lookups
+            try:
+                _ingredient_rules.create_index('ingredient', unique=True)
+                _generated_recipes.create_index([('condition', 1), ('ingredients_key', 1)])
+            except Exception:
+                # Index creation is best-effort; ignore if permissions/environment restrict this
+                pass
+            
+            # Initialize User Manager
+            _user_manager = UserManager(_db)
+            
+            # Initialize database on first connection
+            initialize_database()
+            ensure_core_ingredients()
+            
+        except Exception as e:
+            print(f"MongoDB connection error: {e}")
+            # Create dummy collections to prevent crashes
+            class DummyCollection:
+                def find_one(self, *args, **kwargs): return None
+                def find(self, *args, **kwargs): return []
+                def insert_one(self, *args, **kwargs): return type('obj', (object,), {'inserted_id': None})()
+                def update_one(self, *args, **kwargs): return type('obj', (object,), {'modified_count': 0})()
+                def count_documents(self, *args, **kwargs): return 0
+                def create_index(self, *args, **kwargs): pass
+                def aggregate(self, *args, **kwargs): return []
+                def sort(self, *args, **kwargs): return self
+                def limit(self, *args, **kwargs): return self
+                def delete_one(self, *args, **kwargs): return type('obj', (object,), {'deleted_count': 0})()
+            
+            _ingredient_rules = DummyCollection()
+            _food_entries = DummyCollection()
+            _patients = DummyCollection()
+            _recipes = DummyCollection()
+            _generated_recipes = DummyCollection()
+            _user_manager = UserManager(None)
+    
+    return _db
 
-# Ensure indexes for fast lookups
-try:
-    ingredient_rules.create_index('ingredient', unique=True)
-    generated_recipes.create_index([('condition', 1), ('ingredients_key', 1)])
-except Exception:
-    # Index creation is best-effort; ignore if permissions/environment restrict this
-    pass
+# Accessor functions for collections
+def get_ingredient_rules():
+    get_db()
+    return _ingredient_rules
 
-# Initialize User Manager
-user_manager = UserManager(db)
+def get_food_entries():
+    get_db()
+    return _food_entries
+
+def get_patients():
+    get_db()
+    return _patients
+
+def get_recipes():
+    get_db()
+    return _recipes
+
+def get_generated_recipes():
+    get_db()
+    return _generated_recipes
+
+def get_user_manager():
+    get_db()
+    return _user_manager
+
+# Note: All database access should use the getter functions above
+# Direct access to collections is no longer supported
 
 @login_manager.user_loader
 def load_user(user_id):
     """Load user for Flask-Login"""
-    return user_manager.get_user_by_id(user_id)
+    return get_user_manager().get_user_by_id(user_id)
 
 def initialize_database():
     """Initialize the database with sample data if collections are empty"""
+    try:
+        ingredient_rules_col = get_ingredient_rules()
+        patients_col = get_patients()
+        recipes_col = get_recipes()
+    except Exception as e:
+        print(f"Error initializing database: {e}")
+        return
     
     # Check if ingredient_rules collection is empty
-    if ingredient_rules.count_documents({}) == 0:
-        sample_rules = [
-            {
-                "ingredient": "sugar",
-                "harmful_for": ["diabetes", "obesity"],
-                "alternative": "stevia",
-                "category": "sweetener"
-            },
-            {
-                "ingredient": "salt",
-                "harmful_for": ["hypertension", "heart_disease"],
-                "alternative": "low-sodium salt",
-                "category": "seasoning"
-            },
-            {
-                "ingredient": "flour",
-                "harmful_for": ["celiac", "gluten_intolerance"],
-                "alternative": "almond flour",
-                "category": "baking"
-            },
-            {
-                "ingredient": "butter",
-                "harmful_for": ["cholesterol", "heart_disease"],
-                "alternative": "olive oil",
-                "category": "fat"
-            },
-            {
-                "ingredient": "milk",
-                "harmful_for": ["lactose_intolerance"],
-                "alternative": "almond milk",
-                "category": "dairy"
-            },
-            {
-                "ingredient": "eggs",
-                "harmful_for": ["egg_allergy"],
-                "alternative": "flaxseed meal",
-                "category": "protein"
-            },
-            {
-                "ingredient": "peanuts",
-                "harmful_for": ["peanut_allergy"],
-                "alternative": "sunflower seeds",
-                "category": "nuts"
-            },
-            {
-                "ingredient": "soy",
-                "harmful_for": ["soy_allergy"],
-                "alternative": "coconut aminos",
-                "category": "protein"
-            },
-            {
-                "ingredient": "wheat",
-                "harmful_for": ["celiac", "gluten_intolerance"],
-                "alternative": "quinoa",
-                "category": "grain"
-            },
-            {
-                "ingredient": "corn",
-                "harmful_for": ["corn_allergy"],
-                "alternative": "rice",
-                "category": "grain"
-            }
-        ]
-        ingredient_rules.insert_many(sample_rules)
-        print("Sample ingredient rules added to database")
+    try:
+        if ingredient_rules_col.count_documents({}) == 0:
+            sample_rules = [
+                {
+                    "ingredient": "sugar",
+                    "harmful_for": ["diabetes", "obesity"],
+                    "alternative": "stevia",
+                    "category": "sweetener"
+                },
+                {
+                    "ingredient": "salt",
+                    "harmful_for": ["hypertension", "heart_disease"],
+                    "alternative": "low-sodium salt",
+                    "category": "seasoning"
+                },
+                {
+                    "ingredient": "flour",
+                    "harmful_for": ["celiac", "gluten_intolerance"],
+                    "alternative": "almond flour",
+                    "category": "baking"
+                },
+                {
+                    "ingredient": "butter",
+                    "harmful_for": ["cholesterol", "heart_disease"],
+                    "alternative": "olive oil",
+                    "category": "fat"
+                },
+                {
+                    "ingredient": "milk",
+                    "harmful_for": ["lactose_intolerance"],
+                    "alternative": "almond milk",
+                    "category": "dairy"
+                },
+                {
+                    "ingredient": "eggs",
+                    "harmful_for": ["egg_allergy"],
+                    "alternative": "flaxseed meal",
+                    "category": "protein"
+                },
+                {
+                    "ingredient": "peanuts",
+                    "harmful_for": ["peanut_allergy"],
+                    "alternative": "sunflower seeds",
+                    "category": "nuts"
+                },
+                {
+                    "ingredient": "soy",
+                    "harmful_for": ["soy_allergy"],
+                    "alternative": "coconut aminos",
+                    "category": "protein"
+                },
+                {
+                    "ingredient": "wheat",
+                    "harmful_for": ["celiac", "gluten_intolerance"],
+                    "alternative": "quinoa",
+                    "category": "grain"
+                },
+                {
+                    "ingredient": "corn",
+                    "harmful_for": ["corn_allergy"],
+                    "alternative": "rice",
+                    "category": "grain"
+                }
+            ]
+            ingredient_rules_col.insert_many(sample_rules)
+            print("Sample ingredient rules added to database")
+    except Exception as e:
+        print(f"Error adding sample ingredient rules: {e}")
     
     # Check if patients collection is empty
-    if patients.count_documents({}) == 0:
-        sample_patient = {
-            "patient_id": "1",
-            "name": "John Doe",
-            "condition": "diabetes",
-            "email": "john.doe@example.com"
-        }
-        patients.insert_one(sample_patient)
-        print("Sample patient added to database")
+    try:
+        if patients_col.count_documents({}) == 0:
+            sample_patient = {
+                "patient_id": "1",
+                "name": "John Doe",
+                "condition": "diabetes",
+                "email": "john.doe@example.com"
+            }
+            patients_col.insert_one(sample_patient)
+            print("Sample patient added to database")
+    except Exception as e:
+        print(f"Error adding sample patient: {e}")
 
     # Seed sample recipes if empty
-    if recipes.count_documents({}) == 0:
-        sample_recipes = [
-            {
-                "name": "banana bread",
-                "ingredients": ["flour", "banana", "sugar", "butter", "eggs"],
-                "tags": ["dessert", "bread"]
-            },
-            {
-                "name": "pancakes",
-                "ingredients": ["flour", "milk", "eggs", "butter", "salt", "sugar"],
-                "tags": ["breakfast"]
-            },
-            {
-                "name": "peanut stir fry",
-                "ingredients": ["soy", "peanuts", "salt", "corn", "butter"],
-                "tags": ["dinner"]
-            },
-            {
-                "name": "bread",
-                "ingredients": ["flour", "water", "yeast", "salt"],
-                "tags": ["bread", "basic"]
-            },
-            {
-                "name": "puran poli",
-                "ingredients": ["wheat flour", "chana dal", "jaggery", "ghee", "cardamom", "turmeric", "salt"],
-                "tags": ["indian", "sweet", "festive"]
-            }
-        ]
-        recipes.insert_many(sample_recipes)
-        print("Sample recipes added to database")
+    try:
+        if recipes_col.count_documents({}) == 0:
+            sample_recipes = [
+                {
+                    "name": "banana bread",
+                    "ingredients": ["flour", "banana", "sugar", "butter", "eggs"],
+                    "tags": ["dessert", "bread"]
+                },
+                {
+                    "name": "pancakes",
+                    "ingredients": ["flour", "milk", "eggs", "butter", "salt", "sugar"],
+                    "tags": ["breakfast"]
+                },
+                {
+                    "name": "peanut stir fry",
+                    "ingredients": ["soy", "peanuts", "salt", "corn", "butter"],
+                    "tags": ["dinner"]
+                },
+                {
+                    "name": "bread",
+                    "ingredients": ["flour", "water", "yeast", "salt"],
+                    "tags": ["bread", "basic"]
+                },
+                {
+                    "name": "puran poli",
+                    "ingredients": ["wheat flour", "chana dal", "jaggery", "ghee", "cardamom", "turmeric", "salt"],
+                    "tags": ["indian", "sweet", "festive"]
+                }
+            ]
+            recipes_col.insert_many(sample_recipes)
+            print("Sample recipes added to database")
+    except Exception as e:
+        print(f"Error adding sample recipes: {e}")
+    except Exception as e:
+        print(f"Error in initialize_database: {e}")
 
 def ensure_core_ingredients():
     """Ensure critical common ingredients exist (for autocomplete and matching)."""
-    core_ingredients = [
-        {
-            "ingredient": "pasta",
-            "harmful_for": ["celiac", "gluten_intolerance"],
-            "alternative": "gluten-free pasta",
-            "category": "grain"
-        }
-    ]
-    for item in core_ingredients:
-        try:
-            ingredient_rules.update_one(
-                {"ingredient": item["ingredient"]},
-                {"$setOnInsert": item},
-                upsert=True
-            )
-        except Exception:
-            # Best-effort; ignore failures in restricted environments
-            pass
+    try:
+        ingredient_rules_col = get_ingredient_rules()
+        core_ingredients = [
+            {
+                "ingredient": "pasta",
+                "harmful_for": ["celiac", "gluten_intolerance"],
+                "alternative": "gluten-free pasta",
+                "category": "grain"
+            }
+        ]
+        for item in core_ingredients:
+            try:
+                ingredient_rules_col.update_one(
+                    {"ingredient": item["ingredient"]},
+                    {"$setOnInsert": item},
+                    upsert=True
+                )
+            except Exception:
+                # Best-effort; ignore failures in restricted environments
+                pass
+    except Exception as e:
+        print(f"Error ensuring core ingredients: {e}")
 
 def check_ingredients(ingredients, condition):
     """Check ingredients against patient condition and return harmful/safe lists.
@@ -206,8 +325,13 @@ def check_ingredients(ingredients, condition):
     unique_ingredients = list({i for i in normalized})
 
     if unique_ingredients:
-        cursor = ingredient_rules.find({"ingredient": {"$in": unique_ingredients}}, {"ingredient": 1, "harmful_for": 1, "alternative": 1, "_id": 0})
-        rules_by_ingredient = {doc["ingredient"]: doc for doc in cursor}
+        try:
+            cursor = get_ingredient_rules().find({"ingredient": {"$in": unique_ingredients}}, {"ingredient": 1, "harmful_for": 1, "alternative": 1, "_id": 0})
+            # Use .get() to prevent KeyError if document structure is unexpected
+            rules_by_ingredient = {doc.get("ingredient"): doc for doc in cursor if doc.get("ingredient")}
+        except Exception as e:
+            print(f"Error querying ingredient rules: {e}")
+            rules_by_ingredient = {}
     else:
         rules_by_ingredient = {}
 
@@ -321,7 +445,13 @@ def generate_recipe(original_ingredients, safe_ingredients, replacements, condit
 
 def _reports_dir():
     """Return a writable reports directory (handles Vercel /tmp)."""
-    base_dir = os.environ.get('VERCEL') and '/tmp/reports' or 'reports'
+    # Check if we're on Vercel (serverless environment)
+    # Vercel sets VERCEL=1 or we can check if /tmp exists and is writable
+    is_vercel = os.environ.get('VERCEL') == '1' or os.environ.get('VERCEL_ENV') is not None
+    if is_vercel:
+        base_dir = '/tmp/reports'
+    else:
+        base_dir = 'reports'
     os.makedirs(base_dir, exist_ok=True)
     return base_dir
 
@@ -331,24 +461,32 @@ def generate_pdf_report(patient_id):
     # Get patient info - try users collection first, then patients collection
     patient = None
     
-    # First try to find user in users collection
-    user = user_manager.get_user_by_id(patient_id)
-    if user:
-        patient = {
-            "patient_id": user.user_id,
-            "name": user.username,
-            "condition": user.medical_condition or "Not specified",
-            "email": user.email
-        }
-    else:
-        # Fallback to patients collection for backward compatibility
-        patient = patients.find_one({"patient_id": patient_id})
+    try:
+        # First try to find user in users collection
+        user = get_user_manager().get_user_by_id(patient_id)
+        if user:
+            patient = {
+                "patient_id": user.user_id,
+                "name": user.username,
+                "condition": user.medical_condition or "Not specified",
+                "email": user.email
+            }
+        else:
+            # Fallback to patients collection for backward compatibility
+            patient = get_patients().find_one({"patient_id": patient_id})
+    except Exception as e:
+        print(f"Error getting patient info: {e}")
+        return None
     
     if not patient:
         return None
     
     # Get all food entries for the patient
-    entries = list(food_entries.find({"patient_id": patient_id}).sort("timestamp", -1))
+    try:
+        entries = list(get_food_entries().find({"patient_id": patient_id}).sort("timestamp", -1))
+    except Exception as e:
+        print(f"Error getting food entries: {e}")
+        entries = []
     
     # Create PDF
     reports_dir = _reports_dir()
@@ -516,21 +654,26 @@ def check_ingredients_route():
 
     # Try to serve from cache first to avoid a slow LLM call
     ingredients_key = ",".join(sorted([i.strip().lower() for i in modified_ingredients if i and i.strip()]))
-    cached_doc = generated_recipes.find_one({"condition": condition, "ingredients_key": ingredients_key}, {"recipe": 1, "_id": 0})
-    if cached_doc and cached_doc.get("recipe"):
-        recipe = cached_doc["recipe"]
-    else:
+    try:
+        cached_doc = get_generated_recipes().find_one({"condition": condition, "ingredients_key": ingredients_key}, {"recipe": 1, "_id": 0})
+        if cached_doc and cached_doc.get("recipe"):
+            recipe = cached_doc["recipe"]
+        else:
+            # Generate modified recipe via Gemini
+            recipe = generate_recipe(ingredients, safe, replacements, condition)
+            try:
+                get_generated_recipes().update_one(
+                    {"condition": condition, "ingredients_key": ingredients_key},
+                    {"$set": {"recipe": recipe, "updated_at": datetime.now()}},
+                    upsert=True
+                )
+            except Exception:
+                # Caching is best-effort; ignore failures
+                pass
+    except Exception as e:
+        print(f"Error checking cache: {e}")
         # Generate modified recipe via Gemini
         recipe = generate_recipe(ingredients, safe, replacements, condition)
-        try:
-            generated_recipes.update_one(
-                {"condition": condition, "ingredients_key": ingredients_key},
-                {"$set": {"recipe": recipe, "updated_at": datetime.now()}},
-                upsert=True
-            )
-        except Exception:
-            # Caching is best-effort; ignore failures
-            pass
     
     # Store in database
     patient_id = current_user.user_id if current_user.is_authenticated else "1"
@@ -544,7 +687,10 @@ def check_ingredients_route():
         "timestamp": datetime.now()
     }
     
-    food_entries.insert_one(food_entry)
+    try:
+        get_food_entries().insert_one(food_entry)
+    except Exception as e:
+        print(f"Error storing food entry: {e}")
     
     # Format recipe for better display
     formatted_recipe = format_recipe_html(recipe)
@@ -584,8 +730,12 @@ def view_report(patient_id):
 @app.route('/api/ingredients')
 def get_ingredients():
     """API endpoint to get all available ingredients"""
-    ingredients = list(ingredient_rules.find({}, {"ingredient": 1, "category": 1, "_id": 0}))
-    return jsonify(ingredients)
+    try:
+        ingredients = list(get_ingredient_rules().find({}, {"ingredient": 1, "category": 1, "_id": 0}))
+        return jsonify(ingredients)
+    except Exception as e:
+        print(f"Error getting ingredients: {e}")
+        return jsonify([])
 
 @app.route('/api/recipes/ingredients')
 def get_recipe_ingredients():
@@ -593,14 +743,18 @@ def get_recipe_ingredients():
     name = request.args.get('name', '')
     if not name:
         return jsonify({"error": "Missing recipe name"}), 400
-    # Try exact case-insensitive match first
-    recipe_doc = recipes.find_one({"name": {"$regex": f"^{name.strip()}$", "$options": "i"}})
-    if not recipe_doc:
-        # Fallback to partial case-insensitive contains match
-        recipe_doc = recipes.find_one({"name": {"$regex": name.strip(), "$options": "i"}})
-    if not recipe_doc:
+    try:
+        # Try exact case-insensitive match first
+        recipe_doc = get_recipes().find_one({"name": {"$regex": f"^{name.strip()}$", "$options": "i"}})
+        if not recipe_doc:
+            # Fallback to partial case-insensitive contains match
+            recipe_doc = get_recipes().find_one({"name": {"$regex": name.strip(), "$options": "i"}})
+        if not recipe_doc:
+            return jsonify({"ingredients": []})
+        return jsonify({"ingredients": recipe_doc.get("ingredients", [])})
+    except Exception as e:
+        print(f"Error getting recipe ingredients: {e}")
         return jsonify({"ingredients": []})
-    return jsonify({"ingredients": recipe_doc.get("ingredients", [])})
 
 @app.route('/api/ai/extract-ingredients', methods=['POST'])
 def ai_extract_ingredients():
@@ -627,11 +781,14 @@ def ai_extract_ingredients():
             return jsonify({"ingredients": ai_items_normalized}), 200
 
         # 2) Fallback to recipes DB lookup by name (exact, then partial)
-        recipe_doc = recipes.find_one({"name": {"$regex": f"^{text}$", "$options": "i"}})
-        if not recipe_doc:
-            recipe_doc = recipes.find_one({"name": {"$regex": text, "$options": "i"}})
-        if recipe_doc:
-            return jsonify({"ingredients": recipe_doc.get("ingredients", [])}), 200
+        try:
+            recipe_doc = get_recipes().find_one({"name": {"$regex": f"^{text}$", "$options": "i"}})
+            if not recipe_doc:
+                recipe_doc = get_recipes().find_one({"name": {"$regex": text, "$options": "i"}})
+            if recipe_doc:
+                return jsonify({"ingredients": recipe_doc.get("ingredients", [])}), 200
+        except Exception as e:
+            print(f"Error looking up recipe: {e}")
 
         # 3) External recipe API fallback (TheMealDB)
         try:
@@ -676,13 +833,17 @@ def ai_extract_ingredients():
 @app.route('/api/conditions')
 def get_conditions():
     """API endpoint to get all available conditions"""
-    pipeline = [
-        {"$unwind": "$harmful_for"},
-        {"$group": {"_id": "$harmful_for"}},
-        {"$sort": {"_id": 1}}
-    ]
-    conditions = list(ingredient_rules.aggregate(pipeline))
-    return jsonify([condition["_id"] for condition in conditions])
+    try:
+        pipeline = [
+            {"$unwind": "$harmful_for"},
+            {"$group": {"_id": "$harmful_for"}},
+            {"$sort": {"_id": 1}}
+        ]
+        conditions = list(get_ingredient_rules().aggregate(pipeline))
+        return jsonify([condition["_id"] for condition in conditions])
+    except Exception as e:
+        print(f"Error getting conditions: {e}")
+        return jsonify([])
 
 # Authentication Routes
 @app.route('/register', methods=['GET', 'POST'])
@@ -693,7 +854,7 @@ def register():
     
     form = RegistrationForm()
     if form.validate_on_submit():
-        user, error = user_manager.create_user(
+        user, error = get_user_manager().create_user(
             username=form.username.data,
             email=form.email.data,
             password=form.password.data,
@@ -718,13 +879,13 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         # Try to find user by username or email
-        user = user_manager.get_user_by_username(form.username.data)
+        user = get_user_manager().get_user_by_username(form.username.data)
         if not user:
-            user = user_manager.get_user_by_email(form.username.data)
+            user = get_user_manager().get_user_by_email(form.username.data)
         
         if user and user.check_password(form.password.data):
             login_user(user, remember=form.remember_me.data)
-            user_manager.update_last_login(user.user_id)
+            get_user_manager().update_last_login(user.user_id)
             
             next_page = request.args.get('next')
             if next_page:
@@ -749,16 +910,24 @@ def logout():
 @login_required
 def profile():
     """User profile page"""
-    # Get user statistics
-    user_entries = list(food_entries.find({"patient_id": current_user.user_id}))
-    total_entries = len(user_entries)
-    
-    total_harmful = sum(len(entry.get('harmful', [])) for entry in user_entries)
-    total_safe = sum(len(entry.get('safe', [])) for entry in user_entries)
-    
-    # Get recent entries
-    recent_entries = list(food_entries.find({"patient_id": current_user.user_id})
-                         .sort("timestamp", -1).limit(10))
+    try:
+        # Get user statistics
+        user_entries = list(get_food_entries().find({"patient_id": current_user.user_id}))
+        total_entries = len(user_entries)
+        
+        total_harmful = sum(len(entry.get('harmful', [])) for entry in user_entries)
+        total_safe = sum(len(entry.get('safe', [])) for entry in user_entries)
+        
+        # Get recent entries
+        recent_entries = list(get_food_entries().find({"patient_id": current_user.user_id})
+                             .sort("timestamp", -1).limit(10))
+    except Exception as e:
+        print(f"Error getting user profile data: {e}")
+        user_entries = []
+        total_entries = 0
+        total_harmful = 0
+        total_safe = 0
+        recent_entries = []
     
     # Create forms
     profile_form = ProfileUpdateForm()
@@ -782,22 +951,27 @@ def update_profile():
     """Update user profile"""
     form = ProfileUpdateForm()
     if form.validate_on_submit():
-        # Update user data
-        user_manager.update_medical_condition(current_user.user_id, form.medical_condition.data)
-        
-        # Update email if changed
-        if form.email.data != current_user.email:
-            # Check if email is already taken
-            existing_user = user_manager.get_user_by_email(form.email.data)
-            if existing_user and existing_user.user_id != current_user.user_id:
-                flash('Email address is already in use.', 'error')
-                return redirect(url_for('profile'))
+        try:
+            # Update user data
+            get_user_manager().update_medical_condition(current_user.user_id, form.medical_condition.data)
             
-            # Update email
-            user_manager.users.update_one(
-                {'user_id': current_user.user_id},
-                {'$set': {'email': form.email.data}}
-            )
+            # Update email if changed
+            if form.email.data != current_user.email:
+                # Check if email is already taken
+                existing_user = get_user_manager().get_user_by_email(form.email.data)
+                if existing_user and existing_user.user_id != current_user.user_id:
+                    flash('Email address is already in use.', 'error')
+                    return redirect(url_for('profile'))
+                
+                # Update email
+                get_user_manager().users.update_one(
+                    {'user_id': current_user.user_id},
+                    {'$set': {'email': form.email.data}}
+                )
+        except Exception as e:
+            print(f"Error updating profile: {e}")
+            flash('Error updating profile. Please try again.', 'error')
+            return redirect(url_for('profile'))
         
         flash('Profile updated successfully!', 'success')
         return redirect(url_for('profile'))
@@ -811,25 +985,30 @@ def change_password():
     """Change user password"""
     form = ChangePasswordForm()
     if form.validate_on_submit():
-        if current_user.check_password(form.current_password.data):
-            # Update password
-            current_user.set_password(form.new_password.data)
-            user_manager.users.update_one(
-                {'user_id': current_user.user_id},
-                {'$set': {'password_hash': current_user.password_hash}}
-            )
-            flash('Password changed successfully!', 'success')
-        else:
-            flash('Current password is incorrect.', 'error')
+        try:
+            if current_user.check_password(form.current_password.data):
+                # Update password
+                current_user.set_password(form.new_password.data)
+                get_user_manager().users.update_one(
+                    {'user_id': current_user.user_id},
+                    {'$set': {'password_hash': current_user.password_hash}}
+                )
+                flash('Password changed successfully!', 'success')
+            else:
+                flash('Current password is incorrect.', 'error')
+        except Exception as e:
+            print(f"Error changing password: {e}")
+            flash('Error changing password. Please try again.', 'error')
     
     return redirect(url_for('profile'))
 
 if __name__ == '__main__':
-    # Initialize database on startup
+    # Initialize database on startup (only for local development)
+    # On Vercel, initialization happens lazily on first request
     initialize_database()
     ensure_core_ingredients()
     
     # Create reports directory
     os.makedirs("reports", exist_ok=True)
     
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run()

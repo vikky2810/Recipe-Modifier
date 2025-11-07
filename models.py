@@ -58,7 +58,17 @@ class UserManager:
     
     def __init__(self, db):
         self.db = db
-        self.users = db['users']
+        if db is not None:
+            self.users = db['users']
+        else:
+            # Create dummy collection for when db is None
+            class DummyCollection:
+                def find_one(self, *args, **kwargs): return None
+                def find(self, *args, **kwargs): return []
+                def insert_one(self, *args, **kwargs): return type('obj', (object,), {'inserted_id': None})()
+                def update_one(self, *args, **kwargs): return type('obj', (object,), {'modified_count': 0})()
+                def delete_one(self, *args, **kwargs): return type('obj', (object,), {'deleted_count': 0})()
+            self.users = DummyCollection()
     
     def create_user(self, username, email, password, medical_condition=None):
         """Create a new user"""
