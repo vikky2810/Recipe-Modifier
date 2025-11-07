@@ -39,12 +39,55 @@ class GeminiService:
         
         try:
             # Create the prompt for Gemini
-            prompt = self._create_recipe_prompt(original_ingredients, modified_ingredients, condition, harmful_ingredients)
+            prompt = f"""
+            You are a professional nutritionist and chef specializing in creating healthy recipes for people with medical conditions.
+
+            Patient Information:
+            - Medical Condition: {condition.replace('_', ' ').title()}
+            - Original Ingredients: {', '.join(original_ingredients)}
+            - Safe Ingredients: {', '.join(modified_ingredients)}
+            - Harmful Ingredients: {', '.join(harmful_ingredients)}
+
+            Please create a detailed, step-by-step recipe using the safe ingredients. The recipe should:
+
+            1. Be easy to follow for home cooking
+            2. Include specific cooking times and temperatures
+            3. Provide clear instructions for each step
+            4. Include helpful tips for the specific medical condition
+            5. Be written in a friendly, encouraging tone
+            6. Include serving suggestions and nutritional notes
+
+            Format the recipe with clear sections using markdown:
+
+            **Health Benefits**
+            Brief introduction explaining why this recipe is good for {condition.replace('_', ' ').title()}
+
+            **Ingredients**
+            - List each ingredient with quantities
+
+            **Instructions**
+            1. Step-by-step cooking instructions
+            2. Include cooking times and temperatures
+            3. Clear, easy-to-follow format
+
+            **Cooking Tips**
+            - Helpful tips for the specific medical condition
+            - Cooking suggestions and variations
+
+            **Serving Suggestions**
+            - How to serve and enjoy the dish
+            - Nutritional notes relevant to the condition
+
+            Keep the response concise but informative (around 200-300 words). Use proper markdown formatting with headers, lists, and clear structure.
+            """
             
             # Generate response
-            response = self.client.generate_content(prompt)
+            response = self.client.models.generate_content(
+                model="gemini-2.5-flash", contents=prompt
+            )
             
             if response and hasattr(response, 'text') and response.text:
+                print("response is :", response.text.strip())
                 return response.text.strip()
             else:
                 return self._fallback_recipe_generation(modified_ingredients)
@@ -61,45 +104,45 @@ class GeminiService:
             harmful_text = f"\nHarmful ingredients replaced: {', '.join(harmful_ingredients)}"
         
         prompt = f"""
-You are a professional nutritionist and chef specializing in creating healthy recipes for people with medical conditions.
+            You are a professional nutritionist and chef specializing in creating healthy recipes for people with medical conditions.
 
-Patient Information:
-- Medical Condition: {condition.replace('_', ' ').title()}
-- Original Ingredients: {', '.join(original_ingredients)}
-- Safe Ingredients: {', '.join(modified_ingredients)}{harmful_text}
+            Patient Information:
+            - Medical Condition: {condition.replace('_', ' ').title()}
+            - Original Ingredients: {', '.join(original_ingredients)}
+            - Safe Ingredients: {', '.join(modified_ingredients)}{harmful_text}
 
-Please create a detailed, step-by-step recipe using the safe ingredients. The recipe should:
+            Please create a detailed, step-by-step recipe using the safe ingredients. The recipe should:
 
-1. Be easy to follow for home cooking
-2. Include specific cooking times and temperatures
-3. Provide clear instructions for each step
-4. Include helpful tips for the specific medical condition
-5. Be written in a friendly, encouraging tone
-6. Include serving suggestions and nutritional notes
+            1. Be easy to follow for home cooking
+            2. Include specific cooking times and temperatures
+            3. Provide clear instructions for each step
+            4. Include helpful tips for the specific medical condition
+            5. Be written in a friendly, encouraging tone
+            6. Include serving suggestions and nutritional notes
 
-Format the recipe with clear sections using markdown:
+            Format the recipe with clear sections using markdown:
 
-**Health Benefits**
-Brief introduction explaining why this recipe is good for {condition.replace('_', ' ').title()}
+            **Health Benefits**
+            Brief introduction explaining why this recipe is good for {condition.replace('_', ' ').title()}
 
-**Ingredients**
-- List each ingredient with quantities
+            **Ingredients**
+            - List each ingredient with quantities
 
-**Instructions**
-1. Step-by-step cooking instructions
-2. Include cooking times and temperatures
-3. Clear, easy-to-follow format
+            **Instructions**
+            1. Step-by-step cooking instructions
+            2. Include cooking times and temperatures
+            3. Clear, easy-to-follow format
 
-**Cooking Tips**
-- Helpful tips for the specific medical condition
-- Cooking suggestions and variations
+            **Cooking Tips**
+            - Helpful tips for the specific medical condition
+            - Cooking suggestions and variations
 
-**Serving Suggestions**
-- How to serve and enjoy the dish
-- Nutritional notes relevant to the condition
+            **Serving Suggestions**
+            - How to serve and enjoy the dish
+            - Nutritional notes relevant to the condition
 
-Keep the response concise but informative (around 200-300 words). Use proper markdown formatting with headers, lists, and clear structure.
-"""
+            Keep the response concise but informative (around 200-300 words). Use proper markdown formatting with headers, lists, and clear structure.
+            """
         return prompt
     
     def _fallback_recipe_generation(self, modified_ingredients):
