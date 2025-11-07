@@ -583,7 +583,9 @@ def ai_extract_ingredients():
     """
     try:
         data = request.get_json(force=True, silent=True) or {}
-        text = (data.get('text') or '').strip()
+        # print(f"Data : {data}")
+        text = (data.get('text'))
+        # print(f"Text : {text}")
         if not text:
             return jsonify({"ingredients": []}), 200
         items = gemini_service.extract_ingredients(text)
