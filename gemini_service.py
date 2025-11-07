@@ -1,4 +1,4 @@
-import google.generativeai as genai
+import google as genai
 from config import Config
 import logging
 import os
@@ -14,20 +14,11 @@ class GeminiService:
     def __init__(self):
         """Initialize Gemini API service"""
         try:
-            GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") or Config.GEMINI_API_KEY
-            if GEMINI_API_KEY and GEMINI_API_KEY != 'your-gemini-api-key-here':
-                genai.configure(api_key=GEMINI_API_KEY)
-                self.model = genai.GenerativeModel('gemini-pro')
-                self.client_available = True
-                logger.info("Gemini API service initialized successfully")
-            else:
-                logger.warning("GEMINI_API_KEY not set, using fallback recipe generation")
-                self.model = None
-                self.client_available = False
+            GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+            self.client = genai.Client(api_key=GEMINI_API_KEY)
+            logger.info("Gemini API service initialized successfully")
         except Exception as e:
             logger.error(f"Failed to initialize Gemini API: {e}")
-            self.model = None
-            self.client_available = False
     
     def generate_recipe_instructions(self, original_ingredients, modified_ingredients, condition, harmful_ingredients=None):
         """
@@ -42,7 +33,7 @@ class GeminiService:
         Returns:
             str: Generated recipe instructions
         """
-        if not self.client_available or not self.model:
+        if not self.client:
             return self._fallback_recipe_generation(modified_ingredients)
         
         try:
@@ -50,7 +41,7 @@ class GeminiService:
             prompt = self._create_recipe_prompt(original_ingredients, modified_ingredients, condition, harmful_ingredients)
             
             # Generate response
-            response = self.model.generate_content(prompt)
+            response = self.client.generate_content(prompt)
             
             if response and hasattr(response, 'text') and response.text:
                 return response.text.strip()
@@ -136,7 +127,7 @@ Serve warm and enjoy! This dish is perfect for a healthy meal that fits your die
     
     def generate_health_tips(self, condition, ingredients):
         """Generate personalized health tips based on condition and ingredients"""
-        if not self.client_available or not self.model:
+        if not self.client:
             return "Always consult with your healthcare provider for personalized dietary advice."
         
         try:
@@ -147,7 +138,7 @@ who is cooking with these ingredients: {', '.join(ingredients)}.
 Keep tips practical, encouraging, and specific to the condition. Format as a simple list.
 """
             
-            response = self.model.generate_content(prompt)
+            response = self.client.generate_content(prompt)
             if response and hasattr(response, 'text') and response.text:
                 return response.text.strip()
             else:
@@ -163,7 +154,7 @@ Keep tips practical, encouraging, and specific to the condition. Format as a sim
         Returns a Python list of lowercased ingredient names without quantities. Falls back to simple parsing.
         """
         # Fallback: split by commas if no client available
-        if not self.client_available or not self.model:
+        if not self.client:
             raw = [p.strip().lower() for p in text_or_name.split(',') if p.strip()]
             return raw
         
@@ -193,7 +184,7 @@ Keep tips practical, encouraging, and specific to the condition. Format as a sim
 
                 Output (just the list, no extra words):
                 """
-            response = self.model.generate_content(prompt)
+            response = self.client.generate_content(prompt)
             if not response or not hasattr(response, 'text') or not response.text:
                 return []
             # Parse and normalize model output
