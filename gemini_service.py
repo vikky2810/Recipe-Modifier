@@ -188,7 +188,7 @@ Keep tips practical, encouraging, and specific to the condition. Format as a sim
             response = self.client.models.generate_content(
                 model="gemini-2.5-flash", contents=prompt
             )
-            print("response is :", response)
+            # print("response is :", response)
             if not response or not hasattr(response, 'text') or not response.text:
                 return []
             # Parse and normalize model output
