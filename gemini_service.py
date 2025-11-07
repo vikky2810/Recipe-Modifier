@@ -1,4 +1,4 @@
-import google as genai
+from google import genai
 from config import Config
 import logging
 import os
@@ -19,6 +19,7 @@ class GeminiService:
             logger.info("Gemini API service initialized successfully")
         except Exception as e:
             logger.error(f"Failed to initialize Gemini API: {e}")
+            self.client = None
     
     def generate_recipe_instructions(self, original_ingredients, modified_ingredients, condition, harmful_ingredients=None):
         """
@@ -184,7 +185,10 @@ Keep tips practical, encouraging, and specific to the condition. Format as a sim
 
                 Output (just the list, no extra words):
                 """
-            response = self.client.generate_content(prompt)
+            response = self.client.models.generate_content(
+                model="gemini-2.5-flash", contents=prompt
+            )
+            print("response is :", response)
             if not response or not hasattr(response, 'text') or not response.text:
                 return []
             # Parse and normalize model output
