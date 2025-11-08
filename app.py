@@ -348,10 +348,20 @@ def format_recipe_html(recipe_text):
             if current_content:
                 html_parts.append(render_current_section(current_section, current_content))
             header_text = line.replace('**', '').strip()
+            
             html_parts.append(f'<h6 class="text-success fw-bold mb-2">{header_text}</h6>')
+            
             current_section = ''
             current_content = []
-            
+        elif line.startswith('*') and line.endswith('*'):
+            # Italic text
+            if current_section != 'italic':
+                if current_content:
+                    html_parts.append(render_current_section(current_section, current_content))
+                current_section = 'italic'
+                current_content = []
+            italic_text = line.replace('*', '').strip()
+            html_parts.append(f'<strong><em class="text-success fw-light mb-2">{italic_text}</em></strong>')
         elif line.startswith('- ') or line.startswith('* '):
             # List item
             if current_section != 'list':

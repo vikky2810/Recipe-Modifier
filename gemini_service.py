@@ -87,7 +87,7 @@ class GeminiService:
             )
             
             if response and hasattr(response, 'text') and response.text:
-                print("response is :", response.text.strip())
+                # print("response is :", response.text.strip())
                 return response.text.strip()
             else:
                 return self._fallback_recipe_generation(modified_ingredients)
