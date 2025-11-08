@@ -56,14 +56,13 @@ _client = None
 _db = None
 _ingredient_rules = None
 _food_entries = None
-_patients = None
 _recipes = None
 _generated_recipes = None
 _user_manager = None
 
 def get_db():
     """Lazy initialization of MongoDB connection"""
-    global _client, _db, _ingredient_rules, _food_entries, _patients, _recipes, _generated_recipes, _user_manager
+    global _client, _db, _ingredient_rules, _food_entries, _recipes, _generated_recipes, _user_manager
     
     if _db is None:
         try:
@@ -79,7 +78,6 @@ def get_db():
             # Initialize collections
             _ingredient_rules = _db['ingredient_rules']
             _food_entries = _db['food_entries']
-            _patients = _db['patients']
             _recipes = _db['recipes']
             _generated_recipes = _db['generated_recipes']
             
@@ -115,7 +113,6 @@ def get_db():
             
             _ingredient_rules = DummyCollection()
             _food_entries = DummyCollection()
-            _patients = DummyCollection()
             _recipes = DummyCollection()
             _generated_recipes = DummyCollection()
             _user_manager = UserManager(None)
@@ -131,9 +128,6 @@ def get_food_entries():
     get_db()
     return _food_entries
 
-def get_patients():
-    get_db()
-    return _patients
 
 def get_recipes():
     get_db()
@@ -159,7 +153,7 @@ def initialize_database():
     """Initialize the database with sample data if collections are empty"""
     try:
         ingredient_rules_col = get_ingredient_rules()
-        patients_col = get_patients()
+        
         recipes_col = get_recipes()
     except Exception as e:
         print(f"Error initializing database: {e}")
@@ -236,18 +230,7 @@ def initialize_database():
         print(f"Error adding sample ingredient rules: {e}")
     
     # Check if patients collection is empty
-    try:
-        if patients_col.count_documents({}) == 0:
-            sample_patient = {
-                "patient_id": "1",
-                "name": "John Doe",
-                "condition": "diabetes",
-                "email": "john.doe@example.com"
-            }
-            patients_col.insert_one(sample_patient)
-            print("Sample patient added to database")
-    except Exception as e:
-        print(f"Error adding sample patient: {e}")
+    
 
     # Seed sample recipes if empty
     try:
@@ -455,169 +438,57 @@ def _reports_dir():
     os.makedirs(base_dir, exist_ok=True)
     return base_dir
 
-def generate_pdf_report(patient_id):
-    """Generate PDF report for a patient with improved formatting"""
-    
-    # Get patient info - try users collection first, then patients collection
-    patient = None
-    
+def generate_pdf_report(user_id):
+    print(f"[DEBUG] Generating PDF report... {user_id}")
+    # make pdf report for user
     try:
-        # First try to find user in users collection
-        user = get_user_manager().get_user_by_id(patient_id)
-        if user:
-            patient = {
-                "patient_id": user.user_id,
-                "name": user.username,
-                "condition": user.medical_condition or "Not specified",
-                "email": user.email
-            }
-        else:
-            # Fallback to patients collection for backward compatibility
-            patient = get_patients().find_one({"patient_id": patient_id})
-    except Exception as e:
-        print(f"Error getting patient info: {e}")
-        return None
-    
-    if not patient:
-        return None
-    
-    # Get all food entries for the patient
-    try:
-        entries = list(get_food_entries().find({"patient_id": patient_id}).sort("timestamp", -1))
-    except Exception as e:
-        print(f"Error getting food entries: {e}")
-        entries = []
-    
-    # Create PDF
-    reports_dir = _reports_dir()
-    filename = os.path.join(reports_dir, f"patient_{patient_id}_report.pdf")
-    
-    doc = SimpleDocTemplate(filename, pagesize=letter, 
-                          leftMargin=0.75*inch, rightMargin=0.75*inch,
-                          topMargin=0.75*inch, bottomMargin=0.75*inch)
-    styles = getSampleStyleSheet()
-    story = []
-    
-    # Custom styles for better formatting
-    title_style = ParagraphStyle(
-        'CustomTitle',
-        parent=styles['Heading1'],
-        fontSize=18,
-        spaceAfter=20,
-        alignment=1,  # Center alignment
-        textColor=colors.darkblue
-    )
-    
-    subtitle_style = ParagraphStyle(
-        'CustomSubtitle',
-        parent=styles['Heading2'],
-        fontSize=14,
-        spaceAfter=12,
-        spaceBefore=20,
-        textColor=colors.darkgreen
-    )
-    
-    info_style = ParagraphStyle(
-        'InfoStyle',
-        parent=styles['Normal'],
-        fontSize=11,
-        spaceAfter=6,
-        leftIndent=20
-    )
-    
-    recipe_style = ParagraphStyle(
-        'RecipeStyle',
-        parent=styles['Normal'],
-        fontSize=10,
-        spaceAfter=8,
-        leftIndent=15,
-        rightIndent=15,
-        alignment=0,  # Left alignment
-        leading=14  # Line spacing
-    )
-    
-    # Title
-    story.append(Paragraph("Health-Aware Recipe Modifier Report", title_style))
-    story.append(Spacer(1, 15))
-    
-    # Patient Information Section
-    story.append(Paragraph("Patient Information", subtitle_style))
-    story.append(Paragraph(f"<b>Name:</b> {patient['name']}", info_style))
-    story.append(Paragraph(f"<b>Medical Condition:</b> {patient['condition'].replace('_', ' ').title()}", info_style))
-    story.append(Paragraph(f"<b>Report Generated:</b> {datetime.now().strftime('%B %d, %Y at %I:%M %p')}", info_style))
-    story.append(Spacer(1, 15))
-    
-    # Summary Statistics
-    if entries:
-        story.append(Paragraph("Summary Statistics", subtitle_style))
-        total_entries = len(entries)
-        total_harmful = sum(len(entry.get('harmful', [])) for entry in entries)
-        story.append(Paragraph(f"<b>Total Food Entries:</b> {total_entries}", info_style))
-        story.append(Paragraph(f"<b>Total Harmful Ingredients Detected:</b> {total_harmful}", info_style))
-        story.append(Paragraph(f"<b>Average Harmful Ingredients per Entry:</b> {total_harmful/total_entries:.1f}", info_style))
-        story.append(Spacer(1, 15))
-    
-    # Food Entries Section
-    if entries:
-        story.append(Paragraph("Detailed Food Entries History", subtitle_style))
-        story.append(Spacer(1, 10))
-        
-        for i, entry in enumerate(entries, 1):
-            # Entry header
-            entry_date = entry['timestamp'].strftime('%B %d, %Y at %I:%M %p')
-            story.append(Paragraph(f"<b>Entry #{i} - {entry_date}</b>", info_style))
+        # print(f"[DEBUG] Fetching food entries for user {user_id}...")
+        entries = list(get_food_entries().find({"patient_id": user_id}).sort("timestamp", -1))
+        print(f"[DEBUG] Entries fetched: {len(entries)}")
+        if not entries:
+            return None
+        filename = os.path.join(_reports_dir(), f"patient_{user_id}_report.pdf")
+        doc = SimpleDocTemplate(filename, pagesize=letter, rightMargin=72, leftMargin=72, topMargin=72, bottomMargin=18)
+        styles = getSampleStyleSheet()
+        report = []
+        for entry in entries:
+            timestamp = entry.get("timestamp")
+            formatted_time = timestamp.strftime('%B %d, %Y at %I:%M %p') if timestamp else "N/A"
+            report.append(Paragraph("Health-Aware Recipe Modifier Report", styles['Title']))
+            # horizontal line
+            report.append(Paragraph("-" * 136, styles['Normal']))
+            report.append(Spacer(1, 6))
+            report.append(Paragraph(f"Date: {formatted_time}", styles['Heading4']))
+            report.append(Spacer(1, 6))
             
-            # Original ingredients
-            original_ingredients = ', '.join(entry['input_ingredients'])
-            story.append(Paragraph(f"<b>Original Ingredients:</b> {original_ingredients}", recipe_style))
+            report.append(Paragraph("Input Ingredients:", styles['Heading5']))
+            input_ingredients = ', '.join(entry.get("input_ingredients", []))
+            report.append(Paragraph(input_ingredients, styles['Normal']))
+                
+            harmful = ', '.join(entry.get("harmful", [])) or "None"
+            safe = ', '.join(entry.get("safe", [])) or "None"
+            report.append(Paragraph(f"Harmful Ingredients:", styles['Heading5']))
+            report.append(Paragraph(f"{harmful}", styles['Normal']))
             
-            # Harmful ingredients
-            harmful_list = entry.get('harmful', [])
-            if harmful_list:
-                harmful_text = ', '.join(harmful_list)
-                story.append(Paragraph(f"<b>⚠️ Harmful Ingredients:</b> {harmful_text}", recipe_style))
-            else:
-                story.append(Paragraph("<b>✅ No harmful ingredients detected</b>", recipe_style))
+            report.append(Paragraph(f"Safe Ingredients: ", styles['Heading5']))
+            report.append(Paragraph(f"{safe}", styles['Normal']))
+            report.append(Spacer(1, 12))
             
-            # Safe alternatives
-            safe_ingredients = ', '.join(entry['safe'])
-            story.append(Paragraph(f"<b>✅ Safe Ingredients:</b> {safe_ingredients}", recipe_style))
+            report.append(Paragraph("Modified Recipe Instructions:", styles['Heading5']))
+            recipe_text = entry.get("recipe", "No recipe available.")
+            for line in recipe_text.split('\n'):
+                report.append(Paragraph(line, styles['Normal']))
+                report.append(Spacer(1, 6))
             
-            # Recipe
-            recipe_text = entry['recipe']
-            # Truncate long recipes to prevent overflow
-            if len(recipe_text) > 300:
-                recipe_text = recipe_text[:297] + "..."
-            story.append(Paragraph(f"<b>📝 Modified Recipe:</b> {recipe_text}", recipe_style))
-            
-            # Add separator between entries
-            if i < len(entries):
-                story.append(Spacer(1, 10))
-                story.append(Paragraph("<hr/>", styles['Normal']))
-                story.append(Spacer(1, 10))
-    else:
-        story.append(Paragraph("No food entries found for this patient.", info_style))
-    
-    # Footer
-    story.append(Spacer(1, 20))
-    footer_style = ParagraphStyle(
-        'FooterStyle',
-        parent=styles['Normal'],
-        fontSize=9,
-        alignment=1,  # Center alignment
-        textColor=colors.grey
-    )
-    story.append(Paragraph("Generated by Health-Aware Recipe Modifier System", footer_style))
-    story.append(Paragraph("For medical advice, always consult with your healthcare provider", footer_style))
-    
-    # Build PDF
-    try:
-        doc.build(story)
+            report.append(Spacer(1, 24))
+        doc.build(report)
+        print(f"PDF report generated for user {user_id}: {filename}")
         return filename
     except Exception as e:
-        print(f"Error generating PDF: {e}")
+        print(f"Error generating PDF report: {e}")
         return None
-
+    
+    
 @app.route('/')
 def index():
     """Main page with ingredient submission form"""
@@ -676,7 +547,7 @@ def check_ingredients_route():
         recipe = generate_recipe(ingredients, safe, replacements, condition)
     
     # Store in database
-    patient_id = current_user.user_id if current_user.is_authenticated else "1"
+    patient_id = current_user.user_id
     food_entry = {
         "patient_id": patient_id,
         "condition": condition,
@@ -710,6 +581,7 @@ def generate_report(patient_id):
     if str(current_user.user_id) != str(patient_id):
         abort(403)
     filename = generate_pdf_report(patient_id)
+    
     if filename and os.path.exists(filename):
         return send_file(filename, as_attachment=True, download_name=f"patient_{patient_id}_report.pdf")
     else:
