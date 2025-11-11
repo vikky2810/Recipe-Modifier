@@ -557,21 +557,22 @@ def check_ingredients_route():
         recipe = generate_recipe(ingredients, safe, replacements, condition)
     
     # Store in database
-    patient_id = current_user.user_id
-    food_entry = {
-        "patient_id": patient_id,
-        "condition": condition,
-        "input_ingredients": ingredients,
-        "harmful": harmful,
-        "safe": modified_ingredients,
-        "recipe": recipe,
-        "timestamp": datetime.now()
-    }
-    
-    try:
-        get_food_entries().insert_one(food_entry)
-    except Exception as e:
-        print(f"Error storing food entry: {e}")
+    if current_user.is_authenticated:
+        patient_id = current_user.user_id
+        food_entry = {
+            "patient_id": patient_id,
+            "condition": condition,
+            "input_ingredients": ingredients,
+            "harmful": harmful,
+            "safe": modified_ingredients,
+            "recipe": recipe,
+            "timestamp": datetime.now()
+        }
+        
+        try:
+            get_food_entries().insert_one(food_entry)
+        except Exception as e:
+            print(f"Error storing food entry: {e}")
     
     # Format recipe for better display
     formatted_recipe = format_recipe_html(recipe)
