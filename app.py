@@ -294,39 +294,109 @@ def ensure_core_ingredients():
     except Exception as e:
         print(f"Error ensuring core ingredients: {e}")
 
+# def check_ingredients(ingredients, condition):
+#     """Check ingredients against patient condition and return harmful/safe lists.
+
+#     Optimized to perform a single batched MongoDB query instead of per-ingredient lookups.
+#     """
+#     harmful_ingredients = []
+#     safe_ingredients = []
+#     replacements = {}
+
+#     # Normalize and de-duplicate for query
+#     normalized = [ingredient.strip().lower() for ingredient in ingredients if ingredient and ingredient.strip()]
+#     unique_ingredients = list({i for i in normalized})
+
+#     if unique_ingredients:
+#         try:
+#             cursor = get_ingredient_rules().find({"ingredient": {"$in": unique_ingredients}}, {"ingredient": 1, "harmful_for": 1, "alternative": 1, "_id": 0})
+#             # Use .get() to prevent KeyError if document structure is unexpected
+#             rules_by_ingredient = {doc.get("ingredient"): doc for doc in cursor if doc.get("ingredient")}
+#         except Exception as e:
+#             print(f"Error querying ingredient rules: {e}")
+#             rules_by_ingredient = {}
+#     else:
+#         rules_by_ingredient = {}
+
+#     for ingredient in normalized:
+#         rule = rules_by_ingredient.get(ingredient)
+#         if rule and condition in rule.get("harmful_for", []):
+#             harmful_ingredients.append(ingredient)
+#             replacements[ingredient] = rule.get("alternative")
+#         else:
+#             safe_ingredients.append(ingredient)
+
+#     return harmful_ingredients, safe_ingredients, replacements
+
 def check_ingredients(ingredients, condition):
     """Check ingredients against patient condition and return harmful/safe lists.
 
     Optimized to perform a single batched MongoDB query instead of per-ingredient lookups.
+    Handles plural/singular safely.
     """
     harmful_ingredients = []
     safe_ingredients = []
     replacements = {}
 
-    # Normalize and de-duplicate for query
-    normalized = [ingredient.strip().lower() for ingredient in ingredients if ingredient and ingredient.strip()]
-    unique_ingredients = list({i for i in normalized})
+    # 🔥 Load all ingredient names from DB for safe plural check
+    try:
+        DB_INGREDIENTS = {
+            doc["ingredient"].lower()
+            for doc in get_ingredient_rules().find({}, {"ingredient": 1, "_id": 0})
+        }
+    except Exception as e:
+        print("Failed loading DB ingredient names:", e)
+        DB_INGREDIENTS = set()
 
+    # 🔥 Safe plural → singular normalizer
+    def safe_normalize(name: str) -> str:
+        name = name.strip().lower()
+        if name.endswith("s"):
+            singular = name[:-1]
+            if singular in DB_INGREDIENTS:
+                return singular
+        return name
+
+    # 🔥 Map original ingredients to normalized
+    original_to_normalized = {}
+    for ing in ingredients:
+        if ing and ing.strip():
+            normalized = safe_normalize(ing)
+            original_to_normalized[ing] = normalized
+
+    unique_ingredients = list({n for n in original_to_normalized.values()})
+
+    # 🔥 Query DB for all normalized ingredients at once
     if unique_ingredients:
         try:
-            cursor = get_ingredient_rules().find({"ingredient": {"$in": unique_ingredients}}, {"ingredient": 1, "harmful_for": 1, "alternative": 1, "_id": 0})
-            # Use .get() to prevent KeyError if document structure is unexpected
-            rules_by_ingredient = {doc.get("ingredient"): doc for doc in cursor if doc.get("ingredient")}
+            cursor = get_ingredient_rules().find(
+                {"ingredient": {"$in": unique_ingredients}},
+                {"ingredient": 1, "harmful_for": 1, "alternative": 1, "_id": 0}
+            )
+            rules_by_ingredient = {
+                doc.get("ingredient"): doc
+                for doc in cursor
+                if doc.get("ingredient")
+            }
         except Exception as e:
             print(f"Error querying ingredient rules: {e}")
             rules_by_ingredient = {}
     else:
         rules_by_ingredient = {}
 
-    for ingredient in normalized:
+    # 🔥 Determine harmful/safe using normalized ingredient but store original
+    for original, ingredient in original_to_normalized.items():
         rule = rules_by_ingredient.get(ingredient)
         if rule and condition in rule.get("harmful_for", []):
-            harmful_ingredients.append(ingredient)
-            replacements[ingredient] = rule.get("alternative")
+            harmful_ingredients.append(original)
+            replacements[original] = rule.get("alternative")
         else:
-            safe_ingredients.append(ingredient)
+            safe_ingredients.append(original)
 
     return harmful_ingredients, safe_ingredients, replacements
+
+
+
 
 def format_recipe_html(recipe_text):
     """Convert markdown recipe text to formatted HTML"""
