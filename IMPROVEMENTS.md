@@ -6,8 +6,8 @@ This document outlines potential improvements for the Health-Aware Recipe Modifi
 
 # Improvement List
 - [ ] Allow a patient to have multiple medical conditions at the same time.
-- [ ] Disable the report-download option when the patient isn’t logged in.
-- [ ] Fix the system date issue (it shows an old timestamp like AM instead of the current one).
+- [x] Disable the report-download option when the patient isn’t logged in.
+- [x] Fix the system date issue (it shows an old timestamp like AM instead of the current one).
 - [ ] Improve allergy handling. If a user has an egg allergy and selects an omelette, the system shouldn’t say the ingredient is safe.
 - [ ] Add a field for custom instructions. If the user is missing ingredients, the recipe should adapt and regenerate without them.
 - [ ] Strengthen username and email validation.
