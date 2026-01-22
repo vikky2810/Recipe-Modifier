@@ -500,6 +500,11 @@ def generate_pdf_report(user_id):
     
     
 @app.route('/')
+def landing_page():
+    """Landing page for the application"""
+    return render_template('landing_page.html')
+
+@app.route('/app')
 def index():
     """Main page with ingredient submission form"""
     return render_template('index.html')

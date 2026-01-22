@@ -3,60 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Recipe Analysis Results - Health-Aware Recipe Modifier</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="{{ url_for('static', filename='styles.css') }}" rel="stylesheet">
+    <meta name="description" content="Recipe Analysis Results - Your personalized healthy recipe is ready.">
+    <title>Results - HealthRecipeAI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container-fluid">
+    <div class="results-page">
         <!-- Header -->
-        <div class="row bg-primary text-white py-4">
-            <div class="col-3 text-start">
-                <button class="btn btn-outline-light btn-lg px-4" onclick="window.location.href='/'">
-                    <i class="fas fa-arrow-left me-2"></i> Back
-                </button>
+        <header class="results-header">
+            <div class="container">
+                <div class="header-left">
+                    <a href="{{ url_for('index') }}" class="back-btn">← Back</a>
+                    <div class="header-title">
+                        <h1>📊 Recipe Analysis Results</h1>
+                        <p>Your personalized healthy recipe is ready!</p>
+                    </div>
+                </div>
             </div>
-            <div class="col-12 text-center">
-                <h1><i class="fas fa-heartbeat me-3"></i>Health-Aware Recipe Modifier</h1>
-                <p class="lead">Your personalized recipe analysis results</p>
-            </div>
-        </div>
+        </header>
 
-        <!-- Results Content -->
-        <div class="row justify-content-center mt-5">
-            <div class="col-md-10 col-lg-8">
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="container">
                 
                 <!-- Summary Card -->
-                <div class="card shadow-lg mb-4">
-                    <div class="card-header bg-info text-white">
-                        <h3 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Analysis Summary</h3>
+                <div class="results-card">
+                    <div class="card-header info">
+                        <span>📋</span>
+                        <h3>Analysis Summary</h3>
                     </div>
                     <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <h5><i class="fas fa-user-md text-primary me-2"></i>Patient Condition</h5>
-                                <p class="badge bg-primary fs-6">{{ condition.replace('_', ' ').title() }}</p>
+                        <div class="summary-grid">
+                            <div class="summary-item">
+                                <h4>🏥 Health Condition</h4>
+                                <span class="badge">{{ condition.replace('_', ' ').title() }}</span>
                             </div>
-                            <div class="col-md-6">
-                                <h5><i class="fas fa-clock text-primary me-2"></i>Analysis Date</h5>
-                                <p class="text-muted">{{ moment }}</p>
+                            <div class="summary-item">
+                                <h4>🕐 Analysis Date</h4>
+                                <span class="value">{{ moment }}</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Original Ingredients -->
-                <div class="card shadow-lg mb-4">
-                    <div class="card-header bg-secondary text-white">
-                        <h4 class="mb-0"><i class="fas fa-list me-2"></i>Original Ingredients</h4>
+                <div class="results-card">
+                    <div class="card-header secondary">
+                        <span>📝</span>
+                        <h3>Original Ingredients</h3>
                     </div>
                     <div class="card-body">
-                        <div class="row">
+                        <div class="ingredients-grid">
                             {% for ingredient in original_ingredients %}
-                            <div class="col-md-3 col-sm-6 mb-2">
-                                <span class="badge bg-secondary fs-6">{{ ingredient.strip() }}</span>
-                            </div>
+                                <span class="ingredient-badge secondary">{{ ingredient.strip() }}</span>
                             {% endfor %}
                         </div>
                     </div>
@@ -64,124 +66,110 @@
 
                 <!-- Harmful Ingredients -->
                 {% if harmful %}
-                <div class="card shadow-lg mb-4 border-danger">
-                    <div class="card-header bg-danger text-white">
-                        <h4 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Harmful Ingredients Detected</h4>
+                <div class="results-card">
+                    <div class="card-header danger">
+                        <span>⚠️</span>
+                        <h3>Harmful Ingredients Detected</h3>
                     </div>
                     <div class="card-body">
-                        <div class="alert alert-danger">
-                            <i class="fas fa-info-circle me-2"></i>
-                            The following ingredients may be harmful for your condition and have been replaced:
+                        <div class="alert-box danger">
+                            <span>ℹ️</span>
+                            <span>The following ingredients may be harmful for your condition and have been replaced:</span>
                         </div>
-                        <div class="row">
+                        <div class="ingredients-grid">
                             {% for ingredient in harmful %}
-                            <div class="col-md-4 col-sm-6 mb-2">
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-times-circle text-danger me-2"></i>
-                                    <span class="badge bg-danger fs-6">{{ ingredient }}</span>
-                                </div>
-                            </div>
+                                <span class="ingredient-badge danger">❌ {{ ingredient }}</span>
                             {% endfor %}
                         </div>
                     </div>
                 </div>
                 {% else %}
-                <div class="card shadow-lg mb-4 border-success">
-                    <div class="card-header bg-success text-white">
-                        <h4 class="mb-0"><i class="fas fa-check-circle me-2"></i>Great News!</h4>
+                <div class="results-card">
+                    <div class="card-header success">
+                        <span>🎉</span>
+                        <h3>Great News!</h3>
                     </div>
                     <div class="card-body">
-                        <div class="alert alert-success">
-                            <i class="fas fa-thumbs-up me-2"></i>
-                            All your ingredients are safe for your condition! No replacements needed.
+                        <div class="alert-box success">
+                            <span>👍</span>
+                            <span>All your ingredients are safe for your condition! No replacements needed.</span>
                         </div>
                     </div>
                 </div>
                 {% endif %}
 
-                <!-- Safe Alternatives -->
-                <div class="card shadow-lg mb-4 border-success">
-                    <div class="card-header bg-success text-white">
-                        <h4 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Safe Ingredients for Your Recipe</h4>
+                <!-- Safe Ingredients -->
+                <div class="results-card">
+                    <div class="card-header success">
+                        <span>🛡️</span>
+                        <h3>Safe Ingredients for Your Recipe</h3>
                     </div>
                     <div class="card-body">
-                        <div class="alert alert-success">
-                            <i class="fas fa-heart me-2"></i>
-                            These ingredients are safe and healthy for your condition:
+                        <div class="alert-box success">
+                            <span>💚</span>
+                            <span>These ingredients are safe and healthy for your condition:</span>
                         </div>
-                        <div class="row">
+                        <div class="ingredients-grid">
                             {% for ingredient in safe %}
-                            <div class="col-md-3 col-sm-6 mb-2">
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-check-circle text-success me-2"></i>
-                                    <span class="badge bg-success fs-6">{{ ingredient }}</span>
-                                </div>
-                            </div>
+                                <span class="ingredient-badge success">✓ {{ ingredient }}</span>
                             {% endfor %}
                         </div>
                     </div>
                 </div>
 
                 <!-- Modified Recipe -->
-                <div class="card shadow-lg mb-4 border-primary">
-                    <div class="card-header bg-primary text-white">
-                        <h4 class="mb-0"><i class="fas fa-utensils me-2"></i>Your Modified Recipe</h4>
+                <div class="results-card">
+                    <div class="card-header primary">
+                        <span>🍳</span>
+                        <h3>Your Modified Recipe</h3>
                     </div>
                     <div class="card-body">
-                        <div class="alert alert-primary">
-                            <i class="fas fa-lightbulb me-2"></i>
-                            Here's your personalized recipe with safe ingredients:
+                        <div class="alert-box info">
+                            <span>💡</span>
+                            <span>Here's your personalized recipe with safe ingredients:</span>
                         </div>
-                        <div class="bg-light p-4 rounded">
-                            <h5 class="text-primary mb-3"><i class="fas fa-book-open me-2"></i>Recipe Instructions:</h5>
-                            <div class="recipe-content">
-                                {{ recipe | safe }}
-                            </div>
+                        <div class="recipe-content">
+                            <h5>📖 Recipe Instructions</h5>
+                            {{ recipe | safe }}
                         </div>
                     </div>
                 </div>
 
                 <!-- Action Buttons -->
-                 
-                <div class="row mb-4 ">
-                    <div class="col-md-4 mb-2">
-                        <a href="{{ url_for('index') }}" class="btn btn-outline-primary btn-lg w-100">
-                            <i class="fas fa-arrow-left me-2"></i>Check Another Recipe
-                        </a>
-                    </div>
-                    <div class="col-md-4 mb-2">
-                        <a href="{{ url_for('view_report', patient_id=current_user.user_id if current_user.is_authenticated else '1') }}" class="btn btn-info btn-lg w-100" target="_blank">
-                            <i class="fas fa-eye me-2"></i>View Health Report
-                        </a>
-                    </div>
-                    <div class="col-md-4 mb-2">
-                        <a href="{{ url_for('generate_report', patient_id=current_user.user_id if current_user.is_authenticated else '1') }}" class="btn btn-warning btn-lg w-100">
-                            <i class="fas fa-download me-2"></i>Download Report
-                        </a>
-                    </div>
+                <div class="action-buttons">
+                    <a href="{{ url_for('index') }}" class="action-btn primary">
+                        ← Check Another Recipe
+                    </a>
+                    <a href="{{ url_for('view_report', patient_id=current_user.user_id if current_user.is_authenticated else '1') }}" class="action-btn info" target="_blank">
+                        👁️ View Health Report
+                    </a>
+                    <a href="{{ url_for('generate_report', patient_id=current_user.user_id if current_user.is_authenticated else '1') }}" class="action-btn warning">
+                        📄 Download Report
+                    </a>
                 </div>
 
                 <!-- Health Tips -->
-                <div class="card shadow-lg border-info">
-                    <div class="card-header bg-info text-white">
-                        <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Health Tips</h5>
+                <div class="tips-card">
+                    <div class="card-header info">
+                        <span>💡</span>
+                        <h3>Health Tips</h3>
                     </div>
                     <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <h6><i class="fas fa-apple-alt text-success me-2"></i>Nutrition Tips:</h6>
-                                <ul class="list-unstyled">
-                                    <li><i class="fas fa-check text-success me-2"></i>Always read ingredient labels</li>
-                                    <li><i class="fas fa-check text-success me-2"></i>Choose whole foods when possible</li>
-                                    <li><i class="fas fa-check text-success me-2"></i>Consult your healthcare provider</li>
+                        <div class="tips-grid">
+                            <div class="tips-section">
+                                <h5>🍎 Nutrition Tips</h5>
+                                <ul>
+                                    <li><span>✓</span> Always read ingredient labels</li>
+                                    <li><span>✓</span> Choose whole foods when possible</li>
+                                    <li><span>✓</span> Consult your healthcare provider</li>
                                 </ul>
                             </div>
-                            <div class="col-md-6">
-                                <h6><i class="fas fa-heart text-danger me-2"></i>Remember:</h6>
-                                <ul class="list-unstyled">
-                                    <li><i class="fas fa-info text-info me-2"></i>This tool is for guidance only</li>
-                                    <li><i class="fas fa-info text-info me-2"></i>Individual needs may vary</li>
-                                    <li><i class="fas fa-info text-info me-2"></i>Keep track of your food intake</li>
+                            <div class="tips-section">
+                                <h5>❤️ Remember</h5>
+                                <ul>
+                                    <li><span>ℹ️</span> This tool is for guidance only</li>
+                                    <li><span>ℹ️</span> Individual needs may vary</li>
+                                    <li><span>ℹ️</span> Keep track of your food intake</li>
                                 </ul>
                             </div>
                         </div>
@@ -189,23 +177,19 @@
                 </div>
 
             </div>
-        </div>
+        </main>
 
         <!-- Footer -->
-        <div class="row mt-5">
-            <div class="col-12 text-center text-muted">
-                <p><i class="fas fa-heart text-danger me-1"></i>Your health is our priority</p>
-                <small>This tool is for educational purposes. Always consult with your healthcare provider.</small>
-            </div>
-        </div>
+        <footer class="results-footer">
+            <p>❤️ Your health is our priority</p>
+            <small>This tool is for educational purposes. Always consult with your healthcare provider.</small>
+        </footer>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Add some animations and interactivity
+        // Animate cards on load
         document.addEventListener('DOMContentLoaded', function() {
-            // Animate cards on load
-            const cards = document.querySelectorAll('.card');
+            const cards = document.querySelectorAll('.results-card, .tips-card');
             cards.forEach((card, index) => {
                 card.style.opacity = '0';
                 card.style.transform = 'translateY(20px)';
@@ -215,25 +199,6 @@
                     card.style.transform = 'translateY(0)';
                 }, index * 100);
             });
-
-            // Add copy recipe functionality
-            const recipeText = document.querySelector('.bg-light p');
-            if (recipeText) {
-                recipeText.style.cursor = 'pointer';
-                recipeText.title = 'Click to copy recipe';
-                recipeText.addEventListener('click', function() {
-                    navigator.clipboard.writeText(this.textContent).then(() => {
-                        // Show a temporary success message
-                        const originalText = this.textContent;
-                        this.textContent = 'Recipe copied to clipboard!';
-                        this.style.color = 'green';
-                        setTimeout(() => {
-                            this.textContent = originalText;
-                            this.style.color = '';
-                        }, 2000);
-                    });
-                });
-            }
         });
     </script>
 </body>
