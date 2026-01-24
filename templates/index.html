@@ -1,465 +1,271 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Health-Aware Recipe Modifier</title>
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
-    <link
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
-      rel="stylesheet"
-    />
-    <link
-      href="{{ url_for('static', filename='styles.css') }}"
-      rel="stylesheet"
-    />
-  </head>
-  <body>
-    <div class="container-fluid">
-      <!-- Header -->
-      <div class="row bg-primary text-white py-4">
-        <div class="col-12">
-          <div class="d-flex justify-content-between align-items-center position-relative py-4 px-4">
-            <div class="text-start">
-              {% if current_user.is_authenticated %}
-              <div class="text-light">
-                <div>
-                  <i class="fas fa-user me-2"></i>Welcome, {{
-                  current_user.username }}!
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Health-Aware Recipe Modifier - Analyze your ingredients and get healthy alternatives.">
+    <title>Recipe Modifier - HealthRecipeAI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-page">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="container">
+                <div class="header-left">
+                    <a href="{{ url_for('landing_page') }}" class="back-btn">← Home</a>
+                    <div class="header-title">
+                        <h1>🥗 HealthRecipeAI</h1>
+                        <p>Transform your recipes for better health</p>
+                    </div>
                 </div>
-                {% if current_user.medical_condition %}
-                <small
-                  ><i class="fas fa-heartbeat me-1"></i>{{
-                  current_user.medical_condition.replace('_', ' ').title()
-                  }}</small
-                >
-                {% endif %}
-              </div>
-              {% endif %}
-            </div>
-            <div class="text-center position-absolute start-50 translate-middle-x">
-              <h1>
-                <i class="fas fa-heartbeat me-3"></i>Health-Aware Recipe
-                Modifier
-              </h1>
-              <p class="lead mb-0">
-                Transform your recipes for better health outcomes
-              </p>
-            </div>
-            <div class="text-end">
-              {% if current_user.is_authenticated %}
-              <div class="btn-group" role="group">
-                <a
-                  href="{{ url_for('profile') }}"
-                  class="btn btn-outline-light btn-sm"
-                >
-                  <i class="fas fa-user-circle me-1"></i>Profile
-                </a>
-                <a
-                  href="{{ url_for('logout') }}"
-                  class="btn btn-outline-light btn-sm"
-                >
-                  <i class="fas fa-sign-out-alt me-1"></i>Logout
-                </a>
-              </div>
-              {% else %}
-              <div class="btn-group" role="group">
-                <a
-                  href="{{ url_for('login') }}"
-                  class="btn btn-outline-light btn-sm"
-                >
-                  <i class="fas fa-sign-in-alt me-1"></i>Login
-                </a>
-                <a
-                  href="{{ url_for('register') }}"
-                  class="btn btn-outline-light btn-sm"
-                >
-                  <i class="fas fa-user-plus me-1"></i>Register
-                </a>
-              </div>
-              {% endif %}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Flash Messages -->
-      <div class="row justify-content-center mt-3">
-        <div class="col-md-8 col-lg-6">
-          {% with messages = get_flashed_messages(with_categories=true) %} {% if
-          messages %} {% for category, message in messages %}
-          <div
-            class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show"
-            role="alert"
-          >
-            <i
-              class="fas fa-{{ 'exclamation-triangle' if category == 'error' else 'info-circle' }} me-2"
-            ></i>
-            {{ message }}
-            <button
-              type="button"
-              class="btn-close"
-              data-bs-dismiss="alert"
-            ></button>
-          </div>
-          {% endfor %} {% endif %} {% endwith %}
-        </div>
-      </div>
-
-      <!-- Main Content -->
-      <div class="row justify-content-center mt-5">
-        <div class="col-md-8 col-lg-6">
-          <div class="text-center mb-3">
-            <h2 class="fw-bold mb-1"><i class="fas fa-seedling me-2 text-success"></i>Get Started</h2>
-            <p class="text-muted mb-0">Enter a recipe name or your ingredients below</p>
-          </div>
-          <div class="card shadow-lg">
-            <div class="card-header bg-success text-white">
-              <h3 class="mb-0">
-                <i class="fas fa-utensils me-2"></i>Ingredient Checker
-              </h3>
-            </div>
-            <div class="card-body p-4">
-              <form
-                action="{{ url_for('check_ingredients_route') }}"
-                method="POST"
-              >
-                <div class="form-section mb-4">
-                  <label for="recipeName" class="form-label fw-bold">
-                    <i class="fas fa-book me-2"></i>Enter Recipe Name (optional)
-                  </label>
-                  <div class="input-group">
-                    <input
-                      type="text"
-                      class="form-control"
-                      id="recipeName"
-                      placeholder="e.g., Banana Bread, Pancakes"
-                    />
-                    <button
-                      type="button"
-                      class="btn btn-outline-primary"
-                      id="aiFillIngredients"
-                      title="AI auto-fill ingredients"
-                      aria-label="AI auto-fill ingredients"
-                    >
-                      <i class="fas fa-wand-magic-sparkles me-1"></i>AI Auto‑Fill
-                    </button>
-                  </div>
-                  <div class="form-text">
-                    <i class="fas fa-info-circle me-1"></i>
-                    Type a recipe name and click Auto-Fill to populate
-                    ingredients.
-                  </div>
-                </div>
-                <div class="form-section mb-4">
-                  <label for="ingredients" class="form-label fw-bold">
-                    <i class="fas fa-list me-2"></i>Enter Your Ingredients
-                  </label>
-                  <textarea
-                    class="form-control"
-                    id="ingredients"
-                    name="ingredients"
-                    rows="4"
-                    placeholder="Enter ingredients separated by commas (e.g., sugar, flour, butter, banana)"
-                    required
-                  ></textarea>
-                  
-                  <div class="form-text">
-                    <i class="fas fa-info-circle me-1"></i>
-                    Separate multiple ingredients with commas
-                  </div>
-                </div>
-
-                {% if current_user.is_authenticated %}
-                <!-- For authenticated users, show their condition and make it read-only -->
-                <div class="form-section mb-4">
-                  <label for="condition" class="form-label fw-bold">
-                    <i class="fas fa-user-md me-2"></i>Your Medical Condition
-                  </label>
-                  <div class="input-group">
-                    <span class="input-group-text bg-success text-white">
-                      <i class="fas fa-check-circle"></i>
-                    </span>
-                    <input
-                      type="text"
-                      class="form-control"
-                      value="{{ current_user.medical_condition.replace('_', ' ').title() if current_user.medical_condition else 'Not specified' }}"
-                      readonly
-                    />
-                    <input
-                      type="hidden"
-                      name="condition"
-                      value="{{ current_user.medical_condition or 'diabetes' }}"
-                    />
-                  </div>
-                  <div class="form-text">
-                    <i class="fas fa-info-circle me-1"></i>
-                    Your condition is set from your profile.
-                    <a href="{{ url_for('profile') }}">Update profile</a> to
-                    change it.
-                  </div>
-                </div>
-                {% else %}
-                <!-- For non-authenticated users, show the dropdown -->
-                <div class="form-section mb-4">
-                  <label for="condition" class="form-label fw-bold">
-                    <i class="fas fa-user-md me-2"></i>Select Your Medical
-                    Condition
-                  </label>
-                  <select
-                    class="form-select"
-                    id="condition"
-                    name="condition"
-                    required
-                  >
-                    <option value="">Choose your condition...</option>
-                    <option value="diabetes">Diabetes</option>
-                    <option value="hypertension">Hypertension</option>
-                    <option value="heart_disease">Heart Disease</option>
-                    <option value="celiac">Celiac Disease</option>
-                    <option value="gluten_intolerance">
-                      Gluten Intolerance
-                    </option>
-                    <option value="lactose_intolerance">
-                      Lactose Intolerance
-                    </option>
-                    <option value="egg_allergy">Egg Allergy</option>
-                    <option value="peanut_allergy">Peanut Allergy</option>
-                    <option value="soy_allergy">Soy Allergy</option>
-                    <option value="corn_allergy">Corn Allergy</option>
-                    <option value="obesity">Obesity</option>
-                    <option value="cholesterol">High Cholesterol</option>
-                  </select>
-                </div>
-                {% endif %}
-
-                <div class="d-grid">
-                  <button type="submit" id="submitBtn" class="btn btn-primary btn-lg">
-                    <i class="fas fa-search me-2"></i>Check Ingredients &
-                    Generate Recipe
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-
-          <!-- Information Cards -->
-          <div class="row mt-5">
-            <div class="col-12 text-center mb-3">
-              <h2 class="fw-bold mb-1"><i class="fas fa-info-circle me-2 text-info"></i>How It Works</h2>
-              <p class="text-muted mb-0">We analyze your ingredients and craft a healthier recipe</p>
-            </div>
-            <div class="col-md-6 mb-3">
-              <div class="card h-100 border-info">
-                <div class="card-body text-center">
-                  <i class="fas fa-shield-alt text-info fa-2x mb-2"></i>
-                  <h5 class="card-title">Safe Ingredients</h5>
-                  <p class="card-text">
-                    We'll identify harmful ingredients and suggest healthy
-                    alternatives.
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-6 mb-3">
-              <div class="card h-100 border-success">
-                <div class="card-body text-center">
-                  <i class="fas fa-utensils text-success fa-2x mb-2"></i>
-                  <h5 class="card-title">Modified Recipes</h5>
-                  <p class="card-text">
-                    Get personalized recipes tailored to your health condition.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Quick Actions -->
-          <div class="row mt-5">
-            <div class="col-12 text-center mb-3">
-              <h2 class="fw-bold mb-1"><i class="fas fa-bolt me-2 text-warning"></i>Quick Actions</h2>
-              <p class="text-muted mb-0">Access your reports with a single click</p>
-            </div>
-            <div class="col-12">
-              <div class="card border-warning">
-                <div class="card-header bg-warning text-dark">
-                  <h5 class="mb-0">
-                    <i class="fas fa-download me-2"></i>Generate Your Report
-                  </h5>
-                </div>
-                <div class="card-body">
-                  <div
-                    class="d-flex justify-content-between align-items-center"
-                  >
-                    <span>Download your health report:</span>
+                <div class="header-right">
                     {% if current_user.is_authenticated %}
-                    <a
-                      href="{{ url_for('generate_report', patient_id=current_user.user_id) }}"
-                      class="btn btn-outline-warning"
-                    >
-                      <i class="fas fa-file-pdf me-2"></i>Generate PDF Report
-                    </a>
+                        <div class="user-info">
+                            <div class="username">👤 {{ current_user.username }}</div>
+                            {% if current_user.medical_condition %}
+                                <div class="condition">🏥 {{ current_user.medical_condition.replace('_', ' ').title() }}</div>
+                            {% endif %}
+                        </div>
+                        <a href="{{ url_for('profile') }}" class="header-btn">Profile</a>
+                        <a href="{{ url_for('logout') }}" class="header-btn">Logout</a>
                     {% else %}
-                    <a
-                      href="{{ url_for('login') }}"
-                      class="btn btn-outline-warning"
-                    >
-                      <i class="fas fa-sign-in-alt me-2"></i>Login to Generate
-                      Report
-                    </a>
+                        <a href="{{ url_for('login') }}" class="header-btn">Login</a>
+                        <a href="{{ url_for('register') }}" class="header-btn">Register</a>
                     {% endif %}
-                  </div>
                 </div>
-              </div>
             </div>
-          </div>
-        </div>
-      </div>
+        </header>
 
-      <!-- Footer -->
-      <div class="row mt-5">
-        <div class="col-12 text-center text-muted">
-          <p>
-            <i class="fas fa-heart text-danger me-1"></i>Your health is our
-            priority
-          </p>
-          <small
-            >This tool is for educational purposes. Always consult with your
-            healthcare provider.</small
-          >
-        </div>
-      </div>
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="container">
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category == 'error' else category }}">
+                                <span>{% if category == 'error' %}⚠️{% elif category == 'success' %}✅{% else %}ℹ️{% endif %}</span>
+                                <span>{{ message }}</span>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <!-- Section Intro -->
+                <div class="section-intro">
+                    <h2>🌿 Get Started</h2>
+                    <p>Enter a recipe name or your ingredients below</p>
+                </div>
+
+                <!-- Main Form Card -->
+                <div class="main-card">
+                    <div class="card-header">
+                        <h3>🍳 Ingredient Checker</h3>
+                    </div>
+                    <div class="card-body">
+                        <form action="{{ url_for('check_ingredients_route') }}" method="POST">
+                            <!-- Recipe Name -->
+                            <div class="form-section">
+                                <label for="recipeName" class="form-label">
+                                    <span class="icon">📖</span>Enter Recipe Name (optional)
+                                </label>
+                                <div class="input-group">
+                                    <input type="text" class="form-input" id="recipeName" placeholder="e.g., Banana Bread, Pancakes">
+                                    <button type="button" class="btn-ai" id="aiFillIngredients">
+                                        ✨ AI Auto-Fill
+                                    </button>
+                                </div>
+                                <div class="form-hint">💡 Type a recipe name and click Auto-Fill to populate ingredients</div>
+                            </div>
+
+                            <!-- Ingredients -->
+                            <div class="form-section">
+                                <label for="ingredients" class="form-label">
+                                    <span class="icon">📝</span>Enter Your Ingredients
+                                </label>
+                                <textarea class="form-textarea" id="ingredients" name="ingredients" placeholder="Enter ingredients separated by commas (e.g., sugar, flour, butter, banana)" required></textarea>
+                                <div class="form-hint">ℹ️ Separate multiple ingredients with commas</div>
+                            </div>
+
+                            <!-- Condition -->
+                            {% if current_user.is_authenticated %}
+                                <div class="form-section">
+                                    <label class="form-label">
+                                        <span class="icon">🏥</span>Your Medical Condition
+                                    </label>
+                                    <div class="condition-display">
+                                        <div class="icon">✓</div>
+                                        <div class="text">
+                                            <div class="label">Active condition</div>
+                                            <div class="value">{{ current_user.medical_condition.replace('_', ' ').title() if current_user.medical_condition else 'Not specified' }}</div>
+                                        </div>
+                                        <a href="{{ url_for('profile') }}" class="link">Update →</a>
+                                    </div>
+                                    <input type="hidden" name="condition" value="{{ current_user.medical_condition or 'diabetes' }}">
+                                </div>
+                            {% else %}
+                                <div class="form-section">
+                                    <label for="condition" class="form-label">
+                                        <span class="icon">🏥</span>Select Your Medical Condition
+                                    </label>
+                                    <select class="form-select" id="condition" name="condition" required>
+                                        <option value="">Choose your condition...</option>
+                                        <option value="diabetes">Diabetes</option>
+                                        <option value="hypertension">Hypertension</option>
+                                        <option value="heart_disease">Heart Disease</option>
+                                        <option value="celiac">Celiac Disease</option>
+                                        <option value="gluten_intolerance">Gluten Intolerance</option>
+                                        <option value="lactose_intolerance">Lactose Intolerance</option>
+                                        <option value="egg_allergy">Egg Allergy</option>
+                                        <option value="peanut_allergy">Peanut Allergy</option>
+                                        <option value="soy_allergy">Soy Allergy</option>
+                                        <option value="corn_allergy">Corn Allergy</option>
+                                        <option value="obesity">Obesity</option>
+                                        <option value="cholesterol">High Cholesterol</option>
+                                    </select>
+                                </div>
+                            {% endif %}
+
+                            <!-- Submit -->
+                            <button type="submit" class="btn-submit" id="submitBtn">
+                                🔍 Check Ingredients & Generate Recipe
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Info Cards -->
+                <div class="info-grid">
+                    <div class="info-card">
+                        <div class="icon">🛡️</div>
+                        <h4>Safe Ingredients</h4>
+                        <p>We identify harmful ingredients and suggest healthy alternatives</p>
+                    </div>
+                    <div class="info-card">
+                        <div class="icon">🍽️</div>
+                        <h4>Modified Recipes</h4>
+                        <p>Get personalized recipes tailored to your health condition</p>
+                    </div>
+                </div>
+
+                <!-- Report Card -->
+                <div class="report-card">
+                    <div class="report-card-header">
+                        <h4>📊 Generate Your Report</h4>
+                        {% if current_user.is_authenticated %}
+                            <a href="{{ url_for('generate_report', patient_id=current_user.user_id) }}" class="btn-report">
+                                📄 Download PDF Report
+                            </a>
+                        {% else %}
+                            <a href="{{ url_for('login') }}" class="btn-report">
+                                🔐 Login to Generate Report
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>❤️ Your health is our priority</p>
+            <small>This tool is for educational purposes. Always consult with your healthcare provider.</small>
+        </footer>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-      // Add some interactivity
-      document.addEventListener("DOMContentLoaded", function () {
-        const ingredientsTextarea = document.getElementById("ingredients");
-        const conditionSelect = document.getElementById("condition");
-        const recipeInput = document.getElementById("recipeName");
-        const aiFillButton = document.getElementById("aiFillIngredients");
-        const form = document.querySelector("form[action=\"{{ url_for('check_ingredients_route') }}\"]");
-        const submitBtn = document.getElementById("submitBtn");
+        document.addEventListener("DOMContentLoaded", function () {
+            const ingredientsTextarea = document.getElementById("ingredients");
+            const conditionSelect = document.getElementById("condition");
+            const recipeInput = document.getElementById("recipeName");
+            const aiFillButton = document.getElementById("aiFillIngredients");
+            const form = document.querySelector("form");
+            const submitBtn = document.getElementById("submitBtn");
 
-        // Auto-resize textarea
-        ingredientsTextarea.addEventListener("input", function () {
-          this.style.height = "auto";
-          this.style.height = this.scrollHeight + "px";
-        });
+            // Auto-resize textarea
+            ingredientsTextarea.addEventListener("input", function () {
+                this.style.height = "auto";
+                this.style.height = this.scrollHeight + "px";
+            });
 
-        // Add some helpful placeholder text based on condition
-        if (conditionSelect) {
-          conditionSelect.addEventListener("change", function () {
-            const condition = this.value;
-            let placeholder =
-              "Enter ingredients separated by commas (e.g., sugar, flour, butter, banana)";
-
-            if (condition === "diabetes") {
-              placeholder =
-                "Enter ingredients separated by commas (e.g., sugar, flour, butter, banana) - We'll replace sugar with stevia!";
-            } else if (condition === "hypertension") {
-              placeholder =
-                "Enter ingredients separated by commas (e.g., salt, butter, flour) - We'll replace salt with low-sodium alternatives!";
-            } else if (condition === "celiac") {
-              placeholder =
-                "Enter ingredients separated by commas (e.g., flour, wheat, bread) - We'll replace gluten-containing ingredients!";
+            // Placeholder based on condition
+            if (conditionSelect) {
+                conditionSelect.addEventListener("change", function () {
+                    const condition = this.value;
+                    let placeholder = "Enter ingredients separated by commas (e.g., sugar, flour, butter, banana)";
+                    if (condition === "diabetes") {
+                        placeholder += " - We'll replace sugar with stevia!";
+                    } else if (condition === "hypertension") {
+                        placeholder = "Enter ingredients (e.g., salt, butter, flour) - We'll replace salt with low-sodium alternatives!";
+                    } else if (condition === "celiac") {
+                        placeholder = "Enter ingredients (e.g., flour, wheat) - We'll replace gluten-containing ingredients!";
+                    }
+                    ingredientsTextarea.placeholder = placeholder;
+                });
             }
 
-            ingredientsTextarea.placeholder = placeholder;
-          });
-        }
-
-        
-
-        // AI Auto-Fill: simple flow with fallback
-        if (aiFillButton) {
-          aiFillButton.addEventListener("click", async function () {
-            // Get text from recipe name or ingredients field
-            const sourceText =
-              (recipeInput && recipeInput.value.trim()) ||
-              ingredientsTextarea.value.trim();
-            
-            if (!sourceText) {
-              (recipeInput || ingredientsTextarea).focus();
-              return;
-            }
-
-            // Show loading state
-            aiFillButton.disabled = true;
-            const originalHtml = aiFillButton.innerHTML;
-            aiFillButton.innerHTML =
-              '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Filling...';
-
-            try {
-              // Try AI extraction first
-              const resp = await fetch("/api/ai/extract-ingredients", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ text: sourceText }),
-              });
-              // console.log(sourceText);
-              const data = await resp.json();
-              console.log("your data is :", data);
-              
-              const ingredients = Array.isArray(data.ingredients) ? data.ingredients : [];
-
-              // If AI worked, use those ingredients
-              if (ingredients.length > 0) {
-                ingredientsTextarea.value = ingredients.join(", ");
-                ingredientsTextarea.dispatchEvent(new Event("input"));
-              } 
-              // Fallback: try database lookup if recipe name exists
-              else if (recipeInput && recipeInput.value.trim()) {
-                const dbResp = await fetch(
-                  `/api/recipes/ingredients?name=${encodeURIComponent(recipeInput.value.trim())}`
-                );
-                const dbData = await dbResp.json();
-                const dbIngredients = Array.isArray(dbData.ingredients) ? dbData.ingredients : [];
-                
-                if (dbIngredients.length > 0) {
-                  ingredientsTextarea.value = dbIngredients.join(", ");
-                  ingredientsTextarea.dispatchEvent(new Event("input"));
-                } else {
-                  ingredientsTextarea.value = "No ingredients found. Please type them manually.";
-                  ingredientsTextarea.dispatchEvent(new Event("input"));
-                }
-              } else {
-                ingredientsTextarea.value = "No ingredients found. Please type them manually.";
-                ingredientsTextarea.dispatchEvent(new Event("input"));
-              }
-            } catch (error) {
-              // On error, show message
-              ingredientsTextarea.value = "Unable to fetch ingredients. Please try again or type them manually.";
-              ingredientsTextarea.dispatchEvent(new Event("input"));
-            } finally {
-              // Restore button
-              aiFillButton.disabled = false;
-              aiFillButton.innerHTML = originalHtml;
-            }
-          });
-        }
-
-        // Disable submit and show spinner while waiting for server
-        if (form && submitBtn) {
-          form.addEventListener("submit", function () {
-            if (submitBtn.dataset.submitting === "true") {
-              return;
-            }
-            submitBtn.dataset.submitting = "true";
-            submitBtn.disabled = true;
-            submitBtn.setAttribute("aria-busy", "true");
-            submitBtn.dataset.originalHtml = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Processing...';
+            // AI Auto-Fill
             if (aiFillButton) {
-              aiFillButton.disabled = true;
+                aiFillButton.addEventListener("click", async function () {
+                    const sourceText = (recipeInput && recipeInput.value.trim()) || ingredientsTextarea.value.trim();
+                    if (!sourceText) {
+                        (recipeInput || ingredientsTextarea).focus();
+                        return;
+                    }
+
+                    aiFillButton.disabled = true;
+                    const originalHtml = aiFillButton.innerHTML;
+                    aiFillButton.innerHTML = '<span class="spinner"></span> Filling...';
+
+                    try {
+                        const resp = await fetch("/api/ai/extract-ingredients", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ text: sourceText }),
+                        });
+                        const data = await resp.json();
+                        const ingredients = Array.isArray(data.ingredients) ? data.ingredients : [];
+
+                        if (ingredients.length > 0) {
+                            ingredientsTextarea.value = ingredients.join(", ");
+                            ingredientsTextarea.dispatchEvent(new Event("input"));
+                        } else if (recipeInput && recipeInput.value.trim()) {
+                            const dbResp = await fetch(`/api/recipes/ingredients?name=${encodeURIComponent(recipeInput.value.trim())}`);
+                            const dbData = await dbResp.json();
+                            const dbIngredients = Array.isArray(dbData.ingredients) ? dbData.ingredients : [];
+                            ingredientsTextarea.value = dbIngredients.length > 0 
+                                ? dbIngredients.join(", ") 
+                                : "No ingredients found. Please type them manually.";
+                            ingredientsTextarea.dispatchEvent(new Event("input"));
+                        } else {
+                            ingredientsTextarea.value = "No ingredients found. Please type them manually.";
+                            ingredientsTextarea.dispatchEvent(new Event("input"));
+                        }
+                    } catch (error) {
+                        ingredientsTextarea.value = "Unable to fetch ingredients. Please try again or type them manually.";
+                        ingredientsTextarea.dispatchEvent(new Event("input"));
+                    } finally {
+                        aiFillButton.disabled = false;
+                        aiFillButton.innerHTML = originalHtml;
+                    }
+                });
             }
-          });
-        }
-      });
+
+            // Form submit loading
+            if (form && submitBtn) {
+                form.addEventListener("submit", function () {
+                    if (submitBtn.dataset.submitting === "true") return;
+                    submitBtn.dataset.submitting = "true";
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<span class="spinner"></span> Processing...';
+                    if (aiFillButton) aiFillButton.disabled = true;
+                });
+            }
+        });
     </script>
-  </body>
+</body>
 </html>
