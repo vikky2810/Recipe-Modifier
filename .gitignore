@@ -27,3 +27,7 @@ Thumbs.db
 
 # Deployment
 .vercel
+
+# Python
+*.pyc
+__pycache__/  
