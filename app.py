@@ -1,9 +1,12 @@
 from flask import Flask, render_template, request, redirect, url_for, send_file, jsonify, flash, abort
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from pymongo import MongoClient
 from datetime import datetime
 from dotenv import load_dotenv
 import os
+import bleach
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -50,6 +53,24 @@ login_manager.init_app(app)
 login_manager.login_view = 'login'
 login_manager.login_message = 'Please log in to access this page.'
 login_manager.login_message_category = 'info'
+
+# Initialize Flask-Limiter for rate limiting (prevents brute force attacks)
+limiter = Limiter(
+    key_func=get_remote_address,
+    app=app,
+    default_limits=["200 per day", "50 per hour"],
+    storage_uri="memory://"
+)
+
+# Allowed HTML tags for sanitization (XSS prevention)
+ALLOWED_TAGS = ['p', 'h5', 'h6', 'ul', 'ol', 'li', 'strong', 'em', 'i', 'b', 'br', 'span', 'div', 'class']
+ALLOWED_ATTRIBUTES = {'*': ['class']}
+
+def sanitize_html(html_content):
+    """Sanitize HTML content to prevent XSS attacks"""
+    if not html_content:
+        return ""
+    return bleach.clean(html_content, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES, strip=True)
 
 # MongoDB Configuration - Lazy initialization for serverless
 _client = None
@@ -513,11 +534,27 @@ def index():
 def check_ingredients_route():
     """Process ingredient submission and return results"""
     
-    ingredients_text = request.form.get('ingredients', '')
-    condition = request.form.get('condition', '')
+    ingredients_text = request.form.get('ingredients', '').strip()
+    condition = request.form.get('condition', '').strip()
     
-    if not ingredients_text or not condition:
+    # Validate ingredients input
+    if not ingredients_text:
+        flash('Please enter at least one ingredient.', 'error')
         return redirect(url_for('index'))
+    
+    # Validate ingredients length (prevent abuse)
+    if len(ingredients_text) > 2000:
+        flash('Ingredients text is too long. Please limit to 2000 characters.', 'error')
+        return redirect(url_for('index'))
+    
+    # Validate condition
+    if not condition:
+        # For authenticated users, use their stored condition
+        if current_user.is_authenticated and current_user.medical_condition:
+            condition = current_user.medical_condition
+        else:
+            flash('Please select a medical condition.', 'error')
+            return redirect(url_for('index'))
     
     # Parse ingredients
     ingredients = [ingredient.strip() for ingredient in ingredients_text.split(',') if ingredient.strip()]
@@ -579,8 +616,8 @@ def check_ingredients_route():
         except Exception as e:
             print(f"Error storing food entry: {e}")
     
-    # Format recipe for better display
-    formatted_recipe = format_recipe_html(recipe)
+    # Format recipe for better display and sanitize HTML to prevent XSS
+    formatted_recipe = sanitize_html(format_recipe_html(recipe))
     
     return render_template('result.html', 
                          harmful=harmful, 
@@ -735,6 +772,7 @@ def get_conditions():
 
 # Authentication Routes
 @app.route('/register', methods=['GET', 'POST'])
+@limiter.limit("3 per minute", error_message="Too many registration attempts. Please try again later.")
 def register():
     """User registration"""
     if current_user.is_authenticated:
@@ -759,6 +797,7 @@ def register():
     return render_template('register.html', form=form)
 
 @app.route('/login', methods=['GET', 'POST'])
+@limiter.limit("5 per minute", error_message="Too many login attempts. Please try again later.")
 def login():
     """User login"""
     if current_user.is_authenticated:

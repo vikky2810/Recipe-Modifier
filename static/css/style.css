@@ -2636,3 +2636,63 @@ section {
         text-align: center;
     }
 }
+
+/* Additional Responsiveness Fixes */
+@media (max-width: 480px) {
+    /* Input group wrapping for small screens */
+    .input-group {
+        flex-wrap: wrap;
+    }
+    
+    .input-group .form-input {
+        width: 100%;
+        min-width: 0;
+    }
+    
+    .input-group .btn-ai {
+        width: 100%;
+        margin-top: var(--space-2);
+    }
+    
+    /* Auth container responsive width */
+    .auth-container {
+        width: min(480px, calc(100% - 2rem));
+        max-width: none;
+    }
+    
+    /* Smaller hero stats on mobile */
+    .hero-stats {
+        gap: var(--space-4);
+    }
+    
+    .stat-number {
+        font-size: 1.5rem;
+    }
+    
+    /* Tabs header scrollable on small screens */
+    .tabs-header {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .tab-btn {
+        white-space: nowrap;
+        min-width: 120px;
+    }
+}
+
+/* Very small screens (360px and below) */
+@media (max-width: 360px) {
+    .hero-buttons .btn {
+        width: 100%;
+    }
+    
+    .action-btn {
+        font-size: 0.875rem;
+        padding: var(--space-3);
+    }
+    
+    .container {
+        padding: 0 var(--space-3);
+    }
+}

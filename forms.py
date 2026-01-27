@@ -46,8 +46,17 @@ class RegistrationForm(FlaskForm):
     
     def validate_username(self, username):
         """Custom validation for username"""
+        # Must only contain letters, numbers, and underscores
         if not re.match(r'^[a-zA-Z0-9_]+$', username.data):
             raise ValidationError('Username can only contain letters, numbers, and underscores')
+        
+        # Must start with a letter
+        if not re.match(r'^[a-zA-Z]', username.data):
+            raise ValidationError('Username must start with a letter')
+        
+        # Must contain at least one letter (not purely numeric or underscores)
+        if not re.search(r'[a-zA-Z]', username.data):
+            raise ValidationError('Username must contain at least one letter')
     
     def validate_password(self, password):
         """Custom validation for password strength"""

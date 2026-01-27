@@ -87,8 +87,8 @@
                                 <label for="ingredients" class="form-label">
                                     <span class="icon">📝</span>Enter Your Ingredients
                                 </label>
-                                <textarea class="form-textarea" id="ingredients" name="ingredients" placeholder="Enter ingredients separated by commas (e.g., sugar, flour, butter, banana)" required></textarea>
-                                <div class="form-hint">ℹ️ Separate multiple ingredients with commas</div>
+                                <textarea class="form-textarea" id="ingredients" name="ingredients" placeholder="Enter ingredients separated by commas (e.g., sugar, flour, butter, banana)" maxlength="2000" required></textarea>
+                                <div class="form-hint">ℹ️ Separate multiple ingredients with commas (max 2000 characters)</div>
                             </div>
 
                             <!-- Condition -->
@@ -255,10 +255,38 @@
                 });
             }
 
-            // Form submit loading
+            // Form submit loading with client-side validation
             if (form && submitBtn) {
-                form.addEventListener("submit", function () {
-                    if (submitBtn.dataset.submitting === "true") return;
+                form.addEventListener("submit", function (e) {
+                    // Client-side validation
+                    const ingredientsValue = ingredientsTextarea.value.trim();
+                    
+                    // Check if ingredients field is empty
+                    if (!ingredientsValue) {
+                        e.preventDefault();
+                        ingredientsTextarea.focus();
+                        alert('Please enter at least one ingredient.');
+                        return false;
+                    }
+                    
+                    // Check if ingredients length exceeds limit
+                    if (ingredientsValue.length > 2000) {
+                        e.preventDefault();
+                        ingredientsTextarea.focus();
+                        alert('Ingredients text is too long. Please limit to 2000 characters.');
+                        return false;
+                    }
+                    
+                    // Check if condition is selected (for non-authenticated users)
+                    if (conditionSelect && !conditionSelect.value) {
+                        e.preventDefault();
+                        conditionSelect.focus();
+                        alert('Please select a medical condition.');
+                        return false;
+                    }
+                    
+                    // Prevent double submission
+                    if (submitBtn.dataset.submitting === "true") return false;
                     submitBtn.dataset.submitting = "true";
                     submitBtn.disabled = true;
                     submitBtn.innerHTML = '<span class="spinner"></span> Processing...';
