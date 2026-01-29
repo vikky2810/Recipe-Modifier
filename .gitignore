@@ -13,6 +13,7 @@ __pycache__/
 *.pyo
 *.pyd
 .Python
+*.pyc
 
 # IDE
 .vscode/
@@ -30,4 +31,5 @@ Thumbs.db
 
 # Python
 *.pyc
-__pycache__/  
+__pycache__/  __pycache__/
+*.pyc
