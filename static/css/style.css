@@ -2784,3 +2784,57 @@ section {
         transform: translateY(-10px);
     }
 }
+
+/* ============================================
+   SPELL SUGGESTION STYLES
+   ============================================ */
+.spell-suggestion {
+    display: none;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 0.875rem;
+    margin-top: 0.5rem;
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.15) 0%, rgba(255, 152, 0, 0.1) 100%);
+    border: 1px solid rgba(255, 193, 7, 0.4);
+    border-radius: var(--radius-lg);
+    font-size: 0.875rem;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.suggestion-label {
+    color: var(--gray-600);
+    flex-shrink: 0;
+}
+
+.suggestion-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+}
+
+.suggestion-link {
+    color: var(--primary-600);
+    text-decoration: none;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0.125rem 0.375rem;
+    border-radius: var(--radius-sm);
+    transition: var(--transition-fast);
+}
+
+.suggestion-link:hover {
+    background: var(--primary-50);
+    color: var(--primary-700);
+    text-decoration: underline;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
