@@ -18,7 +18,6 @@ from gemini_service import gemini_service
 from models import UserManager
 from forms import RegistrationForm, LoginForm, ProfileUpdateForm, ChangePasswordForm
 import requests
-from spell_checker import spell_checker
 
 load_dotenv()
 
@@ -840,22 +839,6 @@ def get_conditions():
     except Exception as e:
         print(f"Error getting conditions: {e}")
         return jsonify([])
-
-@app.route('/api/spell-check', methods=['POST'])
-def spell_check_recipe_name():
-    """Check recipe name spelling and return suggestions"""
-    data = request.get_json(force=True, silent=True) or {}
-    recipe_name = data.get('recipe_name', '').strip()
-    
-    if not recipe_name or len(recipe_name) < 2:
-        return jsonify({"suggestions": [], "is_correct": True})
-    
-    try:
-        result = spell_checker.check_spelling(recipe_name)
-        return jsonify(result)
-    except Exception as e:
-        print(f"Spell check error: {e}")
-        return jsonify({"suggestions": [], "is_correct": True})
 
 # Authentication Routes
 @app.route('/register', methods=['GET', 'POST'])

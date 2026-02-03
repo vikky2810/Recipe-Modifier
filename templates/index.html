@@ -79,11 +79,6 @@
                                         ✨ AI Auto-Fill
                                     </button>
                                 </div>
-                                <!-- Spell suggestion -->
-                                <div class="spell-suggestion" id="spellSuggestion">
-                                    <span class="suggestion-label">💡 Did you mean:</span>
-                                    <span class="suggestion-links" id="suggestionLinks"></span>
-                                </div>
                                 <div class="form-hint">💡 Type a recipe name and click Auto-Fill to populate ingredients</div>
                             </div>
 
@@ -257,54 +252,6 @@
                         aiFillButton.disabled = false;
                         aiFillButton.innerHTML = originalHtml;
                     }
-                });
-            }
-
-            // Spell check with debounce
-            let spellCheckTimeout;
-            if (recipeInput) {
-                recipeInput.addEventListener('input', function() {
-                    clearTimeout(spellCheckTimeout);
-                    const suggestionDiv = document.getElementById('spellSuggestion');
-                    const value = this.value.trim();
-                    
-                    if (value.length < 3) {
-                        suggestionDiv.style.display = 'none';
-                        return;
-                    }
-                    
-                    spellCheckTimeout = setTimeout(async () => {
-                        try {
-                            const resp = await fetch('/api/spell-check', {
-                                method: 'POST',
-                                headers: {'Content-Type': 'application/json'},
-                                body: JSON.stringify({recipe_name: value})
-                            });
-                            const data = await resp.json();
-                            
-                            if (!data.is_correct && data.suggestions && data.suggestions.length > 0) {
-                                const linksContainer = document.getElementById('suggestionLinks');
-                                linksContainer.innerHTML = data.suggestions.map(s => 
-                                    `<a href="#" class="suggestion-link" data-suggestion="${s}">${s}</a>`
-                                ).join(', ');
-                                
-                                suggestionDiv.style.display = 'flex';
-                                
-                                // Handle click on suggestions
-                                linksContainer.querySelectorAll('.suggestion-link').forEach(link => {
-                                    link.addEventListener('click', function(e) {
-                                        e.preventDefault();
-                                        recipeInput.value = this.dataset.suggestion;
-                                        suggestionDiv.style.display = 'none';
-                                    });
-                                });
-                            } else {
-                                suggestionDiv.style.display = 'none';
-                            }
-                        } catch (e) {
-                            console.error('Spell check error:', e);
-                        }
-                    }, 300);
                 });
             }
 
