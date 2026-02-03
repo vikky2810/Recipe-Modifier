@@ -3333,3 +3333,49 @@ section {
         opacity: 1;
     }
 }
+
+/* ============================================
+   SPELL CHECK SUGGESTIONS
+   ============================================ */
+.spell-suggestion {
+    margin-top: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    border-radius: var(--radius-md);
+    border-left: 4px solid var(--warning);
+    font-size: 0.9375rem;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.spell-suggestion .spell-label {
+    color: var(--gray-600);
+    font-weight: 500;
+    margin-right: var(--space-2);
+}
+
+.spell-suggestion .spell-link {
+    color: var(--primary-600);
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: var(--transition-fast);
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-sm);
+}
+
+.spell-suggestion .spell-link:hover {
+    background: var(--primary-50);
+    color: var(--primary-700);
+    text-decoration: underline;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
