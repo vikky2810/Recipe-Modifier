@@ -134,6 +134,136 @@ body {
     -moz-osx-font-smoothing: grayscale;
 }
 
+/* ============================================
+   LUCIDE ICONS
+   ============================================ */
+.lucide-icon {
+    width: 1.25em;
+    height: 1.25em;
+    stroke-width: 2;
+    vertical-align: middle;
+    display: inline-block;
+}
+
+.lucide-icon-sm {
+    width: 1em;
+    height: 1em;
+    stroke-width: 2;
+    vertical-align: middle;
+    display: inline-block;
+}
+
+.lucide-icon-lg {
+    width: 3rem;
+    height: 3rem;
+    stroke-width: 1.5;
+    display: inline-block;
+}
+
+/* Icon in logo */
+.logo-icon .lucide-icon {
+    width: 1.75rem;
+    height: 1.75rem;
+    color: var(--primary-500);
+}
+
+/* Icons in buttons */
+.btn-icon .lucide-icon {
+    width: 1.125rem;
+    height: 1.125rem;
+}
+
+/* Icons in step cards */
+.step-icon .lucide-icon {
+    width: 3rem;
+    height: 3rem;
+    color: var(--primary-500);
+}
+
+/* Icons in feature cards */
+.feature-icon .lucide-icon {
+    width: 2rem;
+    height: 2rem;
+    color: var(--primary-500);
+}
+
+/* Icon in featured card (Most Popular) */
+.feature-card.featured .feature-icon .lucide-icon {
+    color: white;
+}
+
+/* Icons in condition cards */
+.condition-icon .lucide-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    color: var(--primary-500);
+}
+
+/* Icons in benefit items */
+.benefit-icon .lucide-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    color: var(--primary-500);
+}
+
+/* Icons in item-icon (analysis items) */
+.item-icon .lucide-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+.analysis-item.warning .item-icon .lucide-icon {
+    color: var(--warning);
+}
+
+.analysis-item.success .item-icon .lucide-icon {
+    color: var(--success);
+}
+
+/* Icons in output cards */
+.output-icon .lucide-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+/* Floating badge icons */
+.floating-badge .lucide-icon {
+    width: 1rem;
+    height: 1rem;
+    vertical-align: -0.1em;
+}
+
+/* CTA icon */
+.cta-icon .lucide-icon-lg {
+    width: 4rem;
+    height: 4rem;
+    color: white;
+}
+
+/* Coming soon icon */
+.coming-soon .lucide-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    vertical-align: -0.15em;
+    color: var(--primary-500);
+}
+
+/* Recipe meta icons */
+.recipe-meta .lucide-icon-sm {
+    width: 0.9rem;
+    height: 0.9rem;
+    vertical-align: -0.1em;
+    color: var(--gray-400);
+}
+
+/* Disclaimer icon */
+.disclaimer .lucide-icon-sm {
+    width: 1em;
+    height: 1em;
+    vertical-align: -0.15em;
+    color: var(--warning);
+}
+
 img {
     max-width: 100%;
     height: auto;
@@ -210,6 +340,7 @@ button {
 
 .logo-icon {
     font-size: 1.75rem;
+    top: -0.5rem;
 }
 
 .logo-text {
@@ -2309,6 +2440,7 @@ section {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: var(--space-4);
+    margin-top: var(--space-6);
     margin-bottom: var(--space-6);
 }
 
