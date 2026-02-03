@@ -7,6 +7,8 @@ from datetime import datetime
 from dotenv import load_dotenv
 import os
 import bleach
+import time
+from functools import lru_cache
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -18,6 +20,7 @@ from gemini_service import gemini_service
 from models import UserManager
 from forms import RegistrationForm, LoginForm, ProfileUpdateForm, ChangePasswordForm
 import requests
+from spell_checker import spell_checker
 
 load_dotenv()
 
@@ -161,6 +164,33 @@ def get_generated_recipes():
 def get_user_manager():
     get_db()
     return _user_manager
+
+# Ingredient rules cache for faster lookups
+_ingredient_rules_cache = None
+_ingredient_rules_cache_time = 0
+_CACHE_TTL = 300  # 5 minutes
+
+def get_cached_ingredient_rules():
+    """Get ingredient rules from cache (cached for 5 minutes)"""
+    global _ingredient_rules_cache, _ingredient_rules_cache_time
+    
+    current_time = time.time()
+    if _ingredient_rules_cache is None or (current_time - _ingredient_rules_cache_time) > _CACHE_TTL:
+        try:
+            rules = list(get_ingredient_rules().find({}, {"ingredient": 1, "harmful_for": 1, "alternative": 1, "_id": 0}))
+            _ingredient_rules_cache = {doc["ingredient"].lower(): doc for doc in rules if doc.get("ingredient")}
+            _ingredient_rules_cache_time = current_time
+        except Exception as e:
+            print(f"Error caching ingredient rules: {e}")
+            if _ingredient_rules_cache is None:
+                _ingredient_rules_cache = {}
+    
+    return _ingredient_rules_cache
+
+def get_cached_db_ingredients():
+    """Get all ingredient names from cache"""
+    rules = get_cached_ingredient_rules()
+    return set(rules.keys())
 
 # Note: All database access should use the getter functions above
 # Direct access to collections is no longer supported
@@ -352,24 +382,18 @@ def ensure_core_ingredients():
 def check_ingredients(ingredients, condition):
     """Check ingredients against patient condition and return harmful/safe lists.
 
-    Optimized to perform a single batched MongoDB query instead of per-ingredient lookups.
+    Optimized to use cached ingredient rules instead of per-ingredient lookups.
     Handles plural/singular safely.
     """
     harmful_ingredients = []
     safe_ingredients = []
     replacements = {}
 
-    # 🔥 Load all ingredient names from DB for safe plural check
-    try:
-        DB_INGREDIENTS = {
-            doc["ingredient"].lower()
-            for doc in get_ingredient_rules().find({}, {"ingredient": 1, "_id": 0})
-        }
-    except Exception as e:
-        print("Failed loading DB ingredient names:", e)
-        DB_INGREDIENTS = set()
+    # Use cached ingredient rules for fast lookups
+    DB_INGREDIENTS = get_cached_db_ingredients()
+    rules_by_ingredient = get_cached_ingredient_rules()
 
-    # 🔥 Safe plural → singular normalizer
+    # Safe plural → singular normalizer
     def safe_normalize(name: str) -> str:
         name = name.strip().lower()
         if name.endswith("s"):
@@ -378,34 +402,14 @@ def check_ingredients(ingredients, condition):
                 return singular
         return name
 
-    # 🔥 Map original ingredients to normalized
+    # Map original ingredients to normalized
     original_to_normalized = {}
     for ing in ingredients:
         if ing and ing.strip():
             normalized = safe_normalize(ing)
             original_to_normalized[ing] = normalized
 
-    unique_ingredients = list({n for n in original_to_normalized.values()})
-
-    # 🔥 Query DB for all normalized ingredients at once
-    if unique_ingredients:
-        try:
-            cursor = get_ingredient_rules().find(
-                {"ingredient": {"$in": unique_ingredients}},
-                {"ingredient": 1, "harmful_for": 1, "alternative": 1, "_id": 0}
-            )
-            rules_by_ingredient = {
-                doc.get("ingredient"): doc
-                for doc in cursor
-                if doc.get("ingredient")
-            }
-        except Exception as e:
-            print(f"Error querying ingredient rules: {e}")
-            rules_by_ingredient = {}
-    else:
-        rules_by_ingredient = {}
-
-    # 🔥 Determine harmful/safe using normalized ingredient but store original
+    # Determine harmful/safe using normalized ingredient but store original
     for original, ingredient in original_to_normalized.items():
         rule = rules_by_ingredient.get(ingredient)
         if rule and condition in rule.get("harmful_for", []):
@@ -668,7 +672,10 @@ def check_ingredients_route():
         # Generate modified recipe via Gemini
         recipe = generate_recipe(ingredients, safe, replacements, condition)
     
-    # Store in database
+    # Skip synchronous nutrition calculation - will be loaded via AJAX for faster initial page load
+    # Pass modified ingredients to frontend for async nutrition loading
+    
+    # Store in database (without nutrition - will be updated if needed)
     if current_user.is_authenticated:
         patient_id = current_user.user_id
         food_entry = {
@@ -695,6 +702,9 @@ def check_ingredients_route():
                          recipe=formatted_recipe,
                          original_ingredients=ingredients,
                          condition=condition,
+                         nutrition=None,  # Will be loaded via AJAX
+                         nutrition_warnings=[],
+                         modified_ingredients_json=json.dumps(modified_ingredients),
                          moment=datetime.now().strftime('%B %d, %Y at %I:%M %p'))
 
 @app.route('/generate_report/<patient_id>')
@@ -788,7 +798,7 @@ def ai_extract_ingredients():
         # 3) External recipe API fallback (TheMealDB)
         try:
             api_url = f"https://www.themealdb.com/api/json/v1/1/search.php?s={requests.utils.quote(text)}"
-            resp = requests.get(api_url, timeout=6)
+            resp = requests.get(api_url, timeout=3)  # Reduced timeout for faster response
             if resp.ok:
                 payload = resp.json() or {}
                 meals = payload.get("meals") or []
@@ -839,6 +849,22 @@ def get_conditions():
     except Exception as e:
         print(f"Error getting conditions: {e}")
         return jsonify([])
+
+@app.route('/api/spell-check', methods=['POST'])
+def spell_check_recipe_name():
+    """Check recipe name spelling and return suggestions"""
+    data = request.get_json(force=True, silent=True) or {}
+    recipe_name = data.get('recipe_name', '').strip()
+    
+    if not recipe_name or len(recipe_name) < 2:
+        return jsonify({"suggestions": [], "is_correct": True})
+    
+    try:
+        result = spell_checker.check_spelling(recipe_name)
+        return jsonify(result)
+    except Exception as e:
+        print(f"Spell check error: {e}")
+        return jsonify({"suggestions": [], "is_correct": True})
 
 # Authentication Routes
 @app.route('/register', methods=['GET', 'POST'])

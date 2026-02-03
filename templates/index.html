@@ -80,6 +80,11 @@
                                     </button>
                                 </div>
                                 <div class="form-hint">💡 Type a recipe name and click Auto-Fill to populate ingredients</div>
+                                <!-- Spell Check Suggestions -->
+                                <div id="spellSuggestions" class="spell-suggestion" style="display: none;">
+                                    <span class="spell-label">Did you mean:</span>
+                                    <span id="spellSuggestionLinks"></span>
+                                </div>
                             </div>
 
                             <!-- Ingredients -->
@@ -251,6 +256,62 @@
                     } finally {
                         aiFillButton.disabled = false;
                         aiFillButton.innerHTML = originalHtml;
+                    }
+                });
+            }
+
+            // Spell Check for Recipe Name
+            const spellSuggestionsDiv = document.getElementById("spellSuggestions");
+            const spellSuggestionLinks = document.getElementById("spellSuggestionLinks");
+            let spellCheckTimeout = null;
+
+            if (recipeInput && spellSuggestionsDiv && spellSuggestionLinks) {
+                recipeInput.addEventListener("input", function () {
+                    // Clear previous timeout
+                    if (spellCheckTimeout) clearTimeout(spellCheckTimeout);
+                    
+                    const recipeName = this.value.trim();
+                    
+                    // Hide suggestions if input is too short
+                    if (recipeName.length < 2) {
+                        spellSuggestionsDiv.style.display = "none";
+                        return;
+                    }
+                    
+                    // Debounce: wait 400ms after user stops typing
+                    spellCheckTimeout = setTimeout(async () => {
+                        try {
+                            const resp = await fetch("/api/spell-check", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ recipe_name: recipeName })
+                            });
+                            const data = await resp.json();
+                            
+                            // Show suggestions if not correct and suggestions exist
+                            if (!data.is_correct && data.suggestions && data.suggestions.length > 0) {
+                                spellSuggestionLinks.innerHTML = data.suggestions.map(s => 
+                                    `<a href="#" class="spell-link" data-recipe="${s}">${s}</a>`
+                                ).join(", ");
+                                spellSuggestionsDiv.style.display = "block";
+                            } else {
+                                spellSuggestionsDiv.style.display = "none";
+                            }
+                        } catch (error) {
+                            console.error("Spell check error:", error);
+                            spellSuggestionsDiv.style.display = "none";
+                        }
+                    }, 400);
+                });
+                
+                // Click handler for spell suggestions
+                spellSuggestionLinks.addEventListener("click", function (e) {
+                    if (e.target.classList.contains("spell-link")) {
+                        e.preventDefault();
+                        const correctedName = e.target.dataset.recipe;
+                        recipeInput.value = correctedName;
+                        spellSuggestionsDiv.style.display = "none";
+                        recipeInput.focus();
                     }
                 });
             }
