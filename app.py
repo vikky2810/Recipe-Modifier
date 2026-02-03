@@ -21,7 +21,6 @@ from models import UserManager
 from forms import RegistrationForm, LoginForm, ProfileUpdateForm, ChangePasswordForm
 import requests
 from spell_checker import spell_checker
-from nutrition_service import nutrition_service
 
 load_dotenv()
 
@@ -866,35 +865,6 @@ def spell_check_recipe_name():
     except Exception as e:
         print(f"Spell check error: {e}")
         return jsonify({"suggestions": [], "is_correct": True})
-
-@app.route('/api/nutrition', methods=['POST'])
-def calculate_nutrition_async():
-    """Async API endpoint to calculate nutrition for ingredients.
-    
-    This endpoint is called via AJAX after the recipe page loads for faster perceived performance.
-    Body: { "ingredients": [...], "condition": "..." }
-    Returns: { "nutrition": {...}, "warnings": [...] }
-    """
-    try:
-        data = request.get_json(force=True, silent=True) or {}
-        ingredients = data.get('ingredients', [])
-        condition = data.get('condition', '')
-        
-        if not ingredients:
-            return jsonify({"nutrition": None, "warnings": []})
-        
-        # Calculate nutrition
-        nutrition_data = nutrition_service.calculate_recipe_nutrition(ingredients)
-        nutrition_warnings = nutrition_service.get_condition_warnings(nutrition_data, condition) if condition else []
-        nutrition_summary = nutrition_service.format_nutrition_summary(nutrition_data)
-        
-        return jsonify({
-            "nutrition": nutrition_summary,
-            "warnings": nutrition_warnings
-        })
-    except Exception as e:
-        print(f"Async nutrition calculation error: {e}")
-        return jsonify({"nutrition": None, "warnings": [], "error": str(e)})
 
 # Authentication Routes
 @app.route('/register', methods=['GET', 'POST'])
