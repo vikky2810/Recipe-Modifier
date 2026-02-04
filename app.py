@@ -21,6 +21,7 @@ from models import UserManager
 from forms import RegistrationForm, LoginForm, ProfileUpdateForm, ChangePasswordForm
 import requests
 from spell_checker import spell_checker
+from nutrition_service import nutrition_service
 
 load_dotenv()
 
@@ -865,6 +866,32 @@ def spell_check_recipe_name():
     except Exception as e:
         print(f"Spell check error: {e}")
         return jsonify({"suggestions": [], "is_correct": True})
+
+@app.route('/api/nutrition', methods=['POST'])
+def get_nutrition_data():
+    """API endpoint to calculate nutrition for ingredients"""
+    try:
+        data = request.get_json(force=True, silent=True) or {}
+        ingredients = data.get('ingredients', [])
+        condition = data.get('condition', '')
+        
+        if not ingredients:
+            return jsonify({'nutrition': None, 'warnings': []})
+        
+        # Calculate nutrition using nutrition service
+        raw_nutrition = nutrition_service.calculate_recipe_nutrition(ingredients)
+        formatted_nutrition = nutrition_service.format_nutrition_summary(raw_nutrition)
+        
+        # Get condition-specific warnings
+        warnings = nutrition_service.get_condition_warnings(raw_nutrition, condition)
+        
+        return jsonify({
+            'nutrition': formatted_nutrition,
+            'warnings': warnings
+        })
+    except Exception as e:
+        print(f"Nutrition API error: {e}")
+        return jsonify({'nutrition': None, 'warnings': [], 'error': str(e)})
 
 # Authentication Routes
 @app.route('/register', methods=['GET', 'POST'])
