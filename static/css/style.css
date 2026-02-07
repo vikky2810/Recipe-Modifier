@@ -2720,12 +2720,29 @@ section {
     margin-bottom: var(--space-2);
 }
 
+/* Results Card */
+.results-card {
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    margin-bottom: var(--space-6);
+}
+
+.action-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
+}
+
 /* Tips Card */
 .tips-card {
     background: white;
     border: 1px solid var(--gray-200);
     border-radius: var(--radius-xl);
     overflow: hidden;
+    margin-bottom: var(--space-6);
 }
 
 .tips-grid {
