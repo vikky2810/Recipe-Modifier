@@ -392,7 +392,7 @@
             vitamins.forEach(v => {
                 const dv = nutrition.vitamins?.[v.key]?.dv || 0;
                 const statusClass = dv >= 100 ? 'excellent' : dv >= 50 ? 'good' : dv >= 25 ? 'low' : 'deficient';
-                const statusIcon = dv >= 100 ? '✅' : dv >= 50 ? '👍' : dv >= 25 ? '⚠️' : '❌';
+                const statusIcon = dv >= 100 ? '✅' : dv >= 50 ? '👍' : dv >= 25 ? '⚠️' : '';
                 html += `<div class="nutrition-mini-item ${statusClass}">
                     <span class="mini-icon">${v.icon}</span>
                     <span class="mini-label">${v.label}</span>
@@ -432,7 +432,7 @@
                     statusIcon = dv <= 50 ? '✅' : dv <= 75 ? '👍' : dv <= 100 ? '⚠️' : '🔴';
                 } else {
                     statusClass = dv >= 100 ? 'excellent' : dv >= 50 ? 'good' : dv >= 25 ? 'low' : 'deficient';
-                    statusIcon = dv >= 100 ? '✅' : dv >= 50 ? '👍' : dv >= 25 ? '⚠️' : '❌';
+                    statusIcon = dv >= 100 ? '✅' : dv >= 50 ? '👍' : dv >= 25 ? '⚠️' : '';
                 }
                 html += `<div class="nutrition-mini-item ${statusClass}">
                     <span class="mini-icon">${m.icon}</span>
