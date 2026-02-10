@@ -1,15 +1,62 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Login to Health-Aware Recipe Modifier - Access your personalized recipe modifications.">
+    <meta name="description"
+        content="Login to Health-Aware Recipe Modifier - Access your personalized recipe modifications.">
     <title>Login - HealthRecipeAI</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        .password-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .password-input-wrapper .password-input {
+            padding-right: 3rem;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6b7280;
+            transition: color 0.2s ease;
+            border-radius: 6px;
+        }
+
+        .password-toggle:hover {
+            color: #00b0b0;
+            background: rgba(0, 176, 176, 0.05);
+        }
+
+        .password-toggle:focus {
+            outline: 2px solid rgba(0, 176, 176, 0.3);
+            outline-offset: 2px;
+        }
+
+        .eye-icon {
+            width: 20px;
+            height: 20px;
+        }
+    </style>
 </head>
+
 <body>
     <div class="auth-page">
         <div class="auth-container">
@@ -30,28 +77,28 @@
                 <div class="auth-body">
                     <!-- Flash Messages -->
                     {% with messages = get_flashed_messages(with_categories=true) %}
-                        {% if messages %}
-                            {% for category, message in messages %}
-                                <div class="alert alert-{{ 'danger' if category == 'error' else category }}">
-                                    <span>{% if category == 'error' %}⚠️{% else %}ℹ️{% endif %}</span>
-                                    <span>{{ message }}</span>
-                                </div>
-                            {% endfor %}
-                        {% endif %}
+                    {% if messages %}
+                    {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }}">
+                        <span>{% if category == 'error' %}⚠️{% else %}ℹ️{% endif %}</span>
+                        <span>{{ message }}</span>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
                     {% endwith %}
 
                     <form method="POST" action="{{ url_for('login') }}">
                         {{ form.hidden_tag() }}
-                        
+
                         <div class="form-group">
                             <label for="{{ form.username.id }}" class="form-label">
                                 <span class="icon">👤</span>{{ form.username.label.text }}
                             </label>
                             {{ form.username(class="form-input", placeholder="Enter username or email") }}
                             {% if form.username.errors %}
-                                {% for error in form.username.errors %}
-                                    <div class="error-text">⚠️ {{ error }}</div>
-                                {% endfor %}
+                            {% for error in form.username.errors %}
+                            <div class="error-text">⚠️ {{ error }}</div>
+                            {% endfor %}
                             {% endif %}
                         </div>
 
@@ -59,11 +106,28 @@
                             <label for="{{ form.password.id }}" class="form-label">
                                 <span class="icon">🔒</span>{{ form.password.label.text }}
                             </label>
-                            {{ form.password(class="form-input", placeholder="Enter password") }}
+                            <div class="password-input-wrapper">
+                                {{ form.password(class="form-input password-input", placeholder="Enter password") }}
+                                <button type="button" class="password-toggle"
+                                    onclick="togglePassword('{{ form.password.id }}', this)"
+                                    aria-label="Toggle password visibility">
+                                    <svg class="eye-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path class="eye-open" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle class="eye-open" cx="12" cy="12" r="3"></circle>
+                                        <path class="eye-closed"
+                                            d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
+                                            style="display: none;"></path>
+                                        <line class="eye-closed" x1="1" y1="1" x2="23" y2="23" style="display: none;">
+                                        </line>
+                                    </svg>
+                                </button>
+                            </div>
                             {% if form.password.errors %}
-                                {% for error in form.password.errors %}
-                                    <div class="error-text">⚠️ {{ error }}</div>
-                                {% endfor %}
+                            {% for error in form.password.errors %}
+                            <div class="error-text">⚠️ {{ error }}</div>
+                            {% endfor %}
                             {% endif %}
                         </div>
 
@@ -110,8 +174,25 @@
     </div>
 
     <script>
+        // Toggle password visibility
+        function togglePassword(fieldId, button) {
+            const passwordField = document.getElementById(fieldId);
+            const eyeOpen = button.querySelectorAll('.eye-open');
+            const eyeClosed = button.querySelectorAll('.eye-closed');
+
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                eyeOpen.forEach(el => el.style.display = 'none');
+                eyeClosed.forEach(el => el.style.display = 'block');
+            } else {
+                passwordField.type = 'password';
+                eyeOpen.forEach(el => el.style.display = 'block');
+                eyeClosed.forEach(el => el.style.display = 'none');
+            }
+        }
+
         // Add animation on load
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const card = document.querySelector('.auth-card');
             card.style.opacity = '0';
             card.style.transform = 'translateY(20px)';
@@ -123,4 +204,5 @@
         });
     </script>
 </body>
+
 </html>
