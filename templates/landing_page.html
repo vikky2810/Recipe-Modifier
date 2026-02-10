@@ -45,12 +45,12 @@
         </div>
         <div class="container">
             <div class="hero-content">
-                <h1 class="hero-title">Eat Smart. Cook Safe.<br><span class="gradient-text">Powered by AI.</span></h1>
-                <p class="hero-subtitle">Instantly analyze recipes and get healthier alternatives based on your health
-                    condition. Our AI detects harmful ingredients and suggests smart substitutes.</p>
+                <h1 class="hero-title">Make Any Recipe Healthy<br><span class="gradient-text">in Seconds.</span></h1>
+                <p class="hero-subtitle">Stop worrying about ingredients. Our AI instantly adapts your favorite meals to
+                    your health needs.</p>
                 <div class="hero-buttons">
                     <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg"><span class="btn-icon"><i
-                                data-lucide="chef-hat" class="lucide-icon"></i></span>Modify My Recipe</a>
+                                data-lucide="chef-hat" class="lucide-icon"></i></span>Start Modifying Free</a>
                     <a href="#sample-output" class="btn btn-secondary btn-lg"><span class="btn-icon"><i
                                 data-lucide="clipboard-list" class="lucide-icon"></i></span>View Sample Report</a>
                 </div>
@@ -475,14 +475,14 @@
                 // Add timeout to prevent hanging
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-                
+
                 const response = await fetch('/api/stats', {
                     signal: controller.signal
                 });
                 clearTimeout(timeoutId);
-                
+
                 const data = await response.json();
-                
+
                 // Format numbers with K/M suffix
                 function formatNumber(num) {
                     if (num >= 1000000) {
@@ -492,7 +492,7 @@
                     }
                     return num.toString();
                 }
-                
+
                 // Animate number counting
                 function animateCount(element, target, suffix = '') {
                     let current = 0;
@@ -506,22 +506,22 @@
                         element.textContent = formatNumber(current) + suffix;
                     }, 30);
                 }
-                
+
                 // Update stats with animation
                 const recipesEl = document.getElementById('stat-recipes');
                 const usersEl = document.getElementById('stat-users');
                 const conditionsEl = document.getElementById('stat-conditions');
-                
+
                 if (recipesEl && data.recipes_modified !== undefined) {
                     recipesEl.innerHTML = '';
                     animateCount(recipesEl, data.recipes_modified, '+');
                 }
-                
+
                 if (usersEl && data.users !== undefined) {
                     usersEl.innerHTML = '';
                     animateCount(usersEl, data.users, '+');
                 }
-                
+
                 if (conditionsEl && data.health_conditions !== undefined) {
                     conditionsEl.innerHTML = '';
                     animateCount(conditionsEl, data.health_conditions, '+');
@@ -532,13 +532,13 @@
                 const recipesEl = document.getElementById('stat-recipes');
                 const usersEl = document.getElementById('stat-users');
                 const conditionsEl = document.getElementById('stat-conditions');
-                
+
                 if (recipesEl) recipesEl.textContent = '0+';
                 if (usersEl) usersEl.textContent = '0+';
                 if (conditionsEl) conditionsEl.textContent = '12+';
             }
         }
-        
+
         // Load stats on page load
         document.addEventListener('DOMContentLoaded', loadStats);
 

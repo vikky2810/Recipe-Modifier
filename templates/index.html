@@ -26,7 +26,7 @@
                     <div class="header-title">
                         <h1><i data-lucide="salad" class="inline-block w-8 h-8 mr-2 text-primary"></i> HealthRecipeAI
                         </h1>
-                        <p>Transform your recipes for better health</p>
+                        <p>Eat what you love, without the health risks</p>
                     </div>
                 </div>
                 <div class="header-right">
@@ -69,8 +69,9 @@
 
                 <!-- Section Intro -->
                 <div class="section-intro">
-                    <h2><i data-lucide="sprout" class="inline-block w-6 h-6 mr-2 text-primary"></i> Get Started</h2>
-                    <p>Enter a recipe name or your ingredients below</p>
+                    <h2><i data-lucide="sprout" class="inline-block w-6 h-6 mr-2 text-primary"></i> Modify Your Recipe
+                    </h2>
+                    <p>Paste your ingredients or type a recipe name</p>
                 </div>
 
                 <!-- Main Form Card -->
@@ -83,8 +84,8 @@
                             <!-- Recipe Name -->
                             <div class="form-section">
                                 <label for="recipeName" class="form-label">
-                                    <span class="icon"><i data-lucide="book-open" class="w-4 h-4"></i></span>Enter
-                                    Recipe Name (optional)
+                                    <span class="icon"><i data-lucide="book-open" class="w-4 h-4"></i></span>Recipe Name
+                                    <small class="text-gray-500 font-normal">(Optional)</small>
                                 </label>
                                 <div class="input-group">
                                     <input type="text" class="form-input" id="recipeName"
@@ -94,7 +95,7 @@
                                     </button>
                                 </div>
                                 <div class="form-hint"><i data-lucide="lightbulb" class="inline-block w-3 h-3 mr-1"></i>
-                                    Type a recipe name and click Auto-Fill to populate ingredients</div>
+                                    Type a recipe name to auto-detect ingredients</div>
                                 <!-- Spell Check Suggestions -->
                                 <div id="spellSuggestions" class="spell-suggestion" style="display: none;">
                                     <span class="spell-label">Did you mean:</span>
@@ -105,14 +106,14 @@
                             <!-- Ingredients -->
                             <div class="form-section">
                                 <label for="ingredients" class="form-label">
-                                    <span class="icon"><i data-lucide="file-text" class="w-4 h-4"></i></span>Enter Your
-                                    Ingredients
+                                    <span class="icon"><i data-lucide="file-text" class="w-4 h-4"></i></span>Ingredients
+                                    List
                                 </label>
                                 <textarea class="form-textarea" id="ingredients" name="ingredients"
-                                    placeholder="Enter ingredients separated by commas (e.g., sugar, flour, butter, banana)"
+                                    placeholder="Paste ingredients here (e.g., 2 cups flour, 1 cup sugar, 1/2 cup butter...)"
                                     maxlength="2000" required></textarea>
                                 <div class="form-hint"><i data-lucide="info" class="inline-block w-3 h-3 mr-1"></i>
-                                    Separate multiple ingredients with commas (max 2000 characters)</div>
+                                    Separate ingredients with commas</div>
                             </div>
 
                             <!-- Condition -->
@@ -137,8 +138,8 @@
                             {% else %}
                             <div class="form-section">
                                 <label for="condition" class="form-label">
-                                    <span class="icon"><i data-lucide="hospital" class="w-4 h-4"></i></span>Select Your
-                                    Medical Condition
+                                    <span class="icon"><i data-lucide="hospital" class="w-4 h-4"></i></span>Select
+                                    medical condition
                                 </label>
                                 <select class="form-select" id="condition" name="condition" required>
                                     <option value="">Choose your condition...</option>
@@ -160,8 +161,7 @@
 
                             <!-- Submit -->
                             <button type="submit" class="btn-submit" id="submitBtn">
-                                <i data-lucide="search" class="inline-block w-4 h-4 mr-2"></i> Check Ingredients &
-                                Generate Recipe
+                                <i data-lucide="sparkles" class="inline-block w-4 h-4 mr-2"></i> Make It Healthy
                             </button>
                         </form>
                     </div>
@@ -188,11 +188,11 @@
                         </h4>
                         {% if current_user.is_authenticated %}
                         <a href="{{ url_for('generate_report', patient_id=current_user.user_id) }}" class="btn-report">
-                            <i data-lucide="file-text" class="inline-block w-4 h-4 mr-2"></i> Download PDF Report
+                            <i data-lucide="file-text" class="inline-block w-4 h-4 mr-2"></i> Unlock Detailed Report
                         </a>
                         {% else %}
                         <a href="{{ url_for('login') }}" class="btn-report">
-                            <i data-lucide="lock" class="inline-block w-4 h-4 mr-2"></i> Login to Generate Report
+                            <i data-lucide="lock" class="inline-block w-4 h-4 mr-2"></i> Login to Save & Export Results
                         </a>
                         {% endif %}
                     </div>
@@ -202,7 +202,8 @@
 
         <!-- Footer -->
         <footer class="app-footer">
-            <p><i data-lucide="heart" class="inline-block w-4 h-4 text-red-500"></i> Your health is our priority</p>
+            <p><i data-lucide="heart" class="inline-block w-4 h-4 text-red-500"></i> Nutritionist-validated auditing
+                logic</p>
             <small>This tool is for educational purposes. Always consult with your healthcare provider.</small>
         </footer>
     </div>

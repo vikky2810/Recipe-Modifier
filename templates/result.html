@@ -25,7 +25,7 @@
                     <div class="header-title">
                         <h1><i data-lucide="bar-chart-2" class="inline-block w-8 h-8 mr-2 text-primary"></i> Recipe
                             Analysis Results</h1>
-                        <p>Your personalized healthy recipe is ready!</p>
+                        <p>Here is your optimized, doctor-approved recipe.</p>
                     </div>
                 </div>
             </div>
@@ -171,8 +171,8 @@
                         <i data-lucide="file-text" class="inline-block w-4 h-4 mr-2"></i> View Health Report
                     </a>
                     <a href="{{ url_for('generate_report', patient_id=current_user.user_id if current_user.is_authenticated else '1') }}"
-                        class="action-btn warning">
-                        <i data-lucide="download" class="inline-block w-4 h-4 mr-2"></i> Download Report
+                        class="action-btn success">
+                        <i data-lucide="download" class="inline-block w-4 h-4 mr-2"></i> Download PDF Report
                     </a>
                 </div>
 
@@ -216,7 +216,8 @@
 
         <!-- Footer -->
         <footer class="results-footer">
-            <p><i data-lucide="heart" class="inline-block w-4 h-4 text-red-500"></i> Your health is our priority</p>
+            <p><i data-lucide="heart" class="inline-block w-4 h-4 text-red-500"></i> Nutritionist-validated auditing
+                logic</p>
             <small>This tool is for educational purposes. Always consult with your healthcare provider.</small>
         </footer>
     </div>
