@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,11 +9,12 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <style>
         .profile-completion-container {
             min-height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #e6f7f7 0%, #e8f4fc 50%, #f0f9ff 100%);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -28,21 +30,26 @@
             left: -50%;
             width: 200%;
             height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background: radial-gradient(circle, rgba(0, 176, 176, 0.05) 1px, transparent 1px);
             background-size: 50px 50px;
             animation: backgroundMove 20s linear infinite;
         }
 
         @keyframes backgroundMove {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(50px, 50px); }
+            0% {
+                transform: translate(0, 0);
+            }
+
+            100% {
+                transform: translate(50px, 50px);
+            }
         }
 
         .profile-card {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             border-radius: 24px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 20px 60px rgba(0, 176, 176, 0.15);
             max-width: 600px;
             width: 100%;
             padding: 3rem;
@@ -56,6 +63,7 @@
                 opacity: 0;
                 transform: translateY(30px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -65,84 +73,92 @@
         .profile-header {
             text-align: center;
             margin-bottom: 2.5rem;
+            background: transparent !important;
+            padding: 0;
         }
 
         .profile-header h1 {
             font-size: 2rem;
             font-weight: 800;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: #1e293b;
             margin-bottom: 0.5rem;
+            background: transparent !important;
         }
 
         .profile-header p {
-            color: #6b7280;
+            color: #64748b;
             font-size: 1rem;
         }
 
         .progress-indicator {
             display: flex;
             justify-content: space-between;
+            align-items: center;
             margin-bottom: 2rem;
             position: relative;
+            padding: 0 1rem;
+        }
+
+        .progress-indicator::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: calc(16.66% + 1rem);
+            right: calc(16.66% + 1rem);
+            height: 3px;
+            background: #e5e7eb;
+            z-index: 0;
         }
 
         .progress-step {
             flex: 1;
             text-align: center;
             position: relative;
-        }
-
-        .progress-step::before {
-            content: '';
-            position: absolute;
-            top: 15px;
-            left: 50%;
-            width: 100%;
-            height: 3px;
-            background: #e5e7eb;
-            z-index: -1;
-        }
-
-        .progress-step:first-child::before {
-            display: none;
+            z-index: 1;
         }
 
         .progress-dot {
-            width: 30px;
-            height: 30px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             background: #e5e7eb;
             margin: 0 auto 0.5rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 600;
+            font-weight: 700;
             font-size: 0.875rem;
             transition: all 0.3s ease;
+            color: #9ca3af;
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
         .progress-step.active .progress-dot {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #00b0b0 0%, #1a96dd 100%);
             color: white;
-            transform: scale(1.2);
+            transform: scale(1.15);
+            box-shadow: 0 4px 12px rgba(0, 176, 176, 0.3);
         }
 
         .progress-step.completed .progress-dot {
-            background: #10b981;
+            background: #22c55e;
             color: white;
         }
 
-        .progress-step.completed::before {
-            background: #10b981;
+        .progress-step.completed~.progress-step .progress-dot {
+            background: #e5e7eb;
         }
 
         .progress-label {
             font-size: 0.75rem;
             color: #6b7280;
-            font-weight: 500;
+            font-weight: 600;
+        }
+
+        .progress-step.active .progress-label {
+            color: #00b0b0;
+            font-weight: 700;
         }
 
         .form-slide {
@@ -159,6 +175,7 @@
                 opacity: 0;
                 transform: translateX(20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateX(0);
@@ -189,8 +206,8 @@
 
         .form-input:focus {
             outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            border-color: #00b0b0;
+            box-shadow: 0 0 0 3px rgba(0, 176, 176, 0.1);
         }
 
         .form-select {
@@ -207,8 +224,8 @@
 
         .form-select:focus {
             outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            border-color: #00b0b0;
+            box-shadow: 0 0 0 3px rgba(0, 176, 176, 0.1);
         }
 
         .error-text {
@@ -236,13 +253,14 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #00b0b0 0%, #1a96dd 50%, #3b82f6 100%);
             color: white;
+            box-shadow: 0 4px 12px rgba(0, 176, 176, 0.2);
         }
 
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 8px 20px rgba(0, 176, 176, 0.3);
         }
 
         .btn-secondary {
@@ -278,21 +296,21 @@
         }
 
         .goal-option:hover {
-            border-color: #667eea;
-            background: rgba(102, 126, 234, 0.05);
+            border-color: #00b0b0;
+            background: rgba(0, 176, 176, 0.05);
         }
 
         .goal-option input[type="radio"] {
             display: none;
         }
 
-        .goal-option input[type="radio"]:checked + .goal-content {
-            color: #667eea;
+        .goal-option input[type="radio"]:checked+.goal-content {
+            color: #00b0b0;
         }
 
-        .goal-option input[type="radio"]:checked ~ .goal-option {
-            border-color: #667eea;
-            background: rgba(102, 126, 234, 0.1);
+        .goal-option input[type="radio"]:checked~.goal-option {
+            border-color: #00b0b0;
+            background: rgba(0, 176, 176, 0.1);
         }
 
         .alert {
@@ -315,6 +333,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="profile-completion-container">
         <div class="profile-card">
@@ -325,14 +344,14 @@
 
             <!-- Flash Messages -->
             {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }}">
-                            <span>{% if category == 'error' %}⚠️{% else %}✅{% endif %}</span>
-                            <span>{{ message }}</span>
-                        </div>
-                    {% endfor %}
-                {% endif %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }}">
+                <span>{% if category == 'error' %}⚠️{% else %}✅{% endif %}</span>
+                <span>{{ message }}</span>
+            </div>
+            {% endfor %}
+            {% endif %}
             {% endwith %}
 
             <!-- Progress Indicator -->
@@ -363,9 +382,9 @@
                         {{ form.age(class="form-input", placeholder="Enter your age", type="number") }}
                         <div class="input-hint">We need this to calculate your nutritional needs</div>
                         {% if form.age.errors %}
-                            {% for error in form.age.errors %}
-                                <div class="error-text">⚠️ {{ error }}</div>
-                            {% endfor %}
+                        {% for error in form.age.errors %}
+                        <div class="error-text">⚠️ {{ error }}</div>
+                        {% endfor %}
                         {% endif %}
                     </div>
 
@@ -376,9 +395,9 @@
                         {{ form.weight(class="form-input", placeholder="Enter your weight in kg", type="number") }}
                         <div class="input-hint">Your current weight in kilograms</div>
                         {% if form.weight.errors %}
-                            {% for error in form.weight.errors %}
-                                <div class="error-text">⚠️ {{ error }}</div>
-                            {% endfor %}
+                        {% for error in form.weight.errors %}
+                        <div class="error-text">⚠️ {{ error }}</div>
+                        {% endfor %}
                         {% endif %}
                     </div>
 
@@ -396,9 +415,9 @@
                         {{ form.height(class="form-input", placeholder="Enter your height in cm", type="number") }}
                         <div class="input-hint">Your height in centimeters</div>
                         {% if form.height.errors %}
-                            {% for error in form.height.errors %}
-                                <div class="error-text">⚠️ {{ error }}</div>
-                            {% endfor %}
+                        {% for error in form.height.errors %}
+                        <div class="error-text">⚠️ {{ error }}</div>
+                        {% endfor %}
                         {% endif %}
                     </div>
 
@@ -409,9 +428,9 @@
                         {{ form.calorie_target(class="form-input", placeholder="e.g., 2000", type="number") }}
                         <div class="input-hint">Your daily calorie goal (we'll help you calculate this)</div>
                         {% if form.calorie_target.errors %}
-                            {% for error in form.calorie_target.errors %}
-                                <div class="error-text">⚠️ {{ error }}</div>
-                            {% endfor %}
+                        {% for error in form.calorie_target.errors %}
+                        <div class="error-text">⚠️ {{ error }}</div>
+                        {% endfor %}
                         {% endif %}
                     </div>
 
@@ -430,9 +449,9 @@
                         {{ form.goal(class="form-select") }}
                         <div class="input-hint">Choose what you want to achieve</div>
                         {% if form.goal.errors %}
-                            {% for error in form.goal.errors %}
-                                <div class="error-text">⚠️ {{ error }}</div>
-                            {% endfor %}
+                        {% for error in form.goal.errors %}
+                        <div class="error-text">⚠️ {{ error }}</div>
+                        {% endfor %}
                         {% endif %}
                     </div>
 
@@ -490,9 +509,10 @@
         }
 
         // Add animation on load
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             updateProgress();
         });
     </script>
 </body>
+
 </html>
