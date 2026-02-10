@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,17 +9,22 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
+
 <body>
     <div class="results-page">
         <!-- Header -->
         <header class="results-header">
             <div class="container">
                 <div class="header-left">
-                    <a href="{{ url_for('index') }}" class="back-btn">← Back</a>
+                    <a href="{{ url_for('index') }}" class="back-btn"><i data-lucide="arrow-left"
+                            class="inline-block w-4 h-4 mr-1"></i> Check Another Recipe</a>
                     <div class="header-title">
-                        <h1>📊 Recipe Analysis Results</h1>
+                        <h1><i data-lucide="bar-chart-2" class="inline-block w-8 h-8 mr-2 text-primary"></i> Recipe
+                            Analysis Results</h1>
                         <p>Your personalized healthy recipe is ready!</p>
                     </div>
                 </div>
@@ -28,20 +34,22 @@
         <!-- Main Content -->
         <main class="main-content">
             <div class="container">
-                
+
                 <!-- Summary Card -->
                 <div class="results-card">
                     <div class="card-header info">
-                        <h3><span class="header-icon">📋</span> Analysis Summary</h3>
+                        <h3><span class="header-icon"><i data-lucide="clipboard-list" class="w-6 h-6"></i></span>
+                            Analysis Summary</h3>
                     </div>
                     <div class="card-body">
                         <div class="summary-grid">
                             <div class="summary-item">
-                                <h4>🏥 Health Condition</h4>
+                                <h4><i data-lucide="hospital" class="inline-block w-4 h-4 mr-1"></i> Health Condition
+                                </h4>
                                 <span class="badge">{{ condition.replace('_', ' ').title() }}</span>
                             </div>
                             <div class="summary-item">
-                                <h4>🕐 Analysis Date</h4>
+                                <h4><i data-lucide="clock" class="inline-block w-4 h-4 mr-1"></i> Analysis Date</h4>
                                 <span class="value">{{ moment }}</span>
                             </div>
                         </div>
@@ -51,12 +59,13 @@
                 <!-- Original Ingredients -->
                 <div class="results-card">
                     <div class="card-header secondary">
-                        <h3><span class="header-icon">📝</span> Original Ingredients</h3>
+                        <h3><span class="header-icon"><i data-lucide="file-text" class="w-6 h-6"></i></span> Original
+                            Ingredients</h3>
                     </div>
                     <div class="card-body">
                         <div class="ingredients-grid">
                             {% for ingredient in original_ingredients %}
-                                <span class="ingredient-badge secondary">{{ ingredient.strip() }}</span>
+                            <span class="ingredient-badge secondary">{{ ingredient.strip() }}</span>
                             {% endfor %}
                         </div>
                     </div>
@@ -66,15 +75,18 @@
                 {% if harmful %}
                 <div class="results-card">
                     <div class="card-header danger">
-                        <h3><span class="header-icon">⚠️</span> Harmful Ingredients Detected</h3>
+                        <h3><span class="header-icon"><i data-lucide="alert-triangle" class="w-6 h-6"></i></span>
+                            Harmful Ingredients Detected</h3>
                     </div>
                     <div class="card-body">
                         <div class="alert-box danger">
-                            <span>ℹ️ The following ingredients may be harmful for your condition and have been replaced:</span>
+                            <span><i data-lucide="info" class="inline-block w-4 h-4 mr-1"></i> The following ingredients
+                                may be harmful for your condition and have been replaced:</span>
                         </div>
                         <div class="ingredients-grid">
                             {% for ingredient in harmful %}
-                                <span class="ingredient-badge danger">❌ {{ ingredient }}</span>
+                            <span class="ingredient-badge danger"><i data-lucide="x"
+                                    class="inline-block w-3 h-3 mr-1"></i> {{ ingredient }}</span>
                             {% endfor %}
                         </div>
                     </div>
@@ -82,11 +94,13 @@
                 {% else %}
                 <div class="results-card">
                     <div class="card-header success">
-                        <h3><span class="header-icon">🎉</span> Great News!</h3>
+                        <h3><span class="header-icon"><i data-lucide="party-popper" class="w-6 h-6"></i></span> Great
+                            News!</h3>
                     </div>
                     <div class="card-body">
                         <div class="alert-box success">
-                            <span>👍 All your ingredients are safe for your condition! No replacements needed.</span>
+                            <span><i data-lucide="thumbs-up" class="inline-block w-4 h-4 mr-1"></i> All your ingredients
+                                are safe for your condition! No replacements needed.</span>
                         </div>
                     </div>
                 </div>
@@ -95,15 +109,18 @@
                 <!-- Safe Ingredients -->
                 <div class="results-card">
                     <div class="card-header success">
-                        <h3><span class="header-icon">🛡️</span> Safe Ingredients for Your Recipe</h3>
+                        <h3><span class="header-icon"><i data-lucide="shield-check" class="w-6 h-6"></i></span> Safe
+                            Ingredients for Your Recipe</h3>
                     </div>
                     <div class="card-body">
                         <div class="alert-box success">
-                            <span>💚 These ingredients are safe and healthy for your condition:</span>
+                            <span><i data-lucide="heart" class="inline-block w-4 h-4 mr-1"></i> These ingredients are
+                                safe and healthy for your condition:</span>
                         </div>
                         <div class="ingredients-grid">
                             {% for ingredient in safe %}
-                                <span class="ingredient-badge success">✓ {{ ingredient }}</span>
+                            <span class="ingredient-badge success"><i data-lucide="check"
+                                    class="inline-block w-3 h-3 mr-1"></i> {{ ingredient }}</span>
                             {% endfor %}
                         </div>
                     </div>
@@ -112,7 +129,8 @@
                 <!-- Nutrition Summary (Loaded via AJAX for faster initial page load) -->
                 <div class="results-card nutrition-card" id="nutrition-section">
                     <div class="card-header nutrition">
-                        <h3><span class="header-icon">🥗</span> Nutrition Summary (Per Serving)</h3>
+                        <h3><span class="header-icon"><i data-lucide="salad" class="w-6 h-6"></i></span> Nutrition
+                            Summary (Per Serving)</h3>
                     </div>
                     <div class="card-body" id="nutrition-content">
                         <!-- Loading state -->
@@ -123,18 +141,21 @@
                         <!-- Content will be injected here via JavaScript -->
                     </div>
                 </div>
-            
+
                 <!-- Modified Recipe -->
                 <div class="results-card">
                     <div class="card-header primary">
-                        <h3><span class="header-icon">🍳</span> Your Modified Recipe</h3>
+                        <h3><span class="header-icon"><i data-lucide="chef-hat" class="w-6 h-6"></i></span> Your
+                            Modified Recipe</h3>
                     </div>
                     <div class="card-body">
                         <div class="alert-box info">
-                            <span>💡 Here's your personalized recipe with safe ingredients:</span>
+                            <span><i data-lucide="lightbulb" class="inline-block w-4 h-4 mr-1"></i> Here's your
+                                personalized recipe with safe ingredients:</span>
                         </div>
                         <div class="recipe-content">
-                            <h5>📖 Recipe Instructions</h5>
+                            <h5><i data-lucide="book-open" class="inline-block w-4 h-4 mr-1"></i> Recipe Instructions
+                            </h5>
                             {{ recipe | safe }}
                         </div>
                     </div>
@@ -143,37 +164,47 @@
                 <!-- Action Buttons -->
                 <div class="action-buttons">
                     <a href="{{ url_for('index') }}" class="action-btn primary">
-                        ← Check Another Recipe
+                        <i data-lucide="rotate-ccw" class="inline-block w-4 h-4 mr-2"></i> Check Another Recipe
                     </a>
-                    <a href="{{ url_for('view_report', patient_id=current_user.user_id if current_user.is_authenticated else '1') }}" class="action-btn info" target="_blank">
-                        👁️ View Health Report
+                    <a href="{{ url_for('view_report', patient_id=current_user.user_id if current_user.is_authenticated else '1') }}"
+                        class="action-btn info" target="_blank">
+                        <i data-lucide="file-text" class="inline-block w-4 h-4 mr-2"></i> View Health Report
                     </a>
-                    <a href="{{ url_for('generate_report', patient_id=current_user.user_id if current_user.is_authenticated else '1') }}" class="action-btn warning">
-                        📄 Download Report
+                    <a href="{{ url_for('generate_report', patient_id=current_user.user_id if current_user.is_authenticated else '1') }}"
+                        class="action-btn warning">
+                        <i data-lucide="download" class="inline-block w-4 h-4 mr-2"></i> Download Report
                     </a>
                 </div>
 
                 <!-- Health Tips -->
                 <div class="tips-card">
                     <div class="card-header info">
-                        <h3><span class="header-icon">💡</span> Health Tips</h3>
+                        <h3><span class="header-icon"><i data-lucide="lightbulb" class="w-6 h-6"></i></span> Health Tips
+                        </h3>
                     </div>
                     <div class="card-body">
                         <div class="tips-grid">
                             <div class="tips-section">
-                                <h5>🍎 Nutrition Tips</h5>
+                                <h5><i data-lucide="apple" class="inline-block w-4 h-4 mr-1"></i> Nutrition Tips</h5>
                                 <ul>
-                                    <li><span>✓</span> Always read ingredient labels</li>
-                                    <li><span>✓</span> Choose whole foods when possible</li>
-                                    <li><span>✓</span> Consult your healthcare provider</li>
+                                    <li><span><i data-lucide="check" class="inline-block w-3 h-3"></i></span> Always
+                                        read ingredient labels</li>
+                                    <li><span><i data-lucide="check" class="inline-block w-3 h-3"></i></span> Choose
+                                        whole foods when possible</li>
+                                    <li><span><i data-lucide="check" class="inline-block w-3 h-3"></i></span> Consult
+                                        your healthcare provider</li>
                                 </ul>
                             </div>
                             <div class="tips-section">
-                                <h5>❤️ Remember</h5>
+                                <h5><i data-lucide="heart" class="inline-block w-4 h-4 mr-1 text-red-500"></i> Remember
+                                </h5>
                                 <ul>
-                                    <li><span>ℹ️</span> This tool is for guidance only</li>
-                                    <li><span>ℹ️</span> Individual needs may vary</li>
-                                    <li><span>ℹ️</span> Keep track of your food intake</li>
+                                    <li><span><i data-lucide="info" class="inline-block w-3 h-3"></i></span> This tool
+                                        is for guidance only</li>
+                                    <li><span><i data-lucide="info" class="inline-block w-3 h-3"></i></span> Individual
+                                        needs may vary</li>
+                                    <li><span><i data-lucide="info" class="inline-block w-3 h-3"></i></span> Keep track
+                                        of your food intake</li>
                                 </ul>
                             </div>
                         </div>
@@ -185,16 +216,15 @@
 
         <!-- Footer -->
         <footer class="results-footer">
-            <p>❤️ Your health is our priority</p>
+            <p><i data-lucide="heart" class="inline-block w-4 h-4 text-red-500"></i> Your health is our priority</p>
             <small>This tool is for educational purposes. Always consult with your healthcare provider.</small>
         </footer>
     </div>
 
     <!-- Pass data from Jinja2 to JavaScript via data attributes (avoids lint errors) -->
-    <div id="nutrition-data" 
-         data-ingredients='{{ modified_ingredients_json | safe if modified_ingredients_json else "[]" }}'
-         data-condition="{{ condition }}"
-         style="display: none;"></div>
+    <div id="nutrition-data"
+        data-ingredients='{{ modified_ingredients_json | safe if modified_ingredients_json else "[]" }}'
+        data-condition="{{ condition }}" style="display: none;"></div>
 
     <script>
         // Nutrition data configuration - read from data attributes
@@ -208,61 +238,62 @@
         function renderNutritionHTML(data) {
             const nutrition = data.nutrition;
             const warnings = data.warnings || [];
-            
+
             if (!nutrition) {
-                return '<div class="alert-box warning"><span>⚠️</span><span>Nutrition data unavailable</span></div>';
+                return '<div class="alert-box warning"><span class="alert-icon"><i data-lucide="alert-triangle" class="w-5 h-5"></i></span><span>Nutrition data unavailable</span></div>';
             }
-            
+
             let html = '';
-            
+
             // Calculate health score based on warnings and nutrient balance
             const warningCount = warnings.length;
             const healthScore = Math.max(0, 100 - (warningCount * 15));
             const healthStatus = healthScore >= 80 ? 'excellent' : healthScore >= 60 ? 'good' : healthScore >= 40 ? 'moderate' : 'caution';
-            const healthEmoji = healthScore >= 80 ? '🌟' : healthScore >= 60 ? '✅' : healthScore >= 40 ? '⚠️' : '🔴';
-            
+            // Use icon names for JS generation
+            const healthIcon = healthScore >= 80 ? 'star' : healthScore >= 60 ? 'check-circle' : healthScore >= 40 ? 'alert-triangle' : 'alert-circle';
+
             // Quick Stats Overview Section
             html += `<div class="nutrition-quick-stats" role="region" aria-label="Quick Nutrition Overview">
                 <div class="quick-stats-header">
                     <div class="health-score-badge ${healthStatus}">
-                        <span class="score-emoji">${healthEmoji}</span>
+                        <span class="score-emoji"><i data-lucide="${healthIcon}" class="w-5 h-5"></i></span>
                         <span class="score-text">Health Score: ${healthScore}</span>
                     </div>
-                    <span class="serving-info">📊 Per Serving</span>
+                    <span class="serving-info"><i data-lucide="bar-chart-2" class="inline-block w-4 h-4 mr-1"></i> Per Serving</span>
                 </div>
                 <div class="quick-stats-grid">
                     <div class="quick-stat calories">
-                        <span class="stat-icon">🔥</span>
+                        <span class="stat-icon"><i data-lucide="flame" class="w-5 h-5"></i></span>
                         <span class="stat-value">${nutrition.macros.calories?.value || 0}</span>
                         <span class="stat-label">Calories</span>
                     </div>
                     <div class="quick-stat protein">
-                        <span class="stat-icon">🥩</span>
+                        <span class="stat-icon"><i data-lucide="utensils" class="w-5 h-5"></i></span>
                         <span class="stat-value">${nutrition.macros.protein?.value || 0}g</span>
                         <span class="stat-label">Protein</span>
                     </div>
                     <div class="quick-stat carbs">
-                        <span class="stat-icon">🍞</span>
+                        <span class="stat-icon"><i data-lucide="wheat" class="w-5 h-5"></i></span>
                         <span class="stat-value">${nutrition.macros.carbohydrates?.value || 0}g</span>
                         <span class="stat-label">Carbs</span>
                     </div>
                     <div class="quick-stat fat">
-                        <span class="stat-icon">🧈</span>
+                        <span class="stat-icon"><i data-lucide="droplet" class="w-5 h-5"></i></span>
                         <span class="stat-value">${nutrition.macros.total_fat?.value || 0}g</span>
                         <span class="stat-label">Fat</span>
                     </div>
                 </div>
             </div>`;
-            
+
             // Warnings Section (if any)
             if (warnings.length > 0) {
                 html += '<div class="nutrition-warnings" role="alert" aria-label="Nutrition Warnings">';
-                html += '<h5>⚠️ Health Alerts</h5>';
+                html += '<h5><i data-lucide="alert-triangle" class="inline-block w-4 h-4 mr-1"></i> Health Alerts</h5>';
                 warnings.forEach(warning => {
-                    const unit = warning.nutrient === 'Calories' ? ' kcal' : 
-                                 ['Sodium', 'Potassium', 'Calcium'].includes(warning.nutrient) ? ' mg' : 'g';
+                    const unit = warning.nutrient === 'Calories' ? ' kcal' :
+                        ['Sodium', 'Potassium', 'Calcium'].includes(warning.nutrient) ? ' mg' : 'g';
                     html += `<div class="alert-box ${warning.severity}">
-                        <span class="alert-icon">⚠️</span>
+                        <span class="alert-icon"><i data-lucide="alert-triangle" class="w-5 h-5"></i></span>
                         <div class="alert-content">
                             <strong>${warning.nutrient}</strong>
                             <span>${warning.message}</span>
@@ -272,27 +303,27 @@
                 });
                 html += '</div>';
             }
-            
+
             // Detailed Macronutrients Section
             html += `<div class="nutrition-section" role="region" aria-label="Detailed Macronutrients">
-                <h5>⚡ Detailed Macronutrients</h5>
+                <h5><i data-lucide="zap" class="inline-block w-4 h-4 mr-1"></i> Detailed Macronutrients</h5>
                 
                 <!-- Energy & Protein Group -->
                 <div class="macro-group">
-                    <h6>💪 Energy & Protein</h6>
+                    <h6><i data-lucide="activity" class="inline-block w-3 h-3 mr-1"></i> Energy & Protein</h6>
                     <div class="nutrition-grid">`;
-            
+
             const energyMacros = [
-                { key: 'calories', icon: '🔥', label: 'Calories', unit: 'kcal' },
-                { key: 'protein', icon: '🥩', label: 'Protein', unit: 'g' }
+                { key: 'calories', icon: 'flame', label: 'Calories', unit: 'kcal' },
+                { key: 'protein', icon: 'utensils', label: 'Protein', unit: 'g' }
             ];
-            
+
             energyMacros.forEach(m => {
                 const value = nutrition.macros[m.key]?.value || 0;
                 const dv = Math.min(nutrition.macros[m.key]?.dv || 0, 100);
                 const dvClass = dv > 100 ? 'high' : dv > 50 ? 'moderate' : 'low';
                 html += `<div class="nutrition-item ${m.key}" role="listitem">
-                    <div class="nutrition-icon">${m.icon}</div>
+                    <div class="nutrition-icon"><i data-lucide="${m.icon}" class="w-5 h-5"></i></div>
                     <div class="nutrition-details">
                         <div class="nutrition-header">
                             <span class="nutrition-label">${m.label}</span>
@@ -306,24 +337,24 @@
                 </div>`;
             });
             html += '</div></div>';
-            
+
             // Fats Breakdown Group
             html += `<div class="macro-group">
-                    <h6>🧈 Fats Breakdown</h6>
+                    <h6><i data-lucide="droplet" class="inline-block w-3 h-3 mr-1"></i> Fats Breakdown</h6>
                     <div class="nutrition-grid">`;
-            
+
             const fatMacros = [
-                { key: 'total_fat', icon: '🧈', label: 'Total Fat', unit: 'g' },
-                { key: 'saturated_fat', icon: '🥓', label: 'Saturated Fat', unit: 'g' },
-                { key: 'cholesterol', icon: '🥚', label: 'Cholesterol', unit: 'mg' }
+                { key: 'total_fat', icon: 'droplet', label: 'Total Fat', unit: 'g' },
+                { key: 'saturated_fat', icon: 'layers', label: 'Saturated Fat', unit: 'g' },
+                { key: 'cholesterol', icon: 'egg', label: 'Cholesterol', unit: 'mg' }
             ];
-            
+
             fatMacros.forEach(m => {
                 const value = nutrition.macros[m.key]?.value || 0;
                 const dv = Math.min(nutrition.macros[m.key]?.dv || 0, 100);
                 const dvClass = dv > 100 ? 'high' : dv > 50 ? 'moderate' : 'low';
                 html += `<div class="nutrition-item ${m.key}" role="listitem">
-                    <div class="nutrition-icon">${m.icon}</div>
+                    <div class="nutrition-icon"><i data-lucide="${m.icon}" class="w-5 h-5"></i></div>
                     <div class="nutrition-details">
                         <div class="nutrition-header">
                             <span class="nutrition-label">${m.label}</span>
@@ -337,24 +368,24 @@
                 </div>`;
             });
             html += '</div></div>';
-            
+
             // Carbohydrates Breakdown Group
             html += `<div class="macro-group">
-                    <h6>🍞 Carbohydrates Breakdown</h6>
+                    <h6><i data-lucide="wheat" class="inline-block w-3 h-3 mr-1"></i> Carbohydrates Breakdown</h6>
                     <div class="nutrition-grid">`;
-            
+
             const carbMacros = [
-                { key: 'carbohydrates', icon: '🍞', label: 'Total Carbs', unit: 'g' },
-                { key: 'fiber', icon: '🌾', label: 'Dietary Fiber', unit: 'g' },
-                { key: 'sugar', icon: '🍬', label: 'Sugars', unit: 'g' }
+                { key: 'carbohydrates', icon: 'wheat', label: 'Total Carbs', unit: 'g' },
+                { key: 'fiber', icon: 'sprout', label: 'Dietary Fiber', unit: 'g' },
+                { key: 'sugar', icon: 'candy', label: 'Sugars', unit: 'g' }
             ];
-            
+
             carbMacros.forEach(m => {
                 const value = nutrition.macros[m.key]?.value || 0;
                 const dv = Math.min(nutrition.macros[m.key]?.dv || 0, 100);
                 const dvClass = dv > 100 ? 'high' : dv > 50 ? 'moderate' : 'low';
                 html += `<div class="nutrition-item ${m.key}" role="listitem">
-                    <div class="nutrition-icon">${m.icon}</div>
+                    <div class="nutrition-icon"><i data-lucide="${m.icon}" class="w-5 h-5"></i></div>
                     <div class="nutrition-details">
                         <div class="nutrition-header">
                             <span class="nutrition-label">${m.label}</span>
@@ -368,33 +399,33 @@
                 </div>`;
             });
             html += '</div></div></div>';
-            
+
             // Vitamins & Minerals Section with Status Indicators
             html += `<div class="nutrition-section" role="region" aria-label="Vitamins and Minerals">
-                <h5>💊 Vitamins & Minerals</h5>
+                <h5><i data-lucide="pill" class="inline-block w-4 h-4 mr-1"></i> Vitamins & Minerals</h5>
                 <div class="vitamins-minerals-container">
                     <!-- Vitamins Group -->
                     <div class="nutrient-group">
-                        <h6>🍊 Vitamins</h6>
+                        <h6><i data-lucide="citrus" class="inline-block w-3 h-3 mr-1"></i> Vitamins</h6>
                         <div class="nutrition-mini-grid">`;
-            
+
             const vitamins = [
-                { key: 'vitamin_a', label: 'Vitamin A', icon: '🥕' },
-                { key: 'vitamin_c', label: 'Vitamin C', icon: '🍋' },
-                { key: 'vitamin_d', label: 'Vitamin D', icon: '☀️' },
-                { key: 'vitamin_e', label: 'Vitamin E', icon: '🥜' },
-                { key: 'vitamin_k', label: 'Vitamin K', icon: '🥬' },
-                { key: 'vitamin_b12', label: 'B12', icon: '💉' },
-                { key: 'vitamin_b6', label: 'B6', icon: '🫘' },
-                { key: 'folate', label: 'Folate', icon: '🥗' }
+                { key: 'vitamin_a', label: 'Vitamin A', icon: 'carrot' },
+                { key: 'vitamin_c', label: 'Vitamin C', icon: 'citrus' },
+                { key: 'vitamin_d', label: 'Vitamin D', icon: 'sun' },
+                { key: 'vitamin_e', label: 'Vitamin E', icon: 'nut' },
+                { key: 'vitamin_k', label: 'Vitamin K', icon: 'leaf' },
+                { key: 'vitamin_b12', label: 'B12', icon: 'activity' },
+                { key: 'vitamin_b6', label: 'B6', icon: 'bean' },
+                { key: 'folate', label: 'Folate', icon: 'salad' }
             ];
-            
+
             vitamins.forEach(v => {
                 const dv = nutrition.vitamins?.[v.key]?.dv || 0;
                 const statusClass = dv >= 100 ? 'excellent' : dv >= 50 ? 'good' : dv >= 25 ? 'low' : 'deficient';
-                const statusIcon = dv >= 100 ? '✅' : dv >= 50 ? '👍' : dv >= 25 ? '⚠️' : '';
+                const statusIcon = dv >= 100 ? 'check-circle' : dv >= 50 ? 'thumbs-up' : dv >= 25 ? 'alert-triangle' : '';
                 html += `<div class="nutrition-mini-item ${statusClass}">
-                    <span class="mini-icon">${v.icon}</span>
+                    <span class="mini-icon"><i data-lucide="${v.icon}" class="w-4 h-4"></i></span>
                     <span class="mini-label">${v.label}</span>
                     <div class="mini-bar-container">
                         <div class="mini-bar">
@@ -406,36 +437,36 @@
                 </div>`;
             });
             html += '</div></div>';
-            
+
             // Minerals Group
             html += `<div class="nutrient-group">
-                        <h6>⚙️ Minerals</h6>
+                        <h6><i data-lucide="settings" class="inline-block w-3 h-3 mr-1"></i> Minerals</h6>
                         <div class="nutrition-mini-grid">`;
-            
+
             const minerals = [
-                { key: 'calcium', label: 'Calcium', icon: '🦴' },
-                { key: 'iron', label: 'Iron', icon: '🩸' },
-                { key: 'potassium', label: 'Potassium', icon: '🍌' },
-                { key: 'sodium', label: 'Sodium', icon: '🧂', invert: true },
-                { key: 'magnesium', label: 'Magnesium', icon: '🫛' },
-                { key: 'zinc', label: 'Zinc', icon: '🦪' },
-                { key: 'phosphorus', label: 'Phosphorus', icon: '🐟' },
-                { key: 'selenium', label: 'Selenium', icon: '🌰' }
+                { key: 'calcium', label: 'Calcium', icon: 'bone' },
+                { key: 'iron', label: 'Iron', icon: 'droplet' },
+                { key: 'potassium', label: 'Potassium', icon: 'banana' },
+                { key: 'sodium', label: 'Sodium', icon: 'flask-conical', invert: true },
+                { key: 'magnesium', label: 'Magnesium', icon: 'bean' },
+                { key: 'zinc', label: 'Zinc', icon: 'shell' },
+                { key: 'phosphorus', label: 'Phosphorus', icon: 'fish' },
+                { key: 'selenium', label: 'Selenium', icon: 'nut' }
             ];
-            
+
             minerals.forEach(m => {
                 const dv = nutrition.minerals?.[m.key]?.dv || 0;
                 // For sodium, high values are bad
                 let statusClass, statusIcon;
                 if (m.invert) {
                     statusClass = dv <= 50 ? 'excellent' : dv <= 75 ? 'good' : dv <= 100 ? 'moderate' : 'high';
-                    statusIcon = dv <= 50 ? '✅' : dv <= 75 ? '👍' : dv <= 100 ? '⚠️' : '🔴';
+                    statusIcon = dv <= 50 ? 'check-circle' : dv <= 75 ? 'thumbs-up' : dv <= 100 ? 'alert-triangle' : 'alert-circle';
                 } else {
                     statusClass = dv >= 100 ? 'excellent' : dv >= 50 ? 'good' : dv >= 25 ? 'low' : 'deficient';
-                    statusIcon = dv >= 100 ? '✅' : dv >= 50 ? '👍' : dv >= 25 ? '⚠️' : '';
+                    statusIcon = dv >= 100 ? 'check-circle' : dv >= 50 ? 'thumbs-up' : dv >= 25 ? 'alert-triangle' : '';
                 }
                 html += `<div class="nutrition-mini-item ${statusClass}">
-                    <span class="mini-icon">${m.icon}</span>
+                    <span class="mini-icon"><i data-lucide="${m.icon}" class="w-4 h-4"></i></span>
                     <span class="mini-label">${m.label}</span>
                     <div class="mini-bar-container">
                         <div class="mini-bar">
@@ -443,15 +474,15 @@
                         </div>
                     </div>
                     <span class="mini-value">${dv}%</span>
-                    <span class="mini-status">${statusIcon}</span>
+                    <span class="mini-status">${statusIcon ? `<i data-lucide="${statusIcon}" class="w-3 h-3"></i>` : ''}</span>
                 </div>`;
             });
             html += '</div></div></div></div>';
-            
+
             // Data Source & Accuracy Info
             html += `<div class="nutrition-footer">
                 <div class="nutrition-disclaimer">
-                    <span class="disclaimer-icon">ℹ️</span>
+                    <span class="disclaimer-icon"><i data-lucide="info" class="w-5 h-5"></i></span>
                     <div class="disclaimer-content">
                         <span class="disclaimer-title">Data Source: USDA FoodData Central</span>
                         <div class="disclaimer-stats">
@@ -461,35 +492,35 @@
                         </div>
                     </div>
                 </div>`;
-            
+
             // Unmatched ingredients
             if (nutrition.unmatched_ingredients && nutrition.unmatched_ingredients.length > 0) {
                 html += `<details class="unmatched-details">
                     <summary class="unmatched-summary">
-                        <span class="unmatched-icon">⚠️</span>
+                        <span class="unmatched-icon"><i data-lucide="alert-triangle" class="w-4 h-4"></i></span>
                         <span class="unmatched-text">${nutrition.unmatched_ingredients.length} ingredient(s) not found in database - using estimates</span>
-                        <span class="expand-icon">▼</span>
+                        <span class="expand-icon"><i data-lucide="chevron-down" class="w-4 h-4"></i></span>
                     </summary>
                     <div class="unmatched-content">
                         <div class="unmatched-list">`;
                 nutrition.unmatched_ingredients.forEach(ing => {
                     html += `<div class="unmatched-item">
-                        <span class="unmatched-name">❓ ${ing.name}</span>
-                        <span class="unmatched-arrow">→</span>
+                        <span class="unmatched-name"><i data-lucide="help-circle" class="inline-block w-3 h-3 mr-1"></i> ${ing.name}</span>
+                        <span class="unmatched-arrow"><i data-lucide="arrow-right" class="inline-block w-3 h-3"></i></span>
                         <span class="unmatched-category">Est. as: ${ing.category}</span>
                     </div>`;
                 });
                 html += `</div>
                         <div class="unmatched-tip">
-                            <span class="tip-icon">💡</span>
+                            <span class="tip-icon"><i data-lucide="lightbulb" class="w-4 h-4"></i></span>
                             <span>Tip: Use common ingredient names (e.g., "chicken breast" instead of "boneless chicken") for better accuracy.</span>
                         </div>
                     </div>
                 </details>`;
             }
-            
+
             html += '</div>';
-            
+
             return html;
         }
 
@@ -497,12 +528,13 @@
         async function loadNutrition() {
             const loadingEl = document.getElementById('nutrition-loading');
             const contentEl = document.getElementById('nutrition-content');
-            
+
             if (!nutritionConfig.ingredients || nutritionConfig.ingredients.length === 0) {
-                loadingEl.innerHTML = '<div class="alert-box info"><span>ℹ️</span><span>No ingredients to analyze</span></div>';
+                loadingEl.innerHTML = '<div class="alert-box info"><span class="alert-icon"><i data-lucide="info" class="w-5 h-5"></i></span><span>No ingredients to analyze</span></div>';
+                lucide.createIcons();
                 return;
             }
-            
+
             try {
                 const response = await fetch('/api/nutrition', {
                     method: 'POST',
@@ -512,18 +544,20 @@
                         condition: nutritionConfig.condition
                     })
                 });
-                
+
                 const data = await response.json();
                 loadingEl.style.display = 'none';
                 contentEl.insertAdjacentHTML('beforeend', renderNutritionHTML(data));
+                lucide.createIcons(); // Initialize icons for new content
             } catch (error) {
                 console.error('Nutrition loading error:', error);
-                loadingEl.innerHTML = '<div class="alert-box warning"><span>⚠️</span><span>Failed to load nutrition data. Please refresh to try again.</span></div>';
+                loadingEl.innerHTML = '<div class="alert-box warning"><span class="alert-icon"><i data-lucide="alert-triangle" class="w-5 h-5"></i></span><span>Failed to load nutrition data. Please refresh to try again.</span></div>';
+                lucide.createIcons();
             }
         }
 
         // Animate cards on load
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const cards = document.querySelectorAll('.results-card, .tips-card');
             cards.forEach((card, index) => {
                 card.style.opacity = '0';
@@ -537,7 +571,9 @@
 
             // Load nutrition data asynchronously
             loadNutrition();
+            lucide.createIcons(); // Initialize initial icons
         });
     </script>
 </body>
+
 </html>

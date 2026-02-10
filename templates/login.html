@@ -12,6 +12,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         .password-input-wrapper {
             position: relative;
@@ -63,7 +64,7 @@
             <!-- Logo -->
             <div class="logo-header">
                 <a href="{{ url_for('landing_page') }}">
-                    <span class="logo-icon">🥗</span>
+                    <span class="logo-icon"><i data-lucide="salad" class="lucide-icon"></i></span>
                     <span class="logo-text">HealthRecipe<span class="logo-accent">AI</span></span>
                 </a>
             </div>
@@ -71,7 +72,8 @@
             <!-- Login Card -->
             <div class="auth-card">
                 <div class="auth-header">
-                    <h1>👋 Welcome Back!</h1>
+                    <h1><i data-lucide="hand" class="lucide-icon" style="width: 1.5em; height: 1.5em;"></i> Welcome
+                        Back!</h1>
                     <p>Sign in to access your personalized recipes</p>
                 </div>
                 <div class="auth-body">
@@ -80,7 +82,8 @@
                     {% if messages %}
                     {% for category, message in messages %}
                     <div class="alert alert-{{ 'danger' if category == 'error' else category }}">
-                        <span>{% if category == 'error' %}⚠️{% else %}ℹ️{% endif %}</span>
+                        <span>{% if category == 'error' %}<i data-lucide="alert-triangle" class="lucide-icon"></i>{%
+                            else %}<i data-lucide="info" class="lucide-icon"></i>{% endif %}</span>
                         <span>{{ message }}</span>
                     </div>
                     {% endfor %}
@@ -92,41 +95,36 @@
 
                         <div class="form-group">
                             <label for="{{ form.username.id }}" class="form-label">
-                                <span class="icon">👤</span>{{ form.username.label.text }}
+                                <span class="icon"><i data-lucide="user" class="lucide-icon"></i></span>{{
+                                form.username.label.text }}
                             </label>
                             {{ form.username(class="form-input", placeholder="Enter username or email") }}
                             {% if form.username.errors %}
                             {% for error in form.username.errors %}
-                            <div class="error-text">⚠️ {{ error }}</div>
+                            <div class="error-text"><i data-lucide="alert-circle" class="lucide-icon"
+                                    style="width: 1em; height: 1em;"></i> {{ error }}</div>
                             {% endfor %}
                             {% endif %}
                         </div>
 
                         <div class="form-group">
                             <label for="{{ form.password.id }}" class="form-label">
-                                <span class="icon">🔒</span>{{ form.password.label.text }}
+                                <span class="icon"><i data-lucide="lock" class="lucide-icon"></i></span>{{
+                                form.password.label.text }}
                             </label>
                             <div class="password-input-wrapper">
                                 {{ form.password(class="form-input password-input", placeholder="Enter password") }}
                                 <button type="button" class="password-toggle"
                                     onclick="togglePassword('{{ form.password.id }}', this)"
                                     aria-label="Toggle password visibility">
-                                    <svg class="eye-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round">
-                                        <path class="eye-open" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                        <circle class="eye-open" cx="12" cy="12" r="3"></circle>
-                                        <path class="eye-closed"
-                                            d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
-                                            style="display: none;"></path>
-                                        <line class="eye-closed" x1="1" y1="1" x2="23" y2="23" style="display: none;">
-                                        </line>
-                                    </svg>
+                                    <i data-lucide="eye" class="eye-icon eye-open"></i>
+                                    <i data-lucide="eye-off" class="eye-icon eye-closed" style="display: none;"></i>
                                 </button>
                             </div>
                             {% if form.password.errors %}
                             {% for error in form.password.errors %}
-                            <div class="error-text">⚠️ {{ error }}</div>
+                            <div class="error-text"><i data-lucide="alert-circle" class="lucide-icon"
+                                    style="width: 1em; height: 1em;"></i> {{ error }}</div>
                             {% endfor %}
                             {% endif %}
                         </div>
@@ -139,7 +137,7 @@
                         </div>
 
                         <button type="submit" class="btn-submit">
-                            🚀 Sign In
+                            <i data-lucide="log-in" class="lucide-icon"></i> Sign In
                         </button>
                     </form>
 
@@ -148,13 +146,13 @@
                     <div class="auth-link-section">
                         <p>Don't have an account?</p>
                         <a href="{{ url_for('register') }}" class="btn-secondary-auth">
-                            ✨ Create Account
+                            <i data-lucide="user-plus" class="lucide-icon"></i> Create Account
                         </a>
                     </div>
 
                     <div class="auth-link-section">
                         <a href="{{ url_for('landing_page') }}" class="back-link">
-                            ← Back to Home
+                            <i data-lucide="arrow-left" class="lucide-icon"></i> Back to Home
                         </a>
                     </div>
                 </div>
@@ -162,12 +160,16 @@
 
             <!-- Info Card -->
             <div class="info-card">
-                <h4>💡 Why Create an Account?</h4>
+                <h4><i data-lucide="lightbulb" class="lucide-icon"></i> Why Create an Account?</h4>
                 <ul>
-                    <li>✅ Save your medical condition preferences</li>
-                    <li>✅ Track your recipe history</li>
-                    <li>✅ Generate personalized health reports</li>
-                    <li>✅ Access your data from any device</li>
+                    <li><i data-lucide="check-circle" class="lucide-icon" style="color: var(--success);"></i> Save your
+                        medical condition preferences</li>
+                    <li><i data-lucide="check-circle" class="lucide-icon" style="color: var(--success);"></i> Track your
+                        recipe history</li>
+                    <li><i data-lucide="check-circle" class="lucide-icon" style="color: var(--success);"></i> Generate
+                        personalized health reports</li>
+                    <li><i data-lucide="check-circle" class="lucide-icon" style="color: var(--success);"></i> Access
+                        your data from any device</li>
                 </ul>
             </div>
         </div>
@@ -201,6 +203,9 @@
                 card.style.opacity = '1';
                 card.style.transform = 'translateY(0)';
             }, 100);
+
+            // Initialize Lucide icons
+            lucide.createIcons();
         });
     </script>
 </body>

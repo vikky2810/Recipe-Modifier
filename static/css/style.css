@@ -1924,7 +1924,8 @@ section {
 }
 
 .form-label {
-    display: block;
+    display: flex;
+    align-items: center;
     font-weight: 600;
     color: var(--gray-700);
     margin-bottom: var(--space-2);
@@ -1972,9 +1973,19 @@ section {
 }
 
 .form-hint {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
     font-size: 0.8125rem;
     color: var(--gray-500);
     margin-top: var(--space-2);
+}
+
+.form-hint .lucide-icon,
+.form-hint svg {
+    flex-shrink: 0;
+    margin-top: 0.15em;
+    /* Optical alignment with text */
 }
 
 .form-checkbox {
