@@ -707,6 +707,22 @@ button {
     color: var(--gray-500);
 }
 
+.stat-loading {
+    display: inline-block;
+    animation: pulse 1.5s ease-in-out infinite;
+    color: var(--gray-400);
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 0.4;
+    }
+    50% {
+        opacity: 1;
+    }
+}
+
+
 /* Hero Visual Card */
 .hero-visual {
     position: relative;
