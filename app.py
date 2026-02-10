@@ -893,6 +893,89 @@ def get_nutrition_data():
         print(f"Nutrition API error: {e}")
         return jsonify({'nutrition': None, 'warnings': [], 'error': str(e)})
 
+# Cache for landing page stats
+_landing_stats_cache = None
+_landing_stats_cache_time = 0
+_STATS_CACHE_TTL = 60  # Cache for 60 seconds
+
+@app.route('/api/stats')
+def get_landing_stats():
+    """API endpoint to get dynamic statistics for landing page (cached)"""
+    global _landing_stats_cache, _landing_stats_cache_time
+    
+    current_time = time.time()
+    
+    # Return cached stats if still valid
+    if _landing_stats_cache is not None and (current_time - _landing_stats_cache_time) < _STATS_CACHE_TTL:
+        return jsonify(_landing_stats_cache)
+    
+    try:
+        # Get total user count from users collection
+        total_users = 0
+        try:
+            user_manager = get_user_manager()
+            if user_manager.db is not None:
+                users_collection = user_manager.db['users']
+                # Use count_documents for accurate count
+                total_users = users_collection.count_documents({})
+                print(f"[DEBUG] Total users count: {total_users}")
+            else:
+                print("[DEBUG] Database is None")
+        except Exception as e:
+            print(f"Error counting users: {e}")
+            import traceback
+            traceback.print_exc()
+            total_users = 0
+        
+        # Get total recipes modified from food_entries collection
+        recipes_modified = 0
+        try:
+            # Use count_documents for accurate count
+            recipes_modified = get_food_entries().count_documents({})
+            print(f"[DEBUG] Total recipes: {recipes_modified}")
+        except Exception as e:
+            print(f"Error counting recipes: {e}")
+            recipes_modified = 0
+        
+        # Count supported health conditions (from cached ingredient rules)
+        health_conditions = 12  # Default count
+        try:
+            # Use cached ingredient rules to avoid DB query
+            cached_rules = get_cached_ingredient_rules()
+            conditions_set = set()
+            for rule in cached_rules.values():
+                conditions_set.update(rule.get('harmful_for', []))
+            health_conditions = len(conditions_set) if conditions_set else 12
+            print(f"[DEBUG] Total conditions: {health_conditions}")
+        except Exception as e:
+            print(f"Error counting conditions: {e}")
+        
+        # Build stats response
+        stats = {
+            'users': total_users,
+            'recipes_modified': recipes_modified,
+            'health_conditions': health_conditions,
+            'accuracy_rate': 99
+        }
+        
+        # Update cache
+        _landing_stats_cache = stats
+        _landing_stats_cache_time = current_time
+        
+        print(f"[DEBUG] Returning stats: {stats}")
+        return jsonify(stats)
+    except Exception as e:
+        print(f"Stats API error: {e}")
+        import traceback
+        traceback.print_exc()
+        # Return default values on error
+        return jsonify({
+            'users': 0,
+            'recipes_modified': 0,
+            'health_conditions': 12,
+            'accuracy_rate': 99
+        })
+
 # Authentication Routes
 @app.route('/register', methods=['GET', 'POST'])
 @limiter.limit("3 per minute", error_message="Too many registration attempts. Please try again later.")

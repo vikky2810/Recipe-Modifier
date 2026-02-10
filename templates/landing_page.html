@@ -54,11 +54,23 @@
                                 data-lucide="clipboard-list" class="lucide-icon"></i></span>View Sample Report</a>
                 </div>
                 <div class="hero-stats">
-                    <div class="stat"><span class="stat-number">10K+</span><span class="stat-label">Recipes
-                            Modified</span></div>
-                    <div class="stat"><span class="stat-number">6+</span><span class="stat-label">Health
-                            Conditions</span></div>
-                    <div class="stat"><span class="stat-number">99%</span><span class="stat-label">Accuracy Rate</span>
+                    <div class="stat">
+                        <span class="stat-number" id="stat-recipes">
+                            <span class="stat-loading">...</span>
+                        </span>
+                        <span class="stat-label">Recipes Modified</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number" id="stat-users">
+                            <span class="stat-loading">...</span>
+                        </span>
+                        <span class="stat-label">Users</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number" id="stat-conditions">
+                            <span class="stat-loading">...</span>
+                        </span>
+                        <span class="stat-label">Health Conditions</span>
                     </div>
                 </div>
             </div>
@@ -455,6 +467,79 @@
     <script>
         // Initialize Lucide icons
         lucide.createIcons();
+
+        // Fetch and update landing page stats
+        async function loadStats() {
+            try {
+                // Add timeout to prevent hanging
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+                
+                const response = await fetch('/api/stats', {
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                
+                const data = await response.json();
+                
+                // Format numbers with K/M suffix
+                function formatNumber(num) {
+                    if (num >= 1000000) {
+                        return (num / 1000000).toFixed(1) + 'M';
+                    } else if (num >= 1000) {
+                        return (num / 1000).toFixed(1) + 'K';
+                    }
+                    return num.toString();
+                }
+                
+                // Animate number counting
+                function animateCount(element, target, suffix = '') {
+                    let current = 0;
+                    const increment = Math.ceil(target / 30);
+                    const timer = setInterval(() => {
+                        current += increment;
+                        if (current >= target) {
+                            current = target;
+                            clearInterval(timer);
+                        }
+                        element.textContent = formatNumber(current) + suffix;
+                    }, 30);
+                }
+                
+                // Update stats with animation
+                const recipesEl = document.getElementById('stat-recipes');
+                const usersEl = document.getElementById('stat-users');
+                const conditionsEl = document.getElementById('stat-conditions');
+                
+                if (recipesEl && data.recipes_modified !== undefined) {
+                    recipesEl.innerHTML = '';
+                    animateCount(recipesEl, data.recipes_modified, '+');
+                }
+                
+                if (usersEl && data.users !== undefined) {
+                    usersEl.innerHTML = '';
+                    animateCount(usersEl, data.users, '+');
+                }
+                
+                if (conditionsEl && data.health_conditions !== undefined) {
+                    conditionsEl.innerHTML = '';
+                    animateCount(conditionsEl, data.health_conditions, '+');
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+                // Set default values on error or timeout
+                const recipesEl = document.getElementById('stat-recipes');
+                const usersEl = document.getElementById('stat-users');
+                const conditionsEl = document.getElementById('stat-conditions');
+                
+                if (recipesEl) recipesEl.textContent = '0+';
+                if (usersEl) usersEl.textContent = '0+';
+                if (conditionsEl) conditionsEl.textContent = '12+';
+            }
+        }
+        
+        // Load stats on page load
+        document.addEventListener('DOMContentLoaded', loadStats);
 
         const mobileToggle = document.getElementById('mobile-toggle');
         const navLinks = document.getElementById('nav-links');
