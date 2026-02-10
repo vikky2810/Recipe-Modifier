@@ -1132,4 +1132,9 @@ if __name__ == '__main__':
     # Create reports directory
     os.makedirs("reports", exist_ok=True)
     
-    app.run()
+    # Run with debug mode enabled for auto-reload
+    app.run(debug=True, host='0.0.0.0', port=5000, use_reloader=True, extra_files=[
+        'templates/',
+        'static/css/',
+        'static/js/'
+    ])
