@@ -7,7 +7,8 @@ class User(UserMixin):
     """User model for authentication and data storage"""
     
     def __init__(self, user_id, username, email, password_hash=None, medical_condition=None, 
-                 created_at=None, last_login=None):
+                 created_at=None, last_login=None, age=None, weight=None, height=None, 
+                 calorie_target=None, goal=None, profile_completed=False):
         self.user_id = user_id
         self.username = username
         self.email = email
@@ -15,6 +16,12 @@ class User(UserMixin):
         self.medical_condition = medical_condition
         self.created_at = created_at or datetime.now()
         self.last_login = last_login
+        self.age = age
+        self.weight = weight  # in kg
+        self.height = height  # in cm
+        self.calorie_target = calorie_target
+        self.goal = goal
+        self.profile_completed = profile_completed
     
     def get_id(self):
         """Required by Flask-Login"""
@@ -37,7 +44,13 @@ class User(UserMixin):
             'password_hash': self.password_hash,
             'medical_condition': self.medical_condition,
             'created_at': self.created_at,
-            'last_login': self.last_login
+            'last_login': self.last_login,
+            'age': self.age,
+            'weight': self.weight,
+            'height': self.height,
+            'calorie_target': self.calorie_target,
+            'goal': self.goal,
+            'profile_completed': self.profile_completed
         }
     
     @classmethod
@@ -50,7 +63,13 @@ class User(UserMixin):
             password_hash=data.get('password_hash'),
             medical_condition=data.get('medical_condition'),
             created_at=data.get('created_at'),
-            last_login=data.get('last_login')
+            last_login=data.get('last_login'),
+            age=data.get('age'),
+            weight=data.get('weight'),
+            height=data.get('height'),
+            calorie_target=data.get('calorie_target'),
+            goal=data.get('goal'),
+            profile_completed=data.get('profile_completed', False)
         )
 
 class UserManager:
@@ -123,6 +142,25 @@ class UserManager:
         self.users.update_one(
             {'user_id': user_id},
             {'$set': {'medical_condition': condition}}
+        )
+    
+    def update_user_profile(self, user_id, age=None, weight=None, height=None, calorie_target=None, goal=None):
+        """Update user's profile with health metrics and goals"""
+        update_data = {'profile_completed': True}
+        if age is not None:
+            update_data['age'] = age
+        if weight is not None:
+            update_data['weight'] = weight
+        if height is not None:
+            update_data['height'] = height
+        if calorie_target is not None:
+            update_data['calorie_target'] = calorie_target
+        if goal is not None:
+            update_data['goal'] = goal
+        
+        self.users.update_one(
+            {'user_id': user_id},
+            {'$set': update_data}
         )
     
     def get_all_users(self):

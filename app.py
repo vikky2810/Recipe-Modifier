@@ -18,7 +18,7 @@ import json
 from config import Config
 from gemini_service import gemini_service
 from models import UserManager
-from forms import RegistrationForm, LoginForm, ProfileUpdateForm, ChangePasswordForm
+from forms import RegistrationForm, LoginForm, ProfileUpdateForm, ChangePasswordForm, ProfileCompletionForm
 import requests
 from spell_checker import spell_checker
 from nutrition_service import nutrition_service
@@ -912,12 +912,36 @@ def register():
         
         if user:
             login_user(user)
-            flash('Account created successfully! Welcome to Health-Aware Recipe Modifier.', 'success')
-            return redirect(url_for('index'))
+            flash('Account created successfully! Let\'s complete your profile.', 'success')
+            return redirect(url_for('complete_profile'))
         else:
             flash(error, 'error')
     
     return render_template('register.html', form=form)
+
+@app.route('/complete-profile', methods=['GET', 'POST'])
+@login_required
+def complete_profile():
+    """Complete user profile with health metrics and goals"""
+    # If profile is already completed, redirect to index
+    if current_user.profile_completed:
+        return redirect(url_for('index'))
+    
+    form = ProfileCompletionForm()
+    if form.validate_on_submit():
+        get_user_manager().update_user_profile(
+            user_id=current_user.user_id,
+            age=form.age.data,
+            weight=form.weight.data,
+            height=form.height.data,
+            calorie_target=form.calorie_target.data,
+            goal=form.goal.data
+        )
+        flash('Profile completed successfully! Welcome to HealthRecipeAI.', 'success')
+        return redirect(url_for('index'))
+    
+    return render_template('complete_profile.html', form=form)
+
 
 @app.route('/login', methods=['GET', 'POST'])
 @limiter.limit("5 per minute", error_message="Too many login attempts. Please try again later.")
@@ -971,6 +995,45 @@ def profile():
         # Get recent entries
         recent_entries = list(get_food_entries().find({"patient_id": current_user.user_id})
                              .sort("timestamp", -1).limit(10))
+        
+        # Calculate today's calorie consumption
+        today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        today_entries = list(get_food_entries().find({
+            "patient_id": current_user.user_id,
+            "timestamp": {"$gte": today}
+        }))
+        
+        # Sum up calories from today's entries (if nutrition data exists)
+        today_calories = 0
+        for entry in today_entries:
+            if 'nutrition' in entry and entry['nutrition']:
+                # Extract calories from nutrition data
+                nutrition = entry['nutrition']
+                if isinstance(nutrition, dict) and 'calories' in nutrition:
+                    today_calories += nutrition.get('calories', 0)
+        
+        # Calculate BMI if height and weight are available
+        bmi = None
+        bmi_category = None
+        if current_user.height and current_user.weight:
+            height_m = current_user.height / 100  # Convert cm to meters
+            bmi = round(current_user.weight / (height_m ** 2), 1)
+            
+            # Categorize BMI
+            if bmi < 18.5:
+                bmi_category = "Underweight"
+            elif 18.5 <= bmi < 25:
+                bmi_category = "Normal"
+            elif 25 <= bmi < 30:
+                bmi_category = "Overweight"
+            else:
+                bmi_category = "Obese"
+        
+        # Calculate calorie progress percentage
+        calorie_percentage = 0
+        if current_user.calorie_target and current_user.calorie_target > 0:
+            calorie_percentage = min(round((today_calories / current_user.calorie_target) * 100), 100)
+        
     except Exception as e:
         print(f"Error getting user profile data: {e}")
         user_entries = []
@@ -978,6 +1041,10 @@ def profile():
         total_harmful = 0
         total_safe = 0
         recent_entries = []
+        today_calories = 0
+        calorie_percentage = 0
+        bmi = None
+        bmi_category = None
     
     # Create forms
     profile_form = ProfileUpdateForm()
@@ -993,7 +1060,11 @@ def profile():
                          total_entries=total_entries,
                          harmful_ingredients=total_harmful,
                          safe_ingredients=total_safe,
-                         recent_entries=recent_entries)
+                         recent_entries=recent_entries,
+                         today_calories=today_calories,
+                         calorie_percentage=calorie_percentage,
+                         bmi=bmi,
+                         bmi_category=bmi_category)
 
 @app.route('/update_profile', methods=['POST'])
 @login_required

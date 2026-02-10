@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Complete your HealthRecipeAI profile - Set your health goals and metrics.">
+    <title>Complete Profile - HealthRecipeAI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .profile-completion-container {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .profile-completion-container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: backgroundMove 20s linear infinite;
+        }
+
+        @keyframes backgroundMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        .profile-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            padding: 3rem;
+            position: relative;
+            z-index: 1;
+            animation: slideIn 0.6s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .profile-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .profile-header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-header p {
+            color: #6b7280;
+            font-size: 1rem;
+        }
+
+        .progress-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .progress-step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+
+        .progress-step::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            width: 100%;
+            height: 3px;
+            background: #e5e7eb;
+            z-index: -1;
+        }
+
+        .progress-step:first-child::before {
+            display: none;
+        }
+
+        .progress-dot {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #e5e7eb;
+            margin: 0 auto 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+        }
+
+        .progress-step.active .progress-dot {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: scale(1.2);
+        }
+
+        .progress-step.completed .progress-dot {
+            background: #10b981;
+            color: white;
+        }
+
+        .progress-step.completed::before {
+            background: #10b981;
+        }
+
+        .progress-label {
+            font-size: 0.75rem;
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        .form-slide {
+            display: none;
+            animation: fadeSlide 0.5s ease-out;
+        }
+
+        .form-slide.active {
+            display: block;
+        }
+
+        @keyframes fadeSlide {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+            background: white;
+            cursor: pointer;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .error-text {
+            color: #ef4444;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+
+        .form-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 1rem;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .input-hint {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+
+        .goal-option {
+            padding: 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .goal-option:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .goal-option input[type="radio"] {
+            display: none;
+        }
+
+        .goal-option input[type="radio"]:checked + .goal-content {
+            color: #667eea;
+        }
+
+        .goal-option input[type="radio"]:checked ~ .goal-option {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .alert-danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+    </style>
+</head>
+<body>
+    <div class="profile-completion-container">
+        <div class="profile-card">
+            <div class="profile-header">
+                <h1>🎯 Complete Your Profile</h1>
+                <p>Help us personalize your health journey</p>
+            </div>
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }}">
+                            <span>{% if category == 'error' %}⚠️{% else %}✅{% endif %}</span>
+                            <span>{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- Progress Indicator -->
+            <div class="progress-indicator">
+                <div class="progress-step active" id="step-1">
+                    <div class="progress-dot">1</div>
+                    <div class="progress-label">Basics</div>
+                </div>
+                <div class="progress-step" id="step-2">
+                    <div class="progress-dot">2</div>
+                    <div class="progress-label">Metrics</div>
+                </div>
+                <div class="progress-step" id="step-3">
+                    <div class="progress-dot">3</div>
+                    <div class="progress-label">Goals</div>
+                </div>
+            </div>
+
+            <form method="POST" action="{{ url_for('complete_profile') }}" id="profileForm">
+                {{ form.hidden_tag() }}
+
+                <!-- Slide 1: Age & Weight -->
+                <div class="form-slide active" id="slide-1">
+                    <div class="form-group">
+                        <label for="{{ form.age.id }}" class="form-label">
+                            📅 {{ form.age.label.text }}
+                        </label>
+                        {{ form.age(class="form-input", placeholder="Enter your age", type="number") }}
+                        <div class="input-hint">We need this to calculate your nutritional needs</div>
+                        {% if form.age.errors %}
+                            {% for error in form.age.errors %}
+                                <div class="error-text">⚠️ {{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.weight.id }}" class="form-label">
+                            ⚖️ {{ form.weight.label.text }}
+                        </label>
+                        {{ form.weight(class="form-input", placeholder="Enter your weight in kg", type="number") }}
+                        <div class="input-hint">Your current weight in kilograms</div>
+                        {% if form.weight.errors %}
+                            {% for error in form.weight.errors %}
+                                <div class="error-text">⚠️ {{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+
+                    <div class="form-buttons">
+                        <button type="button" class="btn btn-primary" onclick="nextSlide()">Next →</button>
+                    </div>
+                </div>
+
+                <!-- Slide 2: Height & Calorie Target -->
+                <div class="form-slide" id="slide-2">
+                    <div class="form-group">
+                        <label for="{{ form.height.id }}" class="form-label">
+                            📏 {{ form.height.label.text }}
+                        </label>
+                        {{ form.height(class="form-input", placeholder="Enter your height in cm", type="number") }}
+                        <div class="input-hint">Your height in centimeters</div>
+                        {% if form.height.errors %}
+                            {% for error in form.height.errors %}
+                                <div class="error-text">⚠️ {{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.calorie_target.id }}" class="form-label">
+                            🔥 {{ form.calorie_target.label.text }}
+                        </label>
+                        {{ form.calorie_target(class="form-input", placeholder="e.g., 2000", type="number") }}
+                        <div class="input-hint">Your daily calorie goal (we'll help you calculate this)</div>
+                        {% if form.calorie_target.errors %}
+                            {% for error in form.calorie_target.errors %}
+                                <div class="error-text">⚠️ {{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+
+                    <div class="form-buttons">
+                        <button type="button" class="btn btn-secondary" onclick="prevSlide()">← Back</button>
+                        <button type="button" class="btn btn-primary" onclick="nextSlide()">Next →</button>
+                    </div>
+                </div>
+
+                <!-- Slide 3: Goal -->
+                <div class="form-slide" id="slide-3">
+                    <div class="form-group">
+                        <label for="{{ form.goal.id }}" class="form-label">
+                            🎯 {{ form.goal.label.text }}
+                        </label>
+                        {{ form.goal(class="form-select") }}
+                        <div class="input-hint">Choose what you want to achieve</div>
+                        {% if form.goal.errors %}
+                            {% for error in form.goal.errors %}
+                                <div class="error-text">⚠️ {{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+
+                    <div class="form-buttons">
+                        <button type="button" class="btn btn-secondary" onclick="prevSlide()">← Back</button>
+                        <button type="submit" class="btn btn-primary">🚀 Complete Profile</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentSlide = 1;
+        const totalSlides = 3;
+
+        function updateProgress() {
+            // Update progress dots
+            for (let i = 1; i <= totalSlides; i++) {
+                const step = document.getElementById(`step-${i}`);
+                if (i < currentSlide) {
+                    step.classList.add('completed');
+                    step.classList.remove('active');
+                } else if (i === currentSlide) {
+                    step.classList.add('active');
+                    step.classList.remove('completed');
+                } else {
+                    step.classList.remove('active', 'completed');
+                }
+            }
+
+            // Update slides
+            for (let i = 1; i <= totalSlides; i++) {
+                const slide = document.getElementById(`slide-${i}`);
+                if (i === currentSlide) {
+                    slide.classList.add('active');
+                } else {
+                    slide.classList.remove('active');
+                }
+            }
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides) {
+                currentSlide++;
+                updateProgress();
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 1) {
+                currentSlide--;
+                updateProgress();
+            }
+        }
+
+        // Add animation on load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateProgress();
+        });
+    </script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SelectField, SubmitField, BooleanField
-from wtforms.validators import DataRequired, Email, Length, EqualTo, ValidationError
+from wtforms import StringField, PasswordField, SelectField, SubmitField, BooleanField, IntegerField
+from wtforms.validators import DataRequired, Email, Length, EqualTo, ValidationError, NumberRange, Optional
 import re
 
 class RegistrationForm(FlaskForm):
@@ -139,3 +139,38 @@ class ChangePasswordForm(FlaskForm):
         
         if not re.search(r'\d', new_password.data):
             raise ValidationError('Password must contain at least one number')
+
+class ProfileCompletionForm(FlaskForm):
+    """Profile completion form for new users"""
+    age = IntegerField('Age', validators=[
+        DataRequired(message='Please enter your age'),
+        NumberRange(min=13, max=120, message='Age must be between 13 and 120')
+    ])
+    
+    weight = IntegerField('Weight (kg)', validators=[
+        DataRequired(message='Please enter your weight'),
+        NumberRange(min=20, max=300, message='Weight must be between 20 and 300 kg')
+    ])
+    
+    height = IntegerField('Height (cm)', validators=[
+        DataRequired(message='Please enter your height'),
+        NumberRange(min=50, max=250, message='Height must be between 50 and 250 cm')
+    ])
+    
+    calorie_target = IntegerField('Daily Calorie Target', validators=[
+        DataRequired(message='Please enter your calorie target'),
+        NumberRange(min=800, max=5000, message='Calorie target must be between 800 and 5000')
+    ])
+    
+    goal = SelectField('Fitness Goal', 
+                      choices=[
+                          ('', 'Select your goal'),
+                          ('lose_weight', '🔥 Lose Weight'),
+                          ('gain_muscle', '💪 Gain Muscle'),
+                          ('maintain_fitness', '⚖️ Maintain Fitness'),
+                          ('improve_health', '❤️ Improve Overall Health')
+                      ],
+                      validators=[DataRequired(message='Please select a fitness goal')])
+    
+    submit = SubmitField('Complete Profile')
+
