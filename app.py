@@ -91,12 +91,30 @@ def get_db():
     
     if _db is None:
         try:
-            # Increased timeout for serverless cold starts (15 seconds)
+            # Initialize MongoDB client with connection pooling for better performance
             _client = MongoClient(
-                Config.MONGODB_URI, 
-                serverSelectionTimeoutMS=15000,
-                connectTimeoutMS=15000,
-                socketTimeoutMS=30000
+                Config.MONGODB_URI,
+                # Connection Pool Settings
+                maxPoolSize=Config.MONGODB_MAX_POOL_SIZE,  # Max connections in pool
+                minPoolSize=Config.MONGODB_MIN_POOL_SIZE,  # Min connections to maintain
+                maxIdleTimeMS=Config.MONGODB_MAX_IDLE_TIME_MS,  # Max idle time before removal
+                waitQueueTimeoutMS=Config.MONGODB_WAIT_QUEUE_TIMEOUT_MS,  # Wait time for connection
+                maxConnecting=Config.MONGODB_MAX_CONNECTING,  # Limit concurrent connection establishment
+                # Timeout Settings (optimized for serverless)
+                serverSelectionTimeoutMS=Config.MONGODB_SERVER_SELECTION_TIMEOUT_MS,
+                connectTimeoutMS=Config.MONGODB_CONNECT_TIMEOUT_MS,
+                socketTimeoutMS=Config.MONGODB_SOCKET_TIMEOUT_MS,
+                # Additional optimizations
+                retryWrites=True,  # Automatically retry write operations
+                retryReads=True,  # Automatically retry read operations
+                # Write Concern - optimize for performance (acknowledge writes but don't wait for journal)
+                w=1,  # Wait for acknowledgment from primary
+                # Read Preference - read from nearest server for better latency
+                readPreference='primaryPreferred',  # Read from primary if available, otherwise secondary
+                # Connection monitoring
+                appName='health-recipe-modifier',  # Helps identify connections in MongoDB logs
+                # Compression for reduced network traffic
+                compressors='snappy,zlib',  # Enable compression
             )
             _db = _client[Config.DATABASE_NAME]
             

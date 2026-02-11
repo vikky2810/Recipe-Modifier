@@ -208,6 +208,131 @@
         </footer>
     </div>
 
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-content">
+            <div class="loading-spinner-large"></div>
+            <h3 class="loading-title">Making Your Recipe Healthy</h3>
+            <p class="loading-message" id="loadingMessage">Analyzing ingredients...</p>
+            <div class="loading-progress">
+                <div class="loading-progress-bar" id="loadingProgressBar"></div>
+            </div>
+            <p class="loading-eta">Estimated time: <span id="loadingEta">5-10 seconds</span></p>
+        </div>
+    </div>
+
+    <style>
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .loading-content {
+            text-align: center;
+            padding: 3rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            max-width: 400px;
+            animation: slideUp 0.4s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .loading-spinner-large {
+            width: 80px;
+            height: 80px;
+            border: 6px solid rgba(255, 255, 255, 0.2);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1.5rem;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-title {
+            color: #fff;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .loading-message {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+            min-height: 24px;
+        }
+
+        .loading-progress {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        .loading-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #fff, #f0f0f0);
+            border-radius: 10px;
+            width: 0%;
+            transition: width 0.3s ease;
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: -200% 0;
+            }
+
+            100% {
+                background-position: 200% 0;
+            }
+        }
+
+        .loading-eta {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.875rem;
+        }
+    </style>
+
     <script>
         // Initialize Lucide icons
         lucide.createIcons();
@@ -381,6 +506,36 @@
                     submitBtn.disabled = true;
                     submitBtn.innerHTML = '<span class="spinner"></span> Processing...';
                     if (aiFillButton) aiFillButton.disabled = true;
+
+                    // Show loading overlay with progress simulation
+                    showLoadingOverlay();
+                });
+            }
+
+            // Loading overlay progress simulation
+            function showLoadingOverlay() {
+                const overlay = document.getElementById('loadingOverlay');
+                const message = document.getElementById('loadingMessage');
+                const progressBar = document.getElementById('loadingProgressBar');
+                const eta = document.getElementById('loadingEta');
+
+                overlay.style.display = 'flex';
+
+                // Progress stages with realistic timing
+                const stages = [
+                    { progress: 15, message: 'Analyzing ingredients...', eta: '8-12 seconds', delay: 500 },
+                    { progress: 30, message: 'Checking database for harmful ingredients...', eta: '6-10 seconds', delay: 1500 },
+                    { progress: 50, message: 'Finding healthy alternatives...', eta: '4-8 seconds', delay: 2500 },
+                    { progress: 70, message: 'Generating personalized recipe...', eta: '2-5 seconds', delay: 4000 },
+                    { progress: 90, message: 'Finalizing your healthy recipe...', eta: '1-2 seconds', delay: 6000 }
+                ];
+
+                stages.forEach(stage => {
+                    setTimeout(() => {
+                        progressBar.style.width = stage.progress + '%';
+                        message.textContent = stage.message;
+                        eta.textContent = stage.eta;
+                    }, stage.delay);
                 });
             }
         });
