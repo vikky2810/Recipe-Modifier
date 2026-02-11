@@ -1807,14 +1807,23 @@ section {
 }
 
 .user-info {
-    text-align: right;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-end;
 }
 
 .user-info .username {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
     font-weight: 600;
 }
 
 .user-info .condition {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
     font-size: 0.8125rem;
     opacity: 0.9;
 }
