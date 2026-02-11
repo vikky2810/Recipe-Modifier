@@ -3517,3 +3517,420 @@ section {
         transform: translateY(0);
     }
 }
+
+/* ============================================
+   NUTRITION SUMMARY - COMPACT UI
+   Space-Efficient, Modern Design
+   ============================================ */
+
+/* Nutrition Card Container */
+.nutrition-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid rgba(0, 176, 176, 0.1);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nutrition-card:hover {
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+}
+
+/* Loading State */
+.nutrition-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 2rem;
+    gap: 1rem;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(0, 176, 176, 0.1);
+    border-top-color: var(--primary-500);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.nutrition-loading p {
+    color: var(--gray-500);
+    font-size: 0.9375rem;
+    font-weight: 500;
+}
+
+/* Compact Header */
+.nutrition-compact-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: linear-gradient(135deg, rgba(0, 176, 176, 0.05), rgba(59, 130, 246, 0.05));
+    border-radius: var(--radius-lg);
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+/* Health Score Badge - Compact */
+.health-score-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-full);
+    font-weight: 700;
+    font-size: 1rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.health-score-badge.excellent {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: white;
+}
+
+.health-score-badge.good {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+}
+
+.health-score-badge.moderate {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+}
+
+.health-score-badge.caution {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+}
+
+/* Macro Pills - Horizontal Layout */
+.macro-pills {
+    display: flex;
+    gap: 0.75rem;
+    flex: 1;
+    flex-wrap: wrap;
+}
+
+.macro-pill {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.875rem;
+    background: white;
+    border-radius: var(--radius-full);
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    font-size: 0.875rem;
+}
+
+.macro-pill:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.macro-pill.calories {
+    border-color: rgba(245, 158, 11, 0.3);
+    color: #f59e0b;
+}
+
+.macro-pill.protein {
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+}
+
+.macro-pill.carbs {
+    border-color: rgba(59, 130, 246, 0.3);
+    color: #3b82f6;
+}
+
+.macro-pill.fat {
+    border-color: rgba(139, 92, 246, 0.3);
+    color: #8b5cf6;
+}
+
+.macro-pill .value {
+    font-weight: 700;
+    color: var(--gray-900);
+    font-size: 1rem;
+}
+
+.macro-pill .label {
+    font-weight: 500;
+    color: var(--gray-600);
+    font-size: 0.8125rem;
+}
+
+/* Warnings - Compact */
+.nutrition-warnings-compact {
+    margin-bottom: 1rem;
+}
+
+.alert-compact {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-md);
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.alert-compact:last-child {
+    margin-bottom: 0;
+}
+
+.alert-compact.danger {
+    background: rgba(239, 68, 68, 0.1);
+    border-left: 3px solid var(--danger);
+    color: var(--gray-700);
+}
+
+.alert-compact.warning {
+    background: rgba(245, 158, 11, 0.1);
+    border-left: 3px solid var(--warning);
+    color: var(--gray-700);
+}
+
+/* Compact Sections */
+.nutrition-compact-section {
+    margin-bottom: 1.25rem;
+}
+
+.nutrition-compact-section h6 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--gray-700);
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+/* Compact Nutrient Grid */
+.nutrition-compact-grid {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.compact-nutrient-item {
+    display: grid;
+    grid-template-columns: 1fr auto auto auto;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.625rem 0.875rem;
+    background: white;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--gray-200);
+    transition: all 0.3s ease;
+}
+
+.compact-nutrient-item:hover {
+    border-color: var(--primary-300);
+    box-shadow: 0 2px 8px rgba(0, 176, 176, 0.1);
+}
+
+.nutrient-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--primary-600);
+}
+
+.nutrient-name {
+    font-weight: 600;
+    color: var(--gray-700);
+    font-size: 0.875rem;
+}
+
+.nutrient-value {
+    font-weight: 700;
+    color: var(--gray-900);
+    font-size: 0.875rem;
+    min-width: 50px;
+    text-align: right;
+}
+
+.nutrient-bar {
+    width: 80px;
+    height: 6px;
+    background: var(--gray-200);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+}
+
+.nutrient-bar-fill {
+    height: 100%;
+    border-radius: var(--radius-full);
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nutrient-bar-fill.low {
+    background: linear-gradient(90deg, #22c55e, #16a34a);
+}
+
+.nutrient-bar-fill.moderate {
+    background: linear-gradient(90deg, #f59e0b, #d97706);
+}
+
+.nutrient-bar-fill.high {
+    background: linear-gradient(90deg, #ef4444, #dc2626);
+}
+
+.nutrient-dv {
+    font-size: 0.8125rem;
+    color: var(--gray-600);
+    font-weight: 600;
+    min-width: 40px;
+    text-align: right;
+}
+
+/* Vitamins & Minerals Compact Grid */
+.vitamins-minerals-compact {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.5rem;
+}
+
+.compact-micro-item {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: white;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--gray-200);
+    transition: all 0.3s ease;
+}
+
+.compact-micro-item:hover {
+    border-color: var(--primary-300);
+    transform: translateX(2px);
+}
+
+/* Status Colors */
+.compact-micro-item.excellent {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.05), rgba(22, 163, 74, 0.05));
+    border-color: rgba(34, 197, 94, 0.3);
+}
+
+.compact-micro-item.good {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(37, 99, 235, 0.05));
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+.compact-micro-item.low,
+.compact-micro-item.moderate {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.05), rgba(217, 119, 6, 0.05));
+    border-color: rgba(245, 158, 11, 0.3);
+}
+
+.compact-micro-item.deficient,
+.compact-micro-item.high {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.05), rgba(220, 38, 38, 0.05));
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.micro-label {
+    font-weight: 600;
+    color: var(--gray-700);
+    font-size: 0.8125rem;
+}
+
+.micro-bar {
+    height: 5px;
+    background: var(--gray-200);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+}
+
+.micro-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-500), var(--secondary-500));
+    border-radius: var(--radius-full);
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.micro-value {
+    font-weight: 700;
+    color: var(--gray-900);
+    font-size: 0.8125rem;
+    min-width: 35px;
+    text-align: right;
+}
+
+/* Compact Footer */
+.nutrition-compact-footer {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 0.875rem 1rem;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(37, 99, 235, 0.05));
+    border-radius: var(--radius-md);
+    margin-top: 1rem;
+    flex-wrap: wrap;
+}
+
+.footer-item {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.8125rem;
+    color: var(--gray-600);
+    font-weight: 500;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .nutrition-compact-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .macro-pills {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .macro-pill {
+        flex: 1;
+        min-width: 0;
+        justify-content: center;
+    }
+
+    .vitamins-minerals-compact {
+        grid-template-columns: 1fr;
+    }
+
+    .compact-nutrient-item {
+        grid-template-columns: 1fr auto;
+        grid-template-rows: auto auto;
+        gap: 0.5rem;
+    }
+
+    .nutrient-bar {
+        grid-column: 1 / -1;
+        width: 100%;
+    }
+
+    .nutrition-compact-footer {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .macro-pills {
+        flex-direction: column;
+    }
+
+    .macro-pill {
+        width: 100%;
+    }
+}
