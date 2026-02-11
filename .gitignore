@@ -83,6 +83,7 @@ reports/*.pdf
 reports/*.html
 *.pdf
 *.csv
+!models/*.csv
 
 # Temporary files
 *.tmp
