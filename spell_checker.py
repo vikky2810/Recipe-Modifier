@@ -25,9 +25,9 @@ class SpellChecker:
     
     def _ensure_loaded(self):
         """Lazy load recipes on first use"""
-        if self._load_attempted:
-            return self._loaded
-        self._load_attempted = True
+        if self._loaded:
+            return True
+            
         self._load_recipes()
         return self._loaded
     
@@ -35,7 +35,7 @@ class SpellChecker:
         """Load recipe names from CSV file"""
         try:
             base_path = os.path.dirname(os.path.abspath(__file__))
-            recipes_path = os.path.join(base_path, 'models', 'recipes.csv')
+            recipes_path = os.path.join(base_path, 'models', 'recipes1.csv')
             
             if not os.path.exists(recipes_path):
                 logger.warning(f"Recipes file not found: {recipes_path}")
@@ -46,7 +46,7 @@ class SpellChecker:
                 lines = f.readlines()
             
             # Skip header, get recipe names
-            self.recipes = [line.strip() for line in lines[1:] if line.strip()]
+            self.recipes = [line.strip() for line in lines if line.strip()]
             self.recipes_lower = [r.lower() for r in self.recipes]
             
             logger.info(f"Loaded {len(self.recipes)} recipe names")

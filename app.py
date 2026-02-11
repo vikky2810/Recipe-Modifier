@@ -1005,12 +1005,20 @@ def register():
 @app.route('/complete-profile', methods=['GET', 'POST'])
 @login_required
 def complete_profile():
-    """Complete user profile with health metrics and goals"""
-    # If profile is already completed, redirect to index
-    if current_user.profile_completed:
-        return redirect(url_for('index'))
+    """Complete or update user profile with health metrics and goals"""
+    # Allow access always, but change behavior based on completion status
+    is_update = current_user.profile_completed
     
     form = ProfileCompletionForm()
+    
+    # Pre-fill form if updating and it's a GET request
+    if request.method == 'GET' and is_update:
+        form.age.data = current_user.age
+        form.weight.data = current_user.weight
+        form.height.data = current_user.height
+        form.calorie_target.data = current_user.calorie_target
+        form.goal.data = current_user.goal
+    
     if form.validate_on_submit():
         get_user_manager().update_user_profile(
             user_id=current_user.user_id,
@@ -1020,10 +1028,17 @@ def complete_profile():
             calorie_target=form.calorie_target.data,
             goal=form.goal.data
         )
-        flash('Profile completed successfully! Welcome to HealthRecipeAI.', 'success')
-        return redirect(url_for('index'))
+        
+        msg = 'Profile updated successfully!' if is_update else 'Profile completed successfully! Welcome to HealthRecipeAI.'
+        flash(msg, 'success')
+        
+        # If updating, go back to profile. If completion (new user), go to index.
+        if is_update:
+            return redirect(url_for('profile'))
+        else:
+            return redirect(url_for('index'))
     
-    return render_template('complete_profile.html', form=form)
+    return render_template('complete_profile.html', form=form, is_update=is_update)
 
 
 @app.route('/login', methods=['GET', 'POST'])
