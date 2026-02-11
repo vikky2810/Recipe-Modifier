@@ -235,7 +235,7 @@
             condition: dataEl.dataset.condition || ''
         };
 
-        // Function to render nutrition HTML
+        // Function to render nutrition HTML - COMPACT VERSION
         function renderNutritionHTML(data) {
             const nutrition = data.nutrition;
             const warnings = data.warnings || [];
@@ -246,286 +246,125 @@
 
             let html = '';
 
-            // Calculate health score based on warnings and nutrient balance
+            // Calculate health score
             const warningCount = warnings.length;
             const healthScore = Math.max(0, 100 - (warningCount * 15));
             const healthStatus = healthScore >= 80 ? 'excellent' : healthScore >= 60 ? 'good' : healthScore >= 40 ? 'moderate' : 'caution';
-            // Use icon names for JS generation
             const healthIcon = healthScore >= 80 ? 'star' : healthScore >= 60 ? 'check-circle' : healthScore >= 40 ? 'alert-triangle' : 'alert-circle';
 
-            // Quick Stats Overview Section
-            html += `<div class="nutrition-quick-stats" role="region" aria-label="Quick Nutrition Overview">
-                <div class="quick-stats-header">
-                    <div class="health-score-badge ${healthStatus}">
-                        <span class="score-emoji"><i data-lucide="${healthIcon}" class="w-5 h-5"></i></span>
-                        <span class="score-text">Health Score: ${healthScore}</span>
-                    </div>
-                    <span class="serving-info"><i data-lucide="bar-chart-2" class="inline-block w-4 h-4 mr-1"></i> Per Serving</span>
+            // Compact Header with Score and Main Macros
+            html += `<div class="nutrition-compact-header">
+                <div class="health-score-badge ${healthStatus}">
+                    <i data-lucide="${healthIcon}" class="w-4 h-4"></i>
+                    <span>${healthScore}</span>
                 </div>
-                <div class="quick-stats-grid">
-                    <div class="quick-stat calories">
-                        <span class="stat-icon"><i data-lucide="flame" class="w-5 h-5"></i></span>
-                        <span class="stat-value">${nutrition.macros.calories?.value || 0}</span>
-                        <span class="stat-label">Calories</span>
+                <div class="macro-pills">
+                    <div class="macro-pill calories">
+                        <i data-lucide="flame" class="w-4 h-4"></i>
+                        <span class="value">${nutrition.macros.calories?.value || 0}</span>
+                        <span class="label">cal</span>
                     </div>
-                    <div class="quick-stat protein">
-                        <span class="stat-icon"><i data-lucide="utensils" class="w-5 h-5"></i></span>
-                        <span class="stat-value">${nutrition.macros.protein?.value || 0}g</span>
-                        <span class="stat-label">Protein</span>
+                    <div class="macro-pill protein">
+                        <i data-lucide="utensils" class="w-4 h-4"></i>
+                        <span class="value">${nutrition.macros.protein?.value || 0}g</span>
+                        <span class="label">protein</span>
                     </div>
-                    <div class="quick-stat carbs">
-                        <span class="stat-icon"><i data-lucide="wheat" class="w-5 h-5"></i></span>
-                        <span class="stat-value">${nutrition.macros.carbohydrates?.value || 0}g</span>
-                        <span class="stat-label">Carbs</span>
+                    <div class="macro-pill carbs">
+                        <i data-lucide="wheat" class="w-4 h-4"></i>
+                        <span class="value">${nutrition.macros.carbohydrates?.value || 0}g</span>
+                        <span class="label">carbs</span>
                     </div>
-                    <div class="quick-stat fat">
-                        <span class="stat-icon"><i data-lucide="droplet" class="w-5 h-5"></i></span>
-                        <span class="stat-value">${nutrition.macros.total_fat?.value || 0}g</span>
-                        <span class="stat-label">Fat</span>
+                    <div class="macro-pill fat">
+                        <i data-lucide="droplet" class="w-4 h-4"></i>
+                        <span class="value">${nutrition.macros.total_fat?.value || 0}g</span>
+                        <span class="label">fat</span>
                     </div>
                 </div>
             </div>`;
 
-            // Warnings Section (if any)
+            // Warnings (compact)
             if (warnings.length > 0) {
-                html += '<div class="nutrition-warnings" role="alert" aria-label="Nutrition Warnings">';
-                html += '<h5><i data-lucide="alert-triangle" class="inline-block w-4 h-4 mr-1"></i> Health Alerts</h5>';
+                html += '<div class="nutrition-warnings-compact">';
                 warnings.forEach(warning => {
                     const unit = warning.nutrient === 'Calories' ? ' kcal' :
                         ['Sodium', 'Potassium', 'Calcium'].includes(warning.nutrient) ? ' mg' : 'g';
-                    html += `<div class="alert-box ${warning.severity}">
-                        <span class="alert-icon"><i data-lucide="alert-triangle" class="w-5 h-5"></i></span>
-                        <div class="alert-content">
-                            <strong>${warning.nutrient}</strong>
-                            <span>${warning.message}</span>
-                            <span class="alert-values">${warning.value}${unit} / ${warning.threshold} max</span>
-                        </div>
+                    html += `<div class="alert-compact ${warning.severity}">
+                        <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+                        <span><strong>${warning.nutrient}:</strong> ${warning.message} (${warning.value}${unit})</span>
                     </div>`;
                 });
                 html += '</div>';
             }
 
-            // Detailed Macronutrients Section
-            html += `<div class="nutrition-section" role="region" aria-label="Detailed Macronutrients">
-                <h5><i data-lucide="zap" class="inline-block w-4 h-4 mr-1"></i> Detailed Macronutrients</h5>
-                
-                <!-- Energy & Protein Group -->
-                <div class="macro-group">
-                    <h6><i data-lucide="activity" class="inline-block w-3 h-3 mr-1"></i> Energy & Protein</h6>
-                    <div class="nutrition-grid">`;
-
-            const energyMacros = [
-                { key: 'calories', icon: 'flame', label: 'Calories', unit: 'kcal' },
-                { key: 'protein', icon: 'utensils', label: 'Protein', unit: 'g' }
+            // All Macros in Compact Grid
+            html += '<div class="nutrition-compact-section"><h6><i data-lucide="zap" class="w-4 h-4"></i> Macronutrients</h6><div class="nutrition-compact-grid">';
+            
+            const allMacros = [
+                { key: 'total_fat', label: 'Fat', icon: 'droplet' },
+                { key: 'saturated_fat', label: 'Sat. Fat', icon: 'layers' },
+                { key: 'cholesterol', label: 'Cholesterol', icon: 'egg' },
+                { key: 'fiber', label: 'Fiber', icon: 'sprout' },
+                { key: 'sugar', label: 'Sugar', icon: 'candy' }
             ];
 
-            energyMacros.forEach(m => {
+            allMacros.forEach(m => {
                 const value = nutrition.macros[m.key]?.value || 0;
-                const dv = Math.min(nutrition.macros[m.key]?.dv || 0, 100);
+                const dv = nutrition.macros[m.key]?.dv || 0;
                 const dvClass = dv > 100 ? 'high' : dv > 50 ? 'moderate' : 'low';
-                html += `<div class="nutrition-item ${m.key}" role="listitem">
-                    <div class="nutrition-icon"><i data-lucide="${m.icon}" class="w-5 h-5"></i></div>
-                    <div class="nutrition-details">
-                        <div class="nutrition-header">
-                            <span class="nutrition-label">${m.label}</span>
-                            <span class="nutrition-value">${value} ${m.unit}</span>
-                        </div>
-                        <div class="nutrition-bar">
-                            <div class="nutrition-bar-fill ${dvClass}" style="width: ${Math.min(dv, 100)}%"></div>
-                        </div>
-                        <span class="nutrition-dv">${nutrition.macros[m.key]?.dv || 0}% Daily Value</span>
+                html += `<div class="compact-nutrient-item">
+                    <div class="nutrient-info">
+                        <i data-lucide="${m.icon}" class="w-4 h-4"></i>
+                        <span class="nutrient-name">${m.label}</span>
                     </div>
+                    <div class="nutrient-value">${value}${m.key === 'cholesterol' ? 'mg' : 'g'}</div>
+                    <div class="nutrient-bar">
+                        <div class="nutrient-bar-fill ${dvClass}" style="width: ${Math.min(dv, 100)}%"></div>
+                    </div>
+                    <div class="nutrient-dv">${dv}%</div>
                 </div>`;
             });
             html += '</div></div>';
 
-            // Fats Breakdown Group
-            html += `<div class="macro-group">
-                    <h6><i data-lucide="droplet" class="inline-block w-3 h-3 mr-1"></i> Fats Breakdown</h6>
-                    <div class="nutrition-grid">`;
-
-            const fatMacros = [
-                { key: 'total_fat', icon: 'droplet', label: 'Total Fat', unit: 'g' },
-                { key: 'saturated_fat', icon: 'layers', label: 'Saturated Fat', unit: 'g' },
-                { key: 'cholesterol', icon: 'egg', label: 'Cholesterol', unit: 'mg' }
+            // Vitamins & Minerals Combined in Ultra-Compact Grid
+            html += '<div class="nutrition-compact-section"><h6><i data-lucide="pill" class="w-4 h-4"></i> Vitamins & Minerals</h6><div class="vitamins-minerals-compact">';
+            
+            const nutrients = [
+                { key: 'vitamin_a', label: 'Vit A', type: 'vitamins' },
+                { key: 'vitamin_c', label: 'Vit C', type: 'vitamins' },
+                { key: 'vitamin_d', label: 'Vit D', type: 'vitamins' },
+                { key: 'calcium', label: 'Calcium', type: 'minerals' },
+                { key: 'iron', label: 'Iron', type: 'minerals' },
+                { key: 'potassium', label: 'Potassium', type: 'minerals' },
+                { key: 'sodium', label: 'Sodium', type: 'minerals', invert: true }
             ];
 
-            fatMacros.forEach(m => {
-                const value = nutrition.macros[m.key]?.value || 0;
-                const dv = Math.min(nutrition.macros[m.key]?.dv || 0, 100);
-                const dvClass = dv > 100 ? 'high' : dv > 50 ? 'moderate' : 'low';
-                html += `<div class="nutrition-item ${m.key}" role="listitem">
-                    <div class="nutrition-icon"><i data-lucide="${m.icon}" class="w-5 h-5"></i></div>
-                    <div class="nutrition-details">
-                        <div class="nutrition-header">
-                            <span class="nutrition-label">${m.label}</span>
-                            <span class="nutrition-value">${value} ${m.unit}</span>
-                        </div>
-                        <div class="nutrition-bar">
-                            <div class="nutrition-bar-fill ${dvClass}" style="width: ${Math.min(dv, 100)}%"></div>
-                        </div>
-                        <span class="nutrition-dv">${nutrition.macros[m.key]?.dv || 0}% Daily Value</span>
-                    </div>
-                </div>`;
-            });
-            html += '</div></div>';
-
-            // Carbohydrates Breakdown Group
-            html += `<div class="macro-group">
-                    <h6><i data-lucide="wheat" class="inline-block w-3 h-3 mr-1"></i> Carbohydrates Breakdown</h6>
-                    <div class="nutrition-grid">`;
-
-            const carbMacros = [
-                { key: 'carbohydrates', icon: 'wheat', label: 'Total Carbs', unit: 'g' },
-                { key: 'fiber', icon: 'sprout', label: 'Dietary Fiber', unit: 'g' },
-                { key: 'sugar', icon: 'candy', label: 'Sugars', unit: 'g' }
-            ];
-
-            carbMacros.forEach(m => {
-                const value = nutrition.macros[m.key]?.value || 0;
-                const dv = Math.min(nutrition.macros[m.key]?.dv || 0, 100);
-                const dvClass = dv > 100 ? 'high' : dv > 50 ? 'moderate' : 'low';
-                html += `<div class="nutrition-item ${m.key}" role="listitem">
-                    <div class="nutrition-icon"><i data-lucide="${m.icon}" class="w-5 h-5"></i></div>
-                    <div class="nutrition-details">
-                        <div class="nutrition-header">
-                            <span class="nutrition-label">${m.label}</span>
-                            <span class="nutrition-value">${value} ${m.unit}</span>
-                        </div>
-                        <div class="nutrition-bar">
-                            <div class="nutrition-bar-fill ${dvClass}" style="width: ${Math.min(dv, 100)}%"></div>
-                        </div>
-                        <span class="nutrition-dv">${nutrition.macros[m.key]?.dv || 0}% Daily Value</span>
-                    </div>
-                </div>`;
-            });
-            html += '</div></div></div>';
-
-            // Vitamins & Minerals Section with Status Indicators
-            html += `<div class="nutrition-section" role="region" aria-label="Vitamins and Minerals">
-                <h5><i data-lucide="pill" class="inline-block w-4 h-4 mr-1"></i> Vitamins & Minerals</h5>
-                <div class="vitamins-minerals-container">
-                    <!-- Vitamins Group -->
-                    <div class="nutrient-group">
-                        <h6><i data-lucide="citrus" class="inline-block w-3 h-3 mr-1"></i> Vitamins</h6>
-                        <div class="nutrition-mini-grid">`;
-
-            const vitamins = [
-                { key: 'vitamin_a', label: 'Vitamin A', icon: 'carrot' },
-                { key: 'vitamin_c', label: 'Vitamin C', icon: 'citrus' },
-                { key: 'vitamin_d', label: 'Vitamin D', icon: 'sun' },
-                { key: 'vitamin_e', label: 'Vitamin E', icon: 'nut' },
-                { key: 'vitamin_k', label: 'Vitamin K', icon: 'leaf' },
-                { key: 'vitamin_b12', label: 'B12', icon: 'activity' },
-                { key: 'vitamin_b6', label: 'B6', icon: 'bean' },
-                { key: 'folate', label: 'Folate', icon: 'salad' }
-            ];
-
-            vitamins.forEach(v => {
-                const dv = nutrition.vitamins?.[v.key]?.dv || 0;
-                const statusClass = dv >= 100 ? 'excellent' : dv >= 50 ? 'good' : dv >= 25 ? 'low' : 'deficient';
-                const statusIcon = dv >= 100 ? 'check-circle' : dv >= 50 ? 'thumbs-up' : dv >= 25 ? 'alert-triangle' : '';
-                html += `<div class="nutrition-mini-item ${statusClass}">
-                    <span class="mini-icon"><i data-lucide="${v.icon}" class="w-4 h-4"></i></span>
-                    <span class="mini-label">${v.label}</span>
-                    <div class="mini-bar-container">
-                        <div class="mini-bar">
-                            <div class="mini-bar-fill" style="width: ${Math.min(dv, 100)}%"></div>
-                        </div>
-                    </div>
-                    <span class="mini-value">${dv}%</span>
-                    <span class="mini-status">${statusIcon}</span>
-                </div>`;
-            });
-            html += '</div></div>';
-
-            // Minerals Group
-            html += `<div class="nutrient-group">
-                        <h6><i data-lucide="settings" class="inline-block w-3 h-3 mr-1"></i> Minerals</h6>
-                        <div class="nutrition-mini-grid">`;
-
-            const minerals = [
-                { key: 'calcium', label: 'Calcium', icon: 'bone' },
-                { key: 'iron', label: 'Iron', icon: 'droplet' },
-                { key: 'potassium', label: 'Potassium', icon: 'banana' },
-                { key: 'sodium', label: 'Sodium', icon: 'flask-conical', invert: true },
-                { key: 'magnesium', label: 'Magnesium', icon: 'bean' },
-                { key: 'zinc', label: 'Zinc', icon: 'shell' },
-                { key: 'phosphorus', label: 'Phosphorus', icon: 'fish' },
-                { key: 'selenium', label: 'Selenium', icon: 'nut' }
-            ];
-
-            minerals.forEach(m => {
-                const dv = nutrition.minerals?.[m.key]?.dv || 0;
-                // For sodium, high values are bad
-                let statusClass, statusIcon;
-                if (m.invert) {
+            nutrients.forEach(n => {
+                const dv = nutrition[n.type]?.[n.key]?.dv || 0;
+                let statusClass;
+                if (n.invert) {
                     statusClass = dv <= 50 ? 'excellent' : dv <= 75 ? 'good' : dv <= 100 ? 'moderate' : 'high';
-                    statusIcon = dv <= 50 ? 'check-circle' : dv <= 75 ? 'thumbs-up' : dv <= 100 ? 'alert-triangle' : 'alert-circle';
                 } else {
                     statusClass = dv >= 100 ? 'excellent' : dv >= 50 ? 'good' : dv >= 25 ? 'low' : 'deficient';
-                    statusIcon = dv >= 100 ? 'check-circle' : dv >= 50 ? 'thumbs-up' : dv >= 25 ? 'alert-triangle' : '';
                 }
-                html += `<div class="nutrition-mini-item ${statusClass}">
-                    <span class="mini-icon"><i data-lucide="${m.icon}" class="w-4 h-4"></i></span>
-                    <span class="mini-label">${m.label}</span>
-                    <div class="mini-bar-container">
-                        <div class="mini-bar">
-                            <div class="mini-bar-fill" style="width: ${Math.min(dv, 100)}%"></div>
-                        </div>
-                    </div>
-                    <span class="mini-value">${dv}%</span>
-                    <span class="mini-status">${statusIcon ? `<i data-lucide="${statusIcon}" class="w-3 h-3"></i>` : ''}</span>
+                html += `<div class="compact-micro-item ${statusClass}">
+                    <span class="micro-label">${n.label}</span>
+                    <div class="micro-bar"><div class="micro-bar-fill" style="width: ${Math.min(dv, 100)}%"></div></div>
+                    <span class="micro-value">${dv}%</span>
                 </div>`;
             });
-            html += '</div></div></div></div>';
+            html += '</div></div>';
 
-            // Data Source & Accuracy Info
-            html += `<div class="nutrition-footer">
-                <div class="nutrition-disclaimer">
-                    <span class="disclaimer-icon"><i data-lucide="info" class="w-5 h-5"></i></span>
-                    <div class="disclaimer-content">
-                        <span class="disclaimer-title">Data Source: USDA FoodData Central</span>
-                        <div class="disclaimer-stats">
-                            <span class="stat-item">📊 ${nutrition.ingredients_found}/${nutrition.ingredients_analyzed} ingredients matched</span>
-                            <span class="stat-item">🎯 Accuracy: ${nutrition.accuracy}</span>
-                            <span class="stat-item">🍽️ Servings: ${nutrition.servings}</span>
-                        </div>
-                    </div>
-                </div>`;
-
-            // Unmatched ingredients
-            if (nutrition.unmatched_ingredients && nutrition.unmatched_ingredients.length > 0) {
-                html += `<details class="unmatched-details">
-                    <summary class="unmatched-summary">
-                        <span class="unmatched-icon"><i data-lucide="alert-triangle" class="w-4 h-4"></i></span>
-                        <span class="unmatched-text">${nutrition.unmatched_ingredients.length} ingredient(s) not found in database - using estimates</span>
-                        <span class="expand-icon"><i data-lucide="chevron-down" class="w-4 h-4"></i></span>
-                    </summary>
-                    <div class="unmatched-content">
-                        <div class="unmatched-list">`;
-                nutrition.unmatched_ingredients.forEach(ing => {
-                    html += `<div class="unmatched-item">
-                        <span class="unmatched-name"><i data-lucide="help-circle" class="inline-block w-3 h-3 mr-1"></i> ${ing.name}</span>
-                        <span class="unmatched-arrow"><i data-lucide="arrow-right" class="inline-block w-3 h-3"></i></span>
-                        <span class="unmatched-category">Est. as: ${ing.category}</span>
-                    </div>`;
-                });
-                html += `</div>
-                        <div class="unmatched-tip">
-                            <span class="tip-icon"><i data-lucide="lightbulb" class="w-4 h-4"></i></span>
-                            <span>Tip: Use common ingredient names (e.g., "chicken breast" instead of "boneless chicken") for better accuracy.</span>
-                        </div>
-                    </div>
-                </details>`;
-            }
-
-            html += '</div>';
+            // Footer (compact)
+            html += `<div class="nutrition-compact-footer">
+                <span class="footer-item"><i data-lucide="database" class="w-3 h-3"></i> USDA FoodData</span>
+                <span class="footer-item">${nutrition.ingredients_found}/${nutrition.ingredients_analyzed} matched</span>
+                <span class="footer-item">${nutrition.servings} servings</span>
+            </div>`;
 
             return html;
         }
 
-        // Load nutrition via AJAX
+
         async function loadNutrition() {
             const loadingEl = document.getElementById('nutrition-loading');
             const contentEl = document.getElementById('nutrition-content');
