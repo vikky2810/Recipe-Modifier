@@ -352,7 +352,15 @@
                                     <span class="icon"><i data-lucide="key" class="w-4 h-4"></i></span>{{
                                     password_form.current_password.label.text }}
                                 </label>
-                                {{ password_form.current_password(class="form-input") }}
+                                <div class="password-input-wrapper">
+                                    {{ password_form.current_password(class="form-input password-input") }}
+                                    <button type="button" class="password-toggle"
+                                        onclick="togglePassword('{{ password_form.current_password.id }}', this)"
+                                        aria-label="Toggle password visibility">
+                                        <i data-lucide="eye" class="eye-icon eye-open"></i>
+                                        <i data-lucide="eye-off" class="eye-icon eye-closed" style="display: none;"></i>
+                                    </button>
+                                </div>
                                 {% if password_form.current_password.errors %}
                                 {% for error in password_form.current_password.errors %}
                                 <div class="error-text"><i data-lucide="alert-circle"
@@ -366,7 +374,15 @@
                                     <span class="icon"><i data-lucide="lock" class="w-4 h-4"></i></span>{{
                                     password_form.new_password.label.text }}
                                 </label>
-                                {{ password_form.new_password(class="form-input") }}
+                                <div class="password-input-wrapper">
+                                    {{ password_form.new_password(class="form-input password-input") }}
+                                    <button type="button" class="password-toggle"
+                                        onclick="togglePassword('{{ password_form.new_password.id }}', this)"
+                                        aria-label="Toggle password visibility">
+                                        <i data-lucide="eye" class="eye-icon eye-open"></i>
+                                        <i data-lucide="eye-off" class="eye-icon eye-closed" style="display: none;"></i>
+                                    </button>
+                                </div>
                                 {% if password_form.new_password.errors %}
                                 {% for error in password_form.new_password.errors %}
                                 <div class="error-text"><i data-lucide="alert-circle"
@@ -380,7 +396,15 @@
                                     <span class="icon"><i data-lucide="lock" class="w-4 h-4"></i></span>{{
                                     password_form.confirm_new_password.label.text }}
                                 </label>
-                                {{ password_form.confirm_new_password(class="form-input") }}
+                                <div class="password-input-wrapper">
+                                    {{ password_form.confirm_new_password(class="form-input password-input") }}
+                                    <button type="button" class="password-toggle"
+                                        onclick="togglePassword('{{ password_form.confirm_new_password.id }}', this)"
+                                        aria-label="Toggle password visibility">
+                                        <i data-lucide="eye" class="eye-icon eye-open"></i>
+                                        <i data-lucide="eye-off" class="eye-icon eye-closed" style="display: none;"></i>
+                                    </button>
+                                </div>
                                 {% if password_form.confirm_new_password.errors %}
                                 {% for error in password_form.confirm_new_password.errors %}
                                 <div class="error-text"><i data-lucide="alert-circle"
@@ -466,6 +490,23 @@
     <script>
         // Initialize Lucide icons
         lucide.createIcons();
+
+        // Toggle password visibility
+        function togglePassword(fieldId, button) {
+            const passwordField = document.getElementById(fieldId);
+            const eyeOpen = button.querySelectorAll('.eye-open');
+            const eyeClosed = button.querySelectorAll('.eye-closed');
+
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                eyeOpen.forEach(el => el.style.display = 'none');
+                eyeClosed.forEach(el => el.style.display = 'block');
+            } else {
+                passwordField.type = 'password';
+                eyeOpen.forEach(el => el.style.display = 'block');
+                eyeClosed.forEach(el => el.style.display = 'none');
+            }
+        }
 
         // Tabs functionality
         document.querySelectorAll('.tab-btn').forEach(btn => {
