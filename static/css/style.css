@@ -314,6 +314,67 @@ label .icon {
     margin-bottom: 1rem;
 }
 
+/* ============================================
+   HEADER USER INFO ALIGNMENT
+   ============================================ */
+
+/* Username and condition in header */
+.user-info .username,
+.user-info .condition {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.35rem !important;
+    line-height: 1.4 !important;
+}
+
+.user-info {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.25rem !important;
+    align-items: flex-start !important;
+}
+
+/* ============================================
+   HEADER LAYOUT - CENTERED TITLE
+   ============================================ */
+
+.app-header .container {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 1rem !important;
+}
+
+.app-header .header-left {
+    flex: 1;
+    display: flex;
+    align-items: center;
+}
+
+.app-header .header-title {
+    flex: 1;
+    text-align: center;
+}
+
+.app-header .header-title h1 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+}
+
+.app-header .header-title p {
+    margin: 0;
+}
+
+.app-header .header-right {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
 img {
     max-width: 100%;
     height: auto;
@@ -1853,7 +1914,7 @@ section {
 .header-right {
     display: flex;
     align-items: center;
-    gap: var(--space-3);
+    gap: var(--space-5);
 }
 
 .user-info {
