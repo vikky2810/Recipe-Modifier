@@ -4156,3 +4156,42 @@ section {
     width: 20px;
     height: 20px;
 }
+
+/* ============================================
+   UPDATE BUTTON - ENHANCED STYLE
+   ============================================ */
+.update-btn {
+    background: #ffffff;
+    border: none;
+    color: #16a34a !important; /* Vibrant Green Text */
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 700;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.update-btn:hover {
+    background: #f0fdf4; /* Very light green tint */
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    color: #15803d !important; /* Darker Green on Hover */
+}
+
+.update-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+    background: #dcfce7;
+}
+
+.update-btn i {
+    width: 16px;
+    height: 16px;
+    stroke-width: 2.5px;
+}
