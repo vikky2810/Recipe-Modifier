@@ -225,14 +225,16 @@
     <!-- Pass data from Jinja2 to JavaScript via data attributes (avoids lint errors) -->
     <div id="nutrition-data"
         data-ingredients='{{ modified_ingredients_json | safe if modified_ingredients_json else "[]" }}'
-        data-condition="{{ condition }}" style="display: none;"></div>
+        data-condition="{{ condition }}" 
+        data-entry-id="{{ entry_id if entry_id else '' }}" style="display: none;"></div>
 
     <script>
         // Nutrition data configuration - read from data attributes
         const dataEl = document.getElementById('nutrition-data');
         const nutritionConfig = {
             ingredients: JSON.parse(dataEl.dataset.ingredients || '[]'),
-            condition: dataEl.dataset.condition || ''
+            condition: dataEl.dataset.condition || '',
+            entryId: dataEl.dataset.entryId || null
         };
 
         // Function to render nutrition HTML - COMPACT VERSION
@@ -381,7 +383,8 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         ingredients: nutritionConfig.ingredients,
-                        condition: nutritionConfig.condition
+                        condition: nutritionConfig.condition,
+                        entry_id: nutritionConfig.entryId
                     })
                 });
 
