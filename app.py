@@ -1044,6 +1044,40 @@ def complete_profile():
     return render_template('complete_profile.html', form=form)
 
 
+@app.route('/update-health-metrics', methods=['GET', 'POST'])
+@login_required
+def update_health_metrics():
+    """Update user health metrics and goals"""
+    form = ProfileCompletionForm()
+    
+    if form.validate_on_submit():
+        get_user_manager().update_user_profile(
+            user_id=current_user.user_id,
+            age=form.age.data,
+            weight=form.weight.data,
+            height=form.height.data,
+            calorie_target=form.calorie_target.data,
+            goal=form.goal.data
+        )
+        flash('Health metrics updated successfully!', 'success')
+        return redirect(url_for('profile'))
+    
+    # Pre-fill form with current data if GET request
+    if request.method == 'GET':
+        form.age.data = current_user.age
+        form.weight.data = current_user.weight
+        form.height.data = current_user.height
+        form.calorie_target.data = current_user.calorie_target
+        form.goal.data = current_user.goal
+    
+    return render_template('complete_profile.html', 
+                         form=form,
+                         page_title="Update Health Metrics",
+                         page_subtitle="Update your body metrics and goals",
+                         submit_text="Update Metrics",
+                         form_action=url_for('update_health_metrics'))
+
+
 @app.route('/login', methods=['GET', 'POST'])
 @limiter.limit("5 per minute", error_message="Too many login attempts. Please try again later.")
 def login():
