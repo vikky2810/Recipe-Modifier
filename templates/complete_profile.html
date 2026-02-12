@@ -100,8 +100,7 @@
             padding: 0 1rem;
         }
 
-        .progress-indicator::before {
-            content: '';
+        .progress-track {
             position: absolute;
             top: 15px;
             left: calc(16.66% + 1rem);
@@ -109,6 +108,13 @@
             height: 3px;
             background: #e5e7eb;
             z-index: 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #22c55e;
+            width: 0%;
+            transition: width 0.5s ease;
         }
 
         .progress-step {
@@ -147,9 +153,7 @@
             color: white;
         }
 
-        .progress-step.completed~.progress-step .progress-dot {
-            background: #e5e7eb;
-        }
+
 
         .progress-label {
             font-size: 0.75rem;
@@ -359,6 +363,9 @@
 
             <!-- Progress Indicator -->
             <div class="progress-indicator">
+                <div class="progress-track">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
                 <div class="progress-step active" id="step-1">
                     <div class="progress-dot">1</div>
                     <div class="progress-label">Basics</div>
@@ -505,6 +512,7 @@
             }
 
             // Update slides
+
             for (let i = 1; i <= totalSlides; i++) {
                 const slide = document.getElementById(`slide-${i}`);
                 if (i === currentSlide) {
@@ -512,6 +520,13 @@
                 } else {
                     slide.classList.remove('active');
                 }
+            }
+
+            // Update progress connection line
+            const progressFill = document.getElementById('progress-fill');
+            if (progressFill) {
+                const percent = ((currentSlide - 1) / (totalSlides - 1)) * 100;
+                progressFill.style.width = percent + '%';
             }
         }
 
