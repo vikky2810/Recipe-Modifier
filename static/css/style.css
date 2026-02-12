@@ -264,6 +264,56 @@ body {
     color: var(--warning);
 }
 
+/* ============================================
+   ICON ALIGNMENT FIXES
+   ============================================ */
+
+/* Global inline icon alignment - for all inline-block icons */
+i[data-lucide].inline-block {
+    vertical-align: middle;
+    margin-top: -0.05em;
+}
+
+/* Icon container in info items (profile page) */
+.info-item .icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* Icon container in form labels */
+.form-label .icon,
+label .icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+}
+
+/* Icon container in card headers */
+.card-header .icon,
+.card-header span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Ensure form labels use flexbox for proper alignment */
+.form-label {
+    display: flex !important;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+/* Empty state icon container */
+.empty-state .icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
 img {
     max-width: 100%;
     height: auto;
