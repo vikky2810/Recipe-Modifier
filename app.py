@@ -3,6 +3,7 @@ from flask_login import LoginManager, login_user, logout_user, login_required, c
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from pymongo import MongoClient
+from bson.objectid import ObjectId
 from datetime import datetime
 from dotenv import load_dotenv
 import os
@@ -695,6 +696,7 @@ def check_ingredients_route():
     # Pass modified ingredients to frontend for async nutrition loading
     
     # Store in database (without nutrition - will be updated if needed)
+    entry_id = None
     if current_user.is_authenticated:
         patient_id = current_user.user_id
         food_entry = {
@@ -708,7 +710,8 @@ def check_ingredients_route():
         }
         
         try:
-            get_food_entries().insert_one(food_entry)
+            result = get_food_entries().insert_one(food_entry)
+            entry_id = str(result.inserted_id)
         except Exception as e:
             print(f"Error storing food entry: {e}")
     
@@ -722,6 +725,7 @@ def check_ingredients_route():
                          original_ingredients=ingredients,
                          condition=condition,
                          nutrition=None,  # Will be loaded via AJAX
+                         entry_id=entry_id, # Pass entry_id for nutrition update
                          nutrition_warnings=[],
                          modified_ingredients_json=json.dumps(modified_ingredients),
                          moment=datetime.now().strftime('%B %d, %Y at %I:%M %p'))
@@ -903,6 +907,18 @@ def get_nutrition_data():
         # Get condition-specific warnings
         warnings = nutrition_service.get_condition_warnings(raw_nutrition, condition)
         
+        # Update database if entry_id is provided
+        entry_id = data.get('entry_id')
+        if entry_id:
+            try:
+                if current_user.is_authenticated:
+                    get_food_entries().update_one(
+                        {"_id": ObjectId(entry_id), "patient_id": current_user.user_id},
+                        {"$set": {"nutrition": formatted_nutrition}}
+                    )
+            except Exception as e:
+                print(f"Error updating nutrition for entry {entry_id}: {e}")
+        
         return jsonify({
             'nutrition': formatted_nutrition,
             'warnings': warnings
@@ -1044,6 +1060,40 @@ def complete_profile():
     return render_template('complete_profile.html', form=form)
 
 
+@app.route('/update-health-metrics', methods=['GET', 'POST'])
+@login_required
+def update_health_metrics():
+    """Update user health metrics and goals"""
+    form = ProfileCompletionForm()
+    
+    if form.validate_on_submit():
+        get_user_manager().update_user_profile(
+            user_id=current_user.user_id,
+            age=form.age.data,
+            weight=form.weight.data,
+            height=form.height.data,
+            calorie_target=form.calorie_target.data,
+            goal=form.goal.data
+        )
+        flash('Health metrics updated successfully!', 'success')
+        return redirect(url_for('profile'))
+    
+    # Pre-fill form with current data if GET request
+    if request.method == 'GET':
+        form.age.data = current_user.age
+        form.weight.data = current_user.weight
+        form.height.data = current_user.height
+        form.calorie_target.data = current_user.calorie_target
+        form.goal.data = current_user.goal
+    
+    return render_template('complete_profile.html', 
+                         form=form,
+                         page_title="Update Health Metrics",
+                         page_subtitle="Update your body metrics and goals",
+                         submit_text="Update Metrics",
+                         form_action=url_for('update_health_metrics'))
+
+
 @app.route('/login', methods=['GET', 'POST'])
 @limiter.limit("5 per minute", error_message="Too many login attempts. Please try again later.")
 def login():
@@ -1110,8 +1160,15 @@ def profile():
             if 'nutrition' in entry and entry['nutrition']:
                 # Extract calories from nutrition data
                 nutrition = entry['nutrition']
-                if isinstance(nutrition, dict) and 'calories' in nutrition:
-                    today_calories += nutrition.get('calories', 0)
+                if isinstance(nutrition, dict):
+                    # Check for nested structure (new format)
+                    if 'macros' in nutrition and isinstance(nutrition['macros'], dict):
+                        cal_entry = nutrition['macros'].get('calories')
+                        if isinstance(cal_entry, dict):
+                            today_calories += int(cal_entry.get('value', 0))
+                    # Fallback for legacy flat format
+                    elif 'calories' in nutrition:
+                        today_calories += int(nutrition.get('calories', 0))
         
         # Calculate BMI if height and weight are available
         bmi = None

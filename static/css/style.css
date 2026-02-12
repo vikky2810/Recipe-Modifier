@@ -3943,3 +3943,105 @@ section {
         width: 100%;
     }
 }
+
+/* ============================================
+   PROGRESS BAR (Profile)
+   ============================================ */
+.progress-track {
+    background: var(--gray-100);
+    border-radius: var(--radius-full);
+    height: 1.5rem;
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+}
+
+.progress-fill {
+    background: linear-gradient(90deg, var(--warning) 0%, var(--danger) 100%);
+    height: 100%;
+    transition: width 0.5s ease;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: var(--space-2);
+}
+
+.progress-fill-text {
+    color: white;
+    font-weight: 700;
+    font-size: 0.75rem;
+    line-height: 1;
+}
+
+.progress-text-outside {
+    position: absolute;
+    right: var(--space-2);
+    top: 50%;
+    transform: translateY(-50%);
+    font-weight: 700;
+    font-size: 0.75rem;
+    color: var(--gray-500);
+    z-index: 1;
+}
+
+.calorie-status {
+    margin-top: var(--space-4);
+    padding: var(--space-4);
+    background: #fef3c7; /* Light amber/yellow */
+    border-radius: var(--radius-lg);
+    border-left: 4px solid var(--warning);
+}
+
+.calorie-status p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: #92400e; /* Dark amber/brown */
+}
+
+/* Password Visibility Toggle */
+.password-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.password-input-wrapper .password-input {
+    padding-right: 3rem !important; /* Ensure space for icon */
+    width: 100%;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem; /* Ensure clickable area */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6b7280;
+    transition: color 0.2s ease;
+    border-radius: 6px;
+    z-index: 10;
+    outline: none; /* Remove default outline */
+}
+
+.password-toggle:hover {
+    color: #00b0b0;
+    background: rgba(0, 176, 176, 0.05);
+}
+
+.password-toggle:focus {
+    outline: 2px solid rgba(0, 176, 176, 0.3);
+    outline-offset: 2px;
+}
+
+.eye-icon {
+    width: 20px;
+    height: 20px;
+}

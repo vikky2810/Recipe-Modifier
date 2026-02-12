@@ -339,9 +339,9 @@
     <div class="profile-completion-container">
         <div class="profile-card">
             <div class="profile-header">
-                <h1><i data-lucide="target" class="inline-block w-8 h-8 mr-2 text-primary"></i> Complete Your Profile
+                <h1><i data-lucide="target" class="inline-block w-8 h-8 mr-2 text-primary"></i> {{ page_title or 'Complete Your Profile' }}
                 </h1>
-                <p>Help us personalize your health journey</p>
+                <p>{{ page_subtitle or 'Help us personalize your health journey' }}</p>
             </div>
 
             <!-- Flash Messages -->
@@ -373,7 +373,7 @@
                 </div>
             </div>
 
-            <form method="POST" action="{{ url_for('complete_profile') }}" id="profileForm">
+            <form method="POST" action="{{ form_action or url_for('complete_profile') }}" id="profileForm">
                 {{ form.hidden_tag() }}
 
                 <!-- Slide 1: Age & Weight -->
@@ -475,7 +475,7 @@
                         <button type="button" class="btn btn-secondary" onclick="prevSlide()"><i
                                 data-lucide="arrow-left" class="inline-block w-4 h-4 mr-1"></i> Back</button>
                         <button type="submit" class="btn btn-primary"><i data-lucide="rocket"
-                                class="inline-block w-4 h-4 mr-2"></i> Complete Profile</button>
+                                class="inline-block w-4 h-4 mr-2"></i> {{ submit_text or 'Complete Profile' }}</button>
                     </div>
                 </div>
             </form>
