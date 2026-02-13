@@ -344,6 +344,8 @@
             const aiFillButton = document.getElementById("aiFillIngredients");
             const form = document.querySelector("form");
             const submitBtn = document.getElementById("submitBtn");
+            const spellSuggestionsDiv = document.getElementById("spellSuggestions");
+            const spellSuggestionLinks = document.getElementById("spellSuggestionLinks");
 
             // Auto-resize textarea
             ingredientsTextarea.addEventListener("input", function () {
@@ -370,6 +372,7 @@
             // AI Auto-Fill
             if (aiFillButton) {
                 aiFillButton.addEventListener("click", async function () {
+                    if (spellSuggestionsDiv) spellSuggestionsDiv.style.display = "none";
                     const sourceText = (recipeInput && recipeInput.value.trim()) || ingredientsTextarea.value.trim();
                     if (!sourceText) {
                         (recipeInput || ingredientsTextarea).focus();
@@ -415,8 +418,7 @@
             }
 
             // Spell Check for Recipe Name
-            const spellSuggestionsDiv = document.getElementById("spellSuggestions");
-            const spellSuggestionLinks = document.getElementById("spellSuggestionLinks");
+
             let spellCheckTimeout = null;
 
             if (recipeInput && spellSuggestionsDiv && spellSuggestionLinks) {
