@@ -264,6 +264,117 @@ body {
     color: var(--warning);
 }
 
+/* ============================================
+   ICON ALIGNMENT FIXES
+   ============================================ */
+
+/* Global inline icon alignment - for all inline-block icons */
+i[data-lucide].inline-block {
+    vertical-align: middle;
+    margin-top: -0.05em;
+}
+
+/* Icon container in info items (profile page) */
+.info-item .icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* Icon container in form labels */
+.form-label .icon,
+label .icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+}
+
+/* Icon container in card headers */
+.card-header .icon,
+.card-header span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Ensure form labels use flexbox for proper alignment */
+.form-label {
+    display: flex !important;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+/* Empty state icon container */
+.empty-state .icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+/* ============================================
+   HEADER USER INFO ALIGNMENT
+   ============================================ */
+
+/* Username and condition in header */
+.user-info .username,
+.user-info .condition {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.35rem !important;
+    line-height: 1.4 !important;
+}
+
+.user-info {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.25rem !important;
+    align-items: flex-start !important;
+}
+
+/* ============================================
+   HEADER LAYOUT - CENTERED TITLE
+   ============================================ */
+
+.app-header .container {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 1rem !important;
+}
+
+.app-header .header-left {
+    flex: 1;
+    display: flex;
+    align-items: center;
+}
+
+.app-header .header-title {
+    flex: 1;
+    text-align: center;
+}
+
+.app-header .header-title h1 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+}
+
+.app-header .header-title p {
+    margin: 0;
+}
+
+.app-header .header-right {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
 img {
     max-width: 100%;
     height: auto;
@@ -1803,7 +1914,7 @@ section {
 .header-right {
     display: flex;
     align-items: center;
-    gap: var(--space-3);
+    gap: var(--space-5);
 }
 
 .user-info {
@@ -3953,7 +4064,7 @@ section {
     height: 1.5rem;
     overflow: hidden;
     position: relative;
-    width: 100%;
+    width: 60%;
 }
 
 .progress-fill {
@@ -4044,4 +4155,43 @@ section {
 .eye-icon {
     width: 20px;
     height: 20px;
+}
+
+/* ============================================
+   UPDATE BUTTON - ENHANCED STYLE
+   ============================================ */
+.update-btn {
+    background: #ffffff;
+    border: none;
+    color: #16a34a !important; /* Vibrant Green Text */
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 700;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.update-btn:hover {
+    background: #f0fdf4; /* Very light green tint */
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    color: #15803d !important; /* Darker Green on Hover */
+}
+
+.update-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+    background: #dcfce7;
+}
+
+.update-btn i {
+    width: 16px;
+    height: 16px;
+    stroke-width: 2.5px;
 }
