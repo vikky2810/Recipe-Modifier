@@ -8,7 +8,8 @@ class User(UserMixin):
     
     def __init__(self, user_id, username, email, password_hash=None, medical_condition=None, 
                  created_at=None, last_login=None, age=None, weight=None, height=None, 
-                 calorie_target=None, goal=None, profile_completed=False):
+                 calorie_target=None, goal=None, profile_completed=False, role='patient', 
+                 education_details=None, assigned_patients=None):
         self.user_id = user_id
         self.username = username
         self.email = email
@@ -22,6 +23,9 @@ class User(UserMixin):
         self.calorie_target = calorie_target
         self.goal = goal
         self.profile_completed = profile_completed
+        self.role = role  # 'patient' or 'dietitian'
+        self.education_details = education_details or {}
+        self.assigned_patients = assigned_patients or []
     
     def get_id(self):
         """Required by Flask-Login"""
@@ -50,7 +54,10 @@ class User(UserMixin):
             'height': self.height,
             'calorie_target': self.calorie_target,
             'goal': self.goal,
-            'profile_completed': self.profile_completed
+            'profile_completed': self.profile_completed,
+            'role': self.role,
+            'education_details': self.education_details,
+            'assigned_patients': self.assigned_patients
         }
     
     @classmethod
@@ -69,7 +76,10 @@ class User(UserMixin):
             height=data.get('height'),
             calorie_target=data.get('calorie_target'),
             goal=data.get('goal'),
-            profile_completed=data.get('profile_completed', False)
+            profile_completed=data.get('profile_completed', False),
+            role=data.get('role', 'patient'),
+            education_details=data.get('education_details', {}),
+            assigned_patients=data.get('assigned_patients', [])
         )
 
 class UserManager:
