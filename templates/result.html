@@ -28,6 +28,16 @@
                         <p>Here is your optimized, doctor-approved recipe.</p>
                     </div>
                 </div>
+                <!-- Profile Button -->
+                <div class="header-right">
+                    <span style="font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem;">
+                        <i data-lucide="user" class="w-4 h-4"></i>
+                        {{ current_user.username if current_user.is_authenticated else 'Anonymous' }}
+                    </span>
+                    <a href="{{ url_for('profile') if current_user.is_authenticated else url_for('register') }}" class="back-btn">
+                        Profile
+                    </a>
+                </div>
             </div>
         </header>
 
