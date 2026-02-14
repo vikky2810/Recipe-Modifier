@@ -4162,10 +4162,11 @@ section {
    UPDATE BUTTON - ENHANCED STYLE
    ============================================ */
 .update-btn {
-    background: #ffffff;
-    border: none;
-    color: #16a34a !important;
-    /* Vibrant Green Text */
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    color: #ffffff !important;
     padding: 0.5rem 1rem;
     border-radius: 0.5rem;
     cursor: pointer;
@@ -4180,18 +4181,17 @@ section {
 }
 
 .update-btn:hover {
-    background: #f0fdf4;
-    /* Very light green tint */
+    background: rgba(255, 255, 255, 0.3);
     transform: translateY(-2px);
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    color: #15803d !important;
-    /* Darker Green on Hover */
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.6);
 }
 
 .update-btn:active {
     transform: translateY(0);
     box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
-    background: #dcfce7;
+    background: rgba(255, 255, 255, 0.25);
 }
 
 .update-btn i {
