@@ -152,10 +152,24 @@ class ProfileCompletionForm(FlaskForm):
         NumberRange(min=20, max=300, message='Weight must be between 20 and 300 kg')
     ])
     
+
     height = IntegerField('Height (cm)', validators=[
         DataRequired(message='Please enter your height'),
         NumberRange(min=50, max=250, message='Height must be between 50 and 250 cm')
     ])
+    
+    gender = SelectField('Gender', 
+                        choices=[
+                            ('', 'Select your gender'),
+                            ('male', 'Male'),
+                            ('female', 'Female'),
+                            ('other', 'Other')
+                        ],
+                        validators=[DataRequired(message='Please select your gender')])
+    
+    diet_type = StringField('Diet Type (Optional)', validators=[Optional(), Length(max=50)])
+    
+    allergies = StringField('Allergies (Optional)', validators=[Optional(), Length(max=200)])
     
     calorie_target = IntegerField('Daily Calorie Target', validators=[
         DataRequired(message='Please enter your calorie target'),
@@ -173,4 +187,5 @@ class ProfileCompletionForm(FlaskForm):
                       validators=[DataRequired(message='Please select a fitness goal')])
     
     submit = SubmitField('Complete Profile')
+
 

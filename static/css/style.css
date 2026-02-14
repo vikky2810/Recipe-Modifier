@@ -4060,7 +4060,7 @@ section {
     height: 1.5rem;
     overflow: hidden;
     position: relative;
-    width: 60%;
+    width: 100%;
 }
 
 .progress-fill {
@@ -4198,22 +4198,4 @@ section {
     width: 16px;
     height: 16px;
     stroke-width: 2.5px;
-}
-
-/* Ensure Action Buttons Layout is Strict Grid */
-.action-buttons {
-    display: grid !important;
-    grid-template-columns: repeat(3, 1fr) !important;
-    gap: var(--space-4);
-    width: 100%;
-}
-
-.action-buttons>.action-btn {
-    width: 100%;
-}
-
-@media (max-width: 600px) {
-    .action-buttons {
-        grid-template-columns: 1fr !important;
-    }
 }
