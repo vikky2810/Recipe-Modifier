@@ -1162,8 +1162,11 @@ def complete_profile():
         get_user_manager().update_user_profile(
             user_id=current_user.user_id,
             age=form.age.data,
+            gender=form.gender.data,
             weight=form.weight.data,
             height=form.height.data,
+            diet_type=form.diet_type.data,
+            allergies=form.allergies.data,
             calorie_target=form.calorie_target.data,
             goal=form.goal.data
         )
@@ -1183,8 +1186,11 @@ def update_health_metrics():
         get_user_manager().update_user_profile(
             user_id=current_user.user_id,
             age=form.age.data,
+            gender=form.gender.data,
             weight=form.weight.data,
             height=form.height.data,
+            diet_type=form.diet_type.data,
+            allergies=form.allergies.data,
             calorie_target=form.calorie_target.data,
             goal=form.goal.data
         )
@@ -1194,8 +1200,11 @@ def update_health_metrics():
     # Pre-fill form with current data if GET request
     if request.method == 'GET':
         form.age.data = current_user.age
+        form.gender.data = current_user.gender
         form.weight.data = current_user.weight
         form.height.data = current_user.height
+        form.diet_type.data = current_user.diet_type
+        form.allergies.data = current_user.allergies
         form.calorie_target.data = current_user.calorie_target
         form.goal.data = current_user.goal
     
