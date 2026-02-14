@@ -4064,7 +4064,7 @@ section {
     height: 1.5rem;
     overflow: hidden;
     position: relative;
-    width: 60%;
+    width: 100%;
 }
 
 .progress-fill {
@@ -4194,4 +4194,21 @@ section {
     width: 16px;
     height: 16px;
     stroke-width: 2.5px;
+}
+
+/* ============================================
+   RESULTS HEADER FIX
+   ============================================ */
+.results-header .container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+}
+
+.results-header .header-right {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+    gap: var(--space-4);
 }

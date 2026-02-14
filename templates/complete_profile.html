@@ -103,11 +103,12 @@
         .progress-track {
             position: absolute;
             top: 15px;
-            left: calc(16.66% + 1rem);
-            right: calc(16.66% + 1rem);
+            left: calc(16.66% + -0.5rem);
+            right: calc(16.66% + 0.5rem);
             height: 3px;
             background: #e5e7eb;
             z-index: 0;
+            width: 70%;
         }
 
         .progress-fill {
@@ -380,10 +381,14 @@
                 </div>
                 <div class="progress-step" id="step-2">
                     <div class="progress-dot">2</div>
-                    <div class="progress-label">Metrics</div>
+                    <div class="progress-label">Body</div>
                 </div>
                 <div class="progress-step" id="step-3">
                     <div class="progress-dot">3</div>
+                    <div class="progress-label">Diet</div>
+                </div>
+                <div class="progress-step" id="step-4">
+                    <div class="progress-dot">4</div>
                     <div class="progress-label">Goals</div>
                 </div>
             </div>
@@ -429,7 +434,7 @@
                     </div>
                 </div>
 
-                <!-- Slide 2: Height & Calorie Target -->
+                <!-- Slide 2: Height & Gender -->
                 <div class="form-slide" id="slide-2">
                     <div class="form-group">
                         <label for="{{ form.height.id }}" class="form-label">
@@ -445,7 +450,72 @@
                         {% endfor %}
                         {% endif %}
                     </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.gender.id }}" class="form-label">
+                            <span class="icon"><i data-lucide="user" class="w-4 h-4"></i></span>{{
+                            form.gender.label.text }}
+                        </label>
+                        {{ form.gender(class="form-select") }}
+                        <div class="input-hint">Select the gender you identify with</div>
+                        {% if form.gender.errors %}
+                        {% for error in form.gender.errors %}
+                        <div class="error-text"><i data-lucide="alert-circle" class="inline-block w-3 h-3 mr-1"></i> {{
+                            error }}</div>
+                        {% endfor %}
+                        {% endif %}
+                    </div>
 
+                    <div class="form-buttons">
+                        <button type="button" class="btn btn-secondary" onclick="prevSlide()"><i
+                                data-lucide="arrow-left" class="inline-block w-4 h-4 mr-1"></i> Back</button>
+                        <button type="button" class="btn btn-primary" onclick="nextSlide()">Next <i
+                                data-lucide="arrow-right" class="inline-block w-4 h-4 ml-1"></i></button>
+                    </div>
+                </div>
+
+                <!-- Slide 3: Diet & Allergies -->
+                <div class="form-slide" id="slide-3">
+                    <div class="form-group">
+                        <label for="{{ form.diet_type.id }}" class="form-label">
+                            <span class="icon"><i data-lucide="utensils" class="w-4 h-4"></i></span>{{
+                            form.diet_type.label.text }}
+                        </label>
+                        {{ form.diet_type(class="form-input", placeholder="e.g. Vegetarian, Keto (Optional)") }}
+                        <div class="input-hint">Specific dietary preferences</div>
+                        {% if form.diet_type.errors %}
+                        {% for error in form.diet_type.errors %}
+                        <div class="error-text"><i data-lucide="alert-circle" class="inline-block w-3 h-3 mr-1"></i> {{
+                            error }}</div>
+                        {% endfor %}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.allergies.id }}" class="form-label">
+                            <span class="icon"><i data-lucide="alert-octagon" class="w-4 h-4"></i></span>{{
+                            form.allergies.label.text }}
+                        </label>
+                        {{ form.allergies(class="form-input", placeholder="e.g. Peanuts, Shellfish (Optional)") }}
+                        <div class="input-hint">Any allergies we should know about</div>
+                        {% if form.allergies.errors %}
+                        {% for error in form.allergies.errors %}
+                        <div class="error-text"><i data-lucide="alert-circle" class="inline-block w-3 h-3 mr-1"></i> {{
+                            error }}</div>
+                        {% endfor %}
+                        {% endif %}
+                    </div>
+
+                    <div class="form-buttons">
+                        <button type="button" class="btn btn-secondary" onclick="prevSlide()"><i
+                                data-lucide="arrow-left" class="inline-block w-4 h-4 mr-1"></i> Back</button>
+                        <button type="button" class="btn btn-primary" onclick="nextSlide()">Next <i
+                                data-lucide="arrow-right" class="inline-block w-4 h-4 ml-1"></i></button>
+                    </div>
+                </div>
+
+                <!-- Slide 4: Calorie Target & Goal -->
+                <div class="form-slide" id="slide-4">
                     <div class="form-group">
                         <label for="{{ form.calorie_target.id }}" class="form-label">
                             <span class="icon"><i data-lucide="flame" class="w-4 h-4"></i></span>{{
@@ -461,16 +531,9 @@
                         {% endif %}
                     </div>
 
-                    <div class="form-buttons">
-                        <button type="button" class="btn btn-secondary" onclick="prevSlide()"><i
-                                data-lucide="arrow-left" class="inline-block w-4 h-4 mr-1"></i> Back</button>
-                        <button type="button" class="btn btn-primary" onclick="nextSlide()">Next <i
-                                data-lucide="arrow-right" class="inline-block w-4 h-4 ml-1"></i></button>
-                    </div>
-                </div>
+                
+                <!-- (Slide 4 continued) -->
 
-                <!-- Slide 3: Goal -->
-                <div class="form-slide" id="slide-3">
                     <div class="form-group">
                         <label for="{{ form.goal.id }}" class="form-label">
                             <span class="icon"><i data-lucide="target" class="w-4 h-4"></i></span>{{
@@ -499,7 +562,7 @@
 
     <script>
         let currentSlide = 1;
-        const totalSlides = 3;
+        const totalSlides = 4;
 
         // Initialize Lucide icons
         lucide.createIcons();
@@ -609,12 +672,12 @@
 
         function validateSlide2() {
             const heightField = document.getElementById('height');
-            const calorieField = document.getElementById('calorie_target');
+            const genderField = document.getElementById('gender');
             let isValid = true;
 
             // Clear previous errors
             clearError('height');
-            clearError('calorie_target');
+            clearError('gender');
 
             // Validate height
             const height = parseFloat(heightField.value);
@@ -626,6 +689,29 @@
                 isValid = false;
             }
 
+            // Validate gender
+            if (!genderField.value || genderField.value === '') {
+                showError('gender', 'Please select your gender');
+                isValid = false;
+            }
+
+            return isValid;
+        }
+
+        function validateSlide3() {
+            // Diet and Allergies are optional, but we can add validation here if needed
+            return true;
+        }
+
+        function validateSlide4() {
+            const calorieField = document.getElementById('calorie_target');
+            const goalField = document.getElementById('goal');
+            let isValid = true;
+
+            // Clear previous errors
+            clearError('calorie_target');
+            clearError('goal');
+
             // Validate calorie target
             const calories = parseInt(calorieField.value);
             if (!calorieField.value || isNaN(calories)) {
@@ -635,16 +721,6 @@
                 showError('calorie_target', 'Calorie target must be between 500 and 5000 kcal');
                 isValid = false;
             }
-
-            return isValid;
-        }
-
-        function validateSlide3() {
-            const goalField = document.getElementById('goal');
-            let isValid = true;
-
-            // Clear previous errors
-            clearError('goal');
 
             // Validate goal selection
             if (!goalField.value || goalField.value === '') {
@@ -665,6 +741,8 @@
                 isValid = validateSlide2();
             } else if (currentSlide === 3) {
                 isValid = validateSlide3();
+            } else if (currentSlide === 4) {
+                isValid = validateSlide4();
             }
 
             // Only proceed if validation passes
@@ -728,6 +806,13 @@
                 });
             }
 
+            const genderField = document.getElementById('gender');
+            if (genderField) {
+                genderField.addEventListener('change', function () {
+                    if (this.value) clearError('gender');
+                });
+            }
+
             // Validate entire form before submission
             const form = document.getElementById('profileForm');
             if (form) {
@@ -735,8 +820,9 @@
                     const slide1Valid = validateSlide1();
                     const slide2Valid = validateSlide2();
                     const slide3Valid = validateSlide3();
+                    const slide4Valid = validateSlide4();
 
-                    if (!slide1Valid || !slide2Valid || !slide3Valid) {
+                    if (!slide1Valid || !slide2Valid || !slide3Valid || !slide4Valid) {
                         e.preventDefault();
 
                         // Go to first invalid slide
@@ -746,6 +832,8 @@
                             currentSlide = 2;
                         } else if (!slide3Valid) {
                             currentSlide = 3;
+                        } else if (!slide4Valid) {
+                            currentSlide = 4;
                         }
                         updateProgress();
 

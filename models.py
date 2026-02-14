@@ -9,7 +9,8 @@ class User(UserMixin):
     def __init__(self, user_id, username, email, password_hash=None, medical_condition=None, 
                  created_at=None, last_login=None, age=None, weight=None, height=None, 
                  calorie_target=None, goal=None, profile_completed=False, role='patient', 
-                 education_details=None, assigned_patients=None):
+
+                 education_details=None, assigned_patients=None, gender=None, diet_type=None, allergies=None):
         self.user_id = user_id
         self.username = username
         self.email = email
@@ -18,14 +19,18 @@ class User(UserMixin):
         self.created_at = created_at or datetime.now()
         self.last_login = last_login
         self.age = age
+        self.gender = gender
         self.weight = weight  # in kg
         self.height = height  # in cm
+        self.diet_type = diet_type
+        self.allergies = allergies
         self.calorie_target = calorie_target
         self.goal = goal
         self.profile_completed = profile_completed
         self.role = role  # 'patient' or 'dietitian'
         self.education_details = education_details or {}
         self.assigned_patients = assigned_patients or []
+
     
     def get_id(self):
         """Required by Flask-Login"""
@@ -50,8 +55,11 @@ class User(UserMixin):
             'created_at': self.created_at,
             'last_login': self.last_login,
             'age': self.age,
+            'gender': self.gender,
             'weight': self.weight,
             'height': self.height,
+            'diet_type': self.diet_type,
+            'allergies': self.allergies,
             'calorie_target': self.calorie_target,
             'goal': self.goal,
             'profile_completed': self.profile_completed,
@@ -72,8 +80,11 @@ class User(UserMixin):
             created_at=data.get('created_at'),
             last_login=data.get('last_login'),
             age=data.get('age'),
+            gender=data.get('gender'),
             weight=data.get('weight'),
             height=data.get('height'),
+            diet_type=data.get('diet_type'),
+            allergies=data.get('allergies'),
             calorie_target=data.get('calorie_target'),
             goal=data.get('goal'),
             profile_completed=data.get('profile_completed', False),
@@ -154,15 +165,22 @@ class UserManager:
             {'$set': {'medical_condition': condition}}
         )
     
-    def update_user_profile(self, user_id, age=None, weight=None, height=None, calorie_target=None, goal=None):
+
+    def update_user_profile(self, user_id, age=None, weight=None, height=None, calorie_target=None, goal=None, gender=None, diet_type=None, allergies=None):
         """Update user's profile with health metrics and goals"""
         update_data = {'profile_completed': True}
         if age is not None:
             update_data['age'] = age
+        if gender is not None:
+            update_data['gender'] = gender
         if weight is not None:
             update_data['weight'] = weight
         if height is not None:
             update_data['height'] = height
+        if diet_type is not None:
+            update_data['diet_type'] = diet_type
+        if allergies is not None:
+            update_data['allergies'] = allergies
         if calorie_target is not None:
             update_data['calorie_target'] = calorie_target
         if goal is not None:
