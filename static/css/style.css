@@ -2631,6 +2631,7 @@ section {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: var(--space-4);
+    justify-content: space-around;
     margin-top: var(--space-6);
     margin-bottom: var(--space-6);
 }
@@ -2931,12 +2932,7 @@ section {
     margin-bottom: var(--space-6);
 }
 
-.action-buttons {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-4);
-    margin-bottom: var(--space-6);
-}
+
 
 /* Tips Card */
 .tips-card {
@@ -4099,7 +4095,8 @@ section {
 .calorie-status {
     margin-top: var(--space-4);
     padding: var(--space-4);
-    background: #fef3c7; /* Light amber/yellow */
+    background: #fef3c7;
+    /* Light amber/yellow */
     border-radius: var(--radius-lg);
     border-left: 4px solid var(--warning);
 }
@@ -4107,7 +4104,8 @@ section {
 .calorie-status p {
     margin: 0;
     font-size: 0.875rem;
-    color: #92400e; /* Dark amber/brown */
+    color: #92400e;
+    /* Dark amber/brown */
 }
 
 /* Password Visibility Toggle */
@@ -4119,7 +4117,8 @@ section {
 }
 
 .password-input-wrapper .password-input {
-    padding-right: 3rem !important; /* Ensure space for icon */
+    padding-right: 3rem !important;
+    /* Ensure space for icon */
     width: 100%;
 }
 
@@ -4131,7 +4130,8 @@ section {
     background: none;
     border: none;
     cursor: pointer;
-    padding: 0.5rem; /* Ensure clickable area */
+    padding: 0.5rem;
+    /* Ensure clickable area */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -4139,7 +4139,8 @@ section {
     transition: color 0.2s ease;
     border-radius: 6px;
     z-index: 10;
-    outline: none; /* Remove default outline */
+    outline: none;
+    /* Remove default outline */
 }
 
 .password-toggle:hover {
@@ -4163,7 +4164,8 @@ section {
 .update-btn {
     background: #ffffff;
     border: none;
-    color: #16a34a !important; /* Vibrant Green Text */
+    color: #16a34a !important;
+    /* Vibrant Green Text */
     padding: 0.5rem 1rem;
     border-radius: 0.5rem;
     cursor: pointer;
@@ -4178,10 +4180,12 @@ section {
 }
 
 .update-btn:hover {
-    background: #f0fdf4; /* Very light green tint */
+    background: #f0fdf4;
+    /* Very light green tint */
     transform: translateY(-2px);
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    color: #15803d !important; /* Darker Green on Hover */
+    color: #15803d !important;
+    /* Darker Green on Hover */
 }
 
 .update-btn:active {
@@ -4194,4 +4198,22 @@ section {
     width: 16px;
     height: 16px;
     stroke-width: 2.5px;
+}
+
+/* Ensure Action Buttons Layout is Strict Grid */
+.action-buttons {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: var(--space-4);
+    width: 100%;
+}
+
+.action-buttons>.action-btn {
+    width: 100%;
+}
+
+@media (max-width: 600px) {
+    .action-buttons {
+        grid-template-columns: 1fr !important;
+    }
 }
