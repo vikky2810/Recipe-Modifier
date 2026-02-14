@@ -526,7 +526,7 @@ def render_current_section(section_type, content):
     else:
         return f'<p class="mb-3 lh-base">{" ".join(content)}</p>'
 
-def generate_recipe(original_ingredients, safe_ingredients, replacements, condition):
+def generate_recipe(original_ingredients, safe_ingredients, replacements, condition, recipe_name=None):
     """Generate a modified recipe based on safe ingredients using Gemini API"""
     
     # Create modified ingredient list
@@ -546,7 +546,8 @@ def generate_recipe(original_ingredients, safe_ingredients, replacements, condit
         original_ingredients, 
         modified_ingredients, 
         condition, 
-        harmful_ingredients
+        harmful_ingredients,
+        recipe_name
     )
     
     return recipe
@@ -567,50 +568,159 @@ def generate_pdf_report(user_id):
     print(f"[DEBUG] Generating PDF report... {user_id}")
     # make pdf report for user
     try:
-        # print(f"[DEBUG] Fetching food entries for user {user_id}...")
+        user = get_user_manager().get_user_by_id(user_id)
         entries = list(get_food_entries().find({"patient_id": user_id}).sort("timestamp", -1))
-        print(f"[DEBUG] Entries fetched: {len(entries)}")
+        
         if not entries:
             return None
+            
         filename = os.path.join(_reports_dir(), f"patient_{user_id}_report.pdf")
-        doc = SimpleDocTemplate(filename, pagesize=letter, rightMargin=72, leftMargin=72, topMargin=72, bottomMargin=18)
+        doc = SimpleDocTemplate(filename, pagesize=letter, rightMargin=36, leftMargin=36, topMargin=36, bottomMargin=36)
+        elements = []
         styles = getSampleStyleSheet()
-        report = []
-        for entry in entries:
-            timestamp = entry.get("timestamp")
-            formatted_time = timestamp.strftime('%B %d, %Y at %I:%M %p') if timestamp else "N/A"
-            report.append(Paragraph("Health-Aware Recipe Modifier Report", styles['Title']))
-            # horizontal line
-            report.append(Paragraph("-" * 136, styles['Normal']))
-            report.append(Spacer(1, 6))
-            report.append(Paragraph(f"Date: {formatted_time}", styles['Heading4']))
-            report.append(Spacer(1, 6))
+        
+        # Title
+        title_style = styles['Title']
+        title_style.fontSize = 24
+        elements.append(Paragraph("Patient Health Report", title_style))
+        elements.append(Spacer(1, 24))
+        
+        # Patient Info Section (Top)
+        # Patient ID, Age/Gender, Health Condition, Diet Type, Allergies, Report Generated On, Report Version
+        
+        # Safe access to user attributes
+        u_age = getattr(user, 'age', 'N/A')
+        u_gender = getattr(user, 'gender', 'Not Specified') # Field implied by request
+        u_condition = getattr(user, 'medical_condition', 'None')
+        u_diet = getattr(user, 'diet_type', 'Not Specified') # Field implied by request
+        u_allergies = getattr(user, 'allergies', 'Not Specified') # Field implied by request
+        
+        # If diet/allergies stored elsewhere or need default "N/A"
+        if not u_age: u_age = "N/A"
+        if not u_condition: u_condition = "None"
+        
+        user_info = [
+            [Paragraph(f"<b>Patient ID:</b> {user_id}", styles['Normal']), Paragraph(f"<b>Report Version:</b> v1.1", styles['Normal'])],
+            [Paragraph(f"<b>Age / Gender:</b> {u_age} / {u_gender}", styles['Normal']), Paragraph(f"<b>Report Generated On:</b> {datetime.now().strftime('%d-%m-%Y %H:%M')}", styles['Normal'])],
+            [Paragraph(f"<b>Health Condition(s):</b> {u_condition.title()}", styles['Normal']), ""],
+            [Paragraph(f"<b>Diet Type:</b> {u_diet}", styles['Normal']), ""],
+            [Paragraph(f"<b>Allergies:</b> {u_allergies}", styles['Normal']), ""]
+        ]
+        
+        t_info = Table(user_info, colWidths=[4*inch, 3.5*inch])
+        t_info.setStyle(TableStyle([
+            ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+            ('VALIGN', (0,0), (-1,-1), 'TOP'),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 8),
+        ]))
+        elements.append(t_info)
+        elements.append(Spacer(1, 24))
+        
+        # Table of Records (Bottom)
+        # Headers: Sr No | Recipe Name | Harmful Ingredients | Safe Alternatives | Net Calories | Timestamp
+        
+        headers = [
+            Paragraph("<b>Sr No</b>", styles['Normal']),
+            Paragraph("<b>Recipe Name</b>", styles['Normal']),
+            Paragraph("<b>Harmful Ingredients</b>", styles['Normal']),
+            Paragraph("<b>Safe Alternatives</b>", styles['Normal']),
+            Paragraph("<b>Net Calories</b>", styles['Normal']),
+            Paragraph("<b>Timestamp</b>", styles['Normal'])
+        ]
+        
+        data = [headers]
+        
+        for idx, entry in enumerate(entries, 1):
+            # 1. Sr No
+            sr_no = str(idx)
             
-            report.append(Paragraph("Input Ingredients:", styles['Heading5']))
-            input_ingredients = ', '.join(entry.get("input_ingredients", []))
-            report.append(Paragraph(input_ingredients, styles['Normal']))
+            # 2. Recipe Name (Use input ingredients as proxy if no name)
+            # 2. Recipe Name
+            recipe_name_text = entry.get("recipe_name", "")
+            
+            # If no explicit name, try to extract from the generated recipe text (for old records)
+            if not recipe_name_text:
+                recipe_text = entry.get("recipe", "")
+                if recipe_text:
+                    lines = recipe_text.split('\n')
+                    for line in lines:
+                        line = line.strip()
+                        if not line: continue
+                        # Check for bold title style **Title**
+                        if line.startswith('**') and line.endswith('**'):
+                            cleaned = line.replace('**', '').strip()
+                            # Filter out common section headers
+                            if cleaned.lower() not in ['ingredients', 'instructions', 'method', 'directions', 'nutritional info', 'nutrition']:
+                                recipe_name_text = cleaned
+                                break
+            
+            # Final fallback
+            if not recipe_name_text:
+                # User requested avoiding ingredient list in name column
+                recipe_name_text = "Custom Recipe"  
                 
-            harmful = ', '.join(entry.get("harmful", [])) or "None"
-            safe = ', '.join(entry.get("safe", [])) or "None"
-            report.append(Paragraph(f"Harmful Ingredients:", styles['Heading5']))
-            report.append(Paragraph(f"{harmful}", styles['Normal']))
+            # 3. Harmful Ingredients
+            harmful_text = ", ".join(entry.get("harmful", [])).title() or "None"
             
-            report.append(Paragraph(f"Safe Ingredients: ", styles['Heading5']))
-            report.append(Paragraph(f"{safe}", styles['Normal']))
-            report.append(Spacer(1, 12))
+            # 4. Safe Alternatives (Using user's safe list or replacements)
+            # Request says "Safe Alternatives", but we store full safe list. 
+            # Showing full safe list is more useful.
+            safe_text = ", ".join(entry.get("safe", [])).title() or "None"
+
+            # 5. Net Calories
+            calories_text = "N/A"
+            if 'nutrition' in entry and entry['nutrition']:
+                nut = entry['nutrition']
+                # Check for nested structure (new format)
+                if isinstance(nut, dict):
+                    if 'macros' in nut and isinstance(nut['macros'], dict):
+                        cal_entry = nut['macros'].get('calories')
+                        if isinstance(cal_entry, dict):
+                            calories_text = f"{int(cal_entry.get('value', 0))} kcal"
+                    # Fallback for legacy flat format
+                    elif 'calories' in nut:
+                        calories_text = f"{int(nut.get('calories', 0))} kcal"
             
-            report.append(Paragraph("Modified Recipe Instructions:", styles['Heading5']))
-            recipe_text = entry.get("recipe", "No recipe available.")
-            for line in recipe_text.split('\n'):
-                report.append(Paragraph(line, styles['Normal']))
-                report.append(Spacer(1, 6))
+            # 6. Timestamp
+            ts = entry.get("timestamp")
+            timestamp_text = ts.strftime('%Y-%m-%d\n%H:%M') if ts else "N/A"
             
-            report.append(Spacer(1, 24))
-        doc.build(report)
+            row = [
+                sr_no,
+                Paragraph(recipe_name_text, styles['Normal']),
+                Paragraph(harmful_text, styles['Normal']),
+                Paragraph(safe_text, styles['Normal']),
+                calories_text,
+                timestamp_text
+            ]
+            data.append(row)
+            
+        # Table Styling
+        # Columns: 0.5, 1.5, 1.5, 1.5, 1.0, 1.0 = 7.0 inch total width
+        col_widths = [0.5*inch, 1.4*inch, 1.5*inch, 1.5*inch, 1.0*inch, 1.1*inch]
+        
+        t_data = Table(data, colWidths=col_widths, repeatRows=1)
+        t_data.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), colors.Color(0.9, 0.9, 0.9)), # Header background
+            ('TEXTCOLOR', (0,0), (-1,0), colors.black),
+            ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+            ('VALIGN', (0,0), (-1,-1), 'TOP'),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.grey),
+            ('FONTNAME', (0,0), (-1,-1), 'Helvetica'),
+            ('FONTSIZE', (0,0), (-1,-1), 9),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+            ('TOPPADDING', (0,0), (-1,-1), 6),
+        ]))
+        
+        elements.append(t_data)
+        
+        doc.build(elements)
         print(f"PDF report generated for user {user_id}: {filename}")
         return filename
     except Exception as e:
         print(f"Error generating PDF report: {e}")
+        import traceback
+        traceback.print_exc()
         return None
     
     
@@ -629,6 +739,7 @@ def check_ingredients_route():
     """Process ingredient submission and return results"""
     
     ingredients_text = request.form.get('ingredients', '').strip()
+    recipe_name = request.form.get('recipe_name', '').strip()
     condition = request.form.get('condition', '').strip()
     
     # Validate ingredients input
@@ -677,7 +788,7 @@ def check_ingredients_route():
             recipe = cached_doc["recipe"]
         else:
             # Generate modified recipe via Gemini
-            recipe = generate_recipe(ingredients, safe, replacements, condition)
+            recipe = generate_recipe(ingredients, safe, replacements, condition, recipe_name)
             try:
                 get_generated_recipes().update_one(
                     {"condition": condition, "ingredients_key": ingredients_key},
@@ -690,7 +801,7 @@ def check_ingredients_route():
     except Exception as e:
         print(f"Error checking cache: {e}")
         # Generate modified recipe via Gemini
-        recipe = generate_recipe(ingredients, safe, replacements, condition)
+        recipe = generate_recipe(ingredients, safe, replacements, condition, recipe_name)
     
     # Skip synchronous nutrition calculation - will be loaded via AJAX for faster initial page load
     # Pass modified ingredients to frontend for async nutrition loading
@@ -702,12 +813,13 @@ def check_ingredients_route():
         food_entry = {
             "patient_id": patient_id,
             "condition": condition,
+            "recipe_name": recipe_name,
             "input_ingredients": ingredients,
             "harmful": harmful,
             "safe": modified_ingredients,
             "recipe": recipe,
             "timestamp": datetime.now()
-        }
+            }
         
         try:
             result = get_food_entries().insert_one(food_entry)
@@ -728,6 +840,7 @@ def check_ingredients_route():
                          entry_id=entry_id, # Pass entry_id for nutrition update
                          nutrition_warnings=[],
                          modified_ingredients_json=json.dumps(modified_ingredients),
+                         recipe_name=recipe_name,
                          moment=datetime.now().strftime('%B %d, %Y at %I:%M %p'))
 
 @app.route('/generate_report/<patient_id>')

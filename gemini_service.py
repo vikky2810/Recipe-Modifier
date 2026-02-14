@@ -21,7 +21,7 @@ class GeminiService:
             logger.error(f"Failed to initialize Gemini API: {e}")
             self.client = None
     
-    def generate_recipe_instructions(self, original_ingredients, modified_ingredients, condition, harmful_ingredients=None):
+    def generate_recipe_instructions(self, original_ingredients, modified_ingredients, condition, harmful_ingredients=None, recipe_name=None):
         """
         Generate detailed recipe instructions using Gemini API
         
@@ -44,6 +44,7 @@ class GeminiService:
 
             Patient Information:
             - Medical Condition: {condition.replace('_', ' ').title()}
+            - Recipe Name: {recipe_name if recipe_name else 'Custom Recipe with given ingredients'}
             - Original Ingredients: {', '.join(original_ingredients)}
             - Safe Ingredients: {', '.join(modified_ingredients)}
             - Harmful Ingredients: {', '.join(harmful_ingredients)}
