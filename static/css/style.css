@@ -2444,7 +2444,7 @@ section {
 /* Info Grid for App Page */
 .info-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: var(--space-4);
     margin-top: var(--space-8);
 }
