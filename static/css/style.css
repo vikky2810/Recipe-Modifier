@@ -4064,7 +4064,7 @@ section {
     height: 1.5rem;
     overflow: hidden;
     position: relative;
-    width: 60%;
+    width: 100%;
 }
 
 .progress-fill {
