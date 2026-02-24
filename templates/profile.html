@@ -279,8 +279,7 @@
                     <a href="{{ url_for('index') }}" class="action-btn primary">
                         <i data-lucide="chef-hat" class="inline-block w-4 h-4 mr-2"></i> Check New Recipe
                     </a>
-                    <a href="{{ url_for('view_report', patient_id=current_user.user_id) }}" class="action-btn info"
-                        target="_blank">
+                    <a href="{{ url_for('view_report', patient_id=current_user.user_id) }}" class="action-btn info">
                         <i data-lucide="file-text" class="inline-block w-4 h-4 mr-2"></i> View Health Report
                     </a>
                     <a href="{{ url_for('generate_report', patient_id=current_user.user_id) }}"
