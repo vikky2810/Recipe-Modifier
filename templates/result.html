@@ -176,7 +176,7 @@
                         <i data-lucide="rotate-ccw" class="inline-block w-4 h-4 mr-2"></i> Check Another Recipe
                     </a>
                     <a href="{{ url_for('view_report', patient_id=current_user.user_id if current_user.is_authenticated else '1') }}"
-                        class="action-btn info" target="_blank">
+                        class="action-btn info">
                         <i data-lucide="file-text" class="inline-block w-4 h-4 mr-2"></i> View Health Report
                     </a>
                     <a href="{{ url_for('generate_report', patient_id=current_user.user_id if current_user.is_authenticated else '1') }}"

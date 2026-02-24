@@ -852,21 +852,62 @@ def generate_report(patient_id):
     filename = generate_pdf_report(patient_id)
     
     if filename and os.path.exists(filename):
-        return send_file(filename, as_attachment=True, download_name=f"patient_{patient_id}_report.pdf")
+        # Build compact download name: firstname_lastname_DDMMYY_HHMM.pdf
+        safe_name = current_user.username.strip().lower().replace(' ', '_')
+        now = datetime.now()
+        download_name = f"{safe_name}_{now.strftime('%d%m%y')}_{now.strftime('%H%M')}.pdf"
+        return send_file(filename, as_attachment=True, download_name=download_name)
     else:
         return "Report generation failed", 400
 
 @app.route('/view_report/<patient_id>')
 @login_required
 def view_report(patient_id):
-    """View PDF report in browser"""
+    """View PDF report in a dedicated report viewer page"""
     if str(current_user.user_id) != str(patient_id):
         abort(403)
+    
+    # Generate the PDF (so it's ready for the iframe)
     filename = generate_pdf_report(patient_id)
+    report_available = filename is not None and os.path.exists(filename)
+    
+    # Gather info for the report viewer page
+    user = current_user
+    total_entries = 0
+    try:
+        total_entries = get_food_entries().count_documents({"patient_id": patient_id})
+    except Exception:
+        pass
+    
+    condition = getattr(user, 'medical_condition', 'Not set') or 'Not set'
+    if condition and condition != 'Not set':
+        condition = condition.replace('_', ' ').title()
+    
+    now = datetime.now()
+    safe_name = user.username.strip().lower().replace(' ', '_')
+    report_filename = f"{safe_name}_{now.strftime('%d%m%y')}_{now.strftime('%H%M')}.pdf"
+    
+    return render_template('report_viewer.html',
+                         patient_id=patient_id,
+                         report_available=report_available,
+                         username=user.username,
+                         condition=condition,
+                         total_entries=total_entries,
+                         report_filename=report_filename,
+                         generated_date=now.strftime('%B %d, %Y'),
+                         generated_time=now.strftime('%I:%M %p'))
+
+@app.route('/serve_report_pdf/<patient_id>')
+@login_required
+def serve_report_pdf(patient_id):
+    """Serve the raw PDF file for embedding in the report viewer"""
+    if str(current_user.user_id) != str(patient_id):
+        abort(403)
+    filename = os.path.join(_reports_dir(), f"patient_{patient_id}_report.pdf")
     if filename and os.path.exists(filename):
         return send_file(filename, mimetype='application/pdf')
     else:
-        return "Report generation failed", 400
+        return "Report not found", 404
 
 @app.route('/api/ingredients')
 def get_ingredients():
