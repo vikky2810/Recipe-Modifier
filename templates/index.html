@@ -39,6 +39,7 @@
                             current_user.medical_condition.replace('_', ' ').title() }}</div>
                         {% endif %}
                     </div>
+                    <a href="{{ url_for('cookbook') }}" class="header-btn">My Cookbook</a>
                     <a href="{{ url_for('profile') }}" class="header-btn">Profile</a>
                     <a href="{{ url_for('logout') }}" class="header-btn">Logout</a>
                     {% else %}

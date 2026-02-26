@@ -136,3 +136,6 @@ dmypy.json
 # GSD
 gds/
 gds/*
+.gsd/
+.gsd/*
+.agent/
