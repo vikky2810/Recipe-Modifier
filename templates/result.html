@@ -153,9 +153,28 @@
 
                 <!-- Modified Recipe -->
                 <div class="results-card">
-                    <div class="card-header primary">
-                        <h3><span class="header-icon"><i data-lucide="chef-hat" class="w-6 h-6"></i></span> Your
+                    <div class="card-header primary" style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="margin: 0;"><span class="header-icon"><i data-lucide="chef-hat" class="w-6 h-6"></i></span> Your
                             Modified Recipe</h3>
+                        {% if current_user.is_authenticated and entry_id %}
+                        <div class="recipe-actions">
+                            <button id="favoriteBtn" class="fav-action-btn" onclick="toggleResultFavorite('{{ entry_id }}')">
+                                <i data-lucide="heart" class="w-5 h-5"></i>
+                                <span class="btn-text">Save to Cookbook</span>
+                            </button>
+                            <div class="category-selector-wrapper">
+                                <select id="resultCategory" class="category-select-mini" onchange="updateResultCategory('{{ entry_id }}')">
+                                    <option value="General">Category</option>
+                                    <option value="Weekday Dinners">Weekday Dinners</option>
+                                    <option value="Kids' Favorites">Kids' Favorites</option>
+                                    <option value="Holiday Specials">Holiday Specials</option>
+                                    <option value="Breakfast">Breakfast</option>
+                                    <option value="Lunch">Lunch</option>
+                                    <option value="Dinner">Dinner</option>
+                                </select>
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
                     <div class="card-body">
                         <div class="alert-box info">
@@ -406,6 +425,80 @@
                 loadingEl.innerHTML = '<div class="alert-box warning"><span class="alert-icon"><i data-lucide="alert-triangle" class="w-5 h-5"></i></span><span>Failed to load nutrition data. Please refresh to try again.</span></div>';
                 lucide.createIcons();
             }
+        }
+
+        // Toggle Favorite from Results Page
+        async function toggleResultFavorite(entryId) {
+            const btn = document.getElementById('favoriteBtn');
+            const icon = btn.querySelector('i');
+            const text = btn.querySelector('.btn-text');
+            
+            try {
+                const response = await fetch(`/api/favorite/${entryId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    if (data.is_favorite) {
+                        btn.classList.add('active');
+                        icon.classList.add('fill-current');
+                        text.innerText = 'Saved to Cookbook';
+                        showToast('Recipe added to your cookbook!', 'success');
+                    } else {
+                        btn.classList.remove('active');
+                        icon.classList.remove('fill-current');
+                        text.innerText = 'Save to Cookbook';
+                        showToast('Recipe removed from cookbook', 'info');
+                    }
+                }
+            } catch (error) {
+                console.error('Error toggling favorite:', error);
+            }
+        }
+
+        // Update Category from Results Page
+        async function updateResultCategory(entryId) {
+            const categorySelect = document.getElementById('resultCategory');
+            const category = categorySelect.value;
+            
+            try {
+                const response = await fetch(`/api/categorize/${entryId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ category })
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast(`Recipe saved to ${category}!`, 'success');
+                    // Automatically mark as favorite in UI
+                    const favBtn = document.getElementById('favoriteBtn');
+                    favBtn.classList.add('active');
+                    favBtn.querySelector('i').classList.add('fill-current');
+                    favBtn.querySelector('.btn-text').innerText = 'Saved to Cookbook';
+                }
+            } catch (error) {
+                console.error('Error updating category:', error);
+            }
+        }
+
+        // Simple Toast Notification
+        function showToast(message, type) {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `<i data-lucide="${type === 'success' ? 'check-circle' : 'info'}" class="w-4 h-4"></i> ${message}`;
+            document.body.appendChild(toast);
+            lucide.createIcons();
+            
+            setTimeout(() => {
+                toast.classList.add('show');
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => toast.remove(), 300);
+                }, 3000);
+            }, 100);
         }
 
         // Animate cards on load

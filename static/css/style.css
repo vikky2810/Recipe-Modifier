@@ -4199,3 +4199,140 @@ section {
     height: 16px;
     stroke-width: 2.5px;
 }
+
+/* ============================================
+   MEAL PORTFOLIO & COOKBOOK STYLES
+   ============================================ */
+
+/* Toast Notifications */
+.toast {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: white;
+    padding: 1rem 1.5rem;
+    border-radius: 1rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    z-index: 9999;
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border-left: 4px solid var(--primary-500);
+}
+
+.toast.show {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.toast-success { border-left-color: var(--success); }
+.toast-info { border-left-color: var(--info); }
+.toast-warning { border-left-color: var(--warning); }
+
+/* Favorite Buttons */
+.fav-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.2rem;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    color: #64748b;
+    font-weight: 600;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.fav-action-btn:hover {
+    border-color: #ef4444;
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.05);
+}
+
+.fav-action-btn.active {
+    background: #ef4444 !important;
+    color: white !important;
+    border-color: #ef4444 !important;
+}
+
+.fav-icon-btn {
+    background: none;
+    border: none;
+    padding: 0.4rem;
+    border-radius: 0.5rem;
+    color: #cbd5e1;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fav-icon-btn:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.fav-icon-btn.active {
+    color: #ef4444;
+}
+
+.fill-current {
+    fill: currentColor;
+}
+
+/* Category Selectors */
+.category-selector-wrapper {
+    position: relative;
+    margin-left: 0.5rem;
+}
+
+.category-select-mini {
+    padding: 0.5rem 1rem;
+    border-radius: 0.75rem;
+    border: 1px solid #e2e8f0;
+    background: white;
+    color: #64748b;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.category-select-mini:focus {
+    border-color: var(--primary-500);
+    box-shadow: 0 0 0 2px rgba(0, 176, 176, 0.1);
+}
+
+/* Specific alignments for results page */
+.recipe-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* History table tweaks */
+.history-table th:last-child, 
+.history-table td:last-child {
+    text-align: center;
+    width: 100px;
+}
+
+/* Filter selector in cookbook */
+.filter-select {
+    padding: 0.75rem 1rem;
+    border-radius: 1rem;
+    border: 1px solid #e2e8f0;
+    background: white;
+    font-weight: 500;
+    color: #475569;
+    outline: none;
+    cursor: pointer;
+    font-family: inherit;
+}

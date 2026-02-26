@@ -818,7 +818,9 @@ def check_ingredients_route():
             "harmful": harmful,
             "safe": modified_ingredients,
             "recipe": recipe,
-            "timestamp": datetime.now()
+            "timestamp": datetime.now(),
+            "is_favorite": False,
+            "category": "General"
             }
         
         try:
@@ -1443,6 +1445,74 @@ def change_password():
             flash('Error changing password. Please try again.', 'error')
     
     return redirect(url_for('profile'))
+
+@app.route('/cookbook')
+@login_required
+def cookbook():
+    """Personal Cookbook (Meal Portfolio) page"""
+    try:
+        # Get all favorited entries for the user
+        favorite_entries = list(get_food_entries().find({
+            "patient_id": current_user.user_id,
+            "is_favorite": True
+        }).sort("timestamp", -1))
+        
+        # Get unique categories used by the user
+        categories = sorted(list(set(entry.get('category', 'General') for entry in favorite_entries)))
+        if 'General' not in categories:
+            categories.insert(0, 'General')
+            
+    except Exception as e:
+        print(f"Error getting cookbook data: {e}")
+        favorite_entries = []
+        categories = ['General']
+    
+    return render_template('cookbook.html', 
+                         entries=favorite_entries, 
+                         categories=categories)
+
+@app.route('/api/favorite/<entry_id>', methods=['POST'])
+@login_required
+def toggle_favorite(entry_id):
+    """Toggle favorite status for a recipe entry"""
+    try:
+        entry = get_food_entries().find_one({"_id": ObjectId(entry_id), "patient_id": current_user.user_id})
+        if not entry:
+            return jsonify({"error": "Entry not found"}), 404
+            
+        new_status = not entry.get('is_favorite', False)
+        get_food_entries().update_one(
+            {"_id": ObjectId(entry_id)},
+            {"$set": {"is_favorite": new_status}}
+        )
+        return jsonify({"success": True, "is_favorite": new_status})
+    except Exception as e:
+        print(f"Error toggling favorite: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/categorize/<entry_id>', methods=['POST'])
+@login_required
+def update_category(entry_id):
+    """Update category for a recipe entry"""
+    try:
+        data = request.get_json()
+        category = data.get('category', 'General').strip()
+        
+        if not category:
+            category = 'General'
+            
+        result = get_food_entries().update_one(
+            {"_id": ObjectId(entry_id), "patient_id": current_user.user_id},
+            {"$set": {"category": category, "is_favorite": True}} # Categorizing automatically makes it a favorite
+        )
+        
+        if result.modified_count == 0:
+            return jsonify({"error": "Entry not found or not modified"}), 404
+            
+        return jsonify({"success": True, "category": category})
+    except Exception as e:
+        print(f"Error updating category: {e}")
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     # Initialize database on startup (only for local development)

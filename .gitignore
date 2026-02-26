@@ -131,3 +131,11 @@ dmypy.json
 
 # Exceptions
 !models/*.csv
+
+
+# GSD
+gds/
+gds/*
+.gsd/
+.gsd/*
+.agent/
