@@ -1698,11 +1698,23 @@ def change_password():
 def cookbook():
     """Personal Cookbook (Meal Portfolio) page"""
     try:
-        # Get all favorited entries for the user
-        favorite_entries = list(get_food_entries().find({
+        # Get all favorited entries for the user, sorted by newest first
+        all_favorites = list(get_food_entries().find({
             "patient_id": current_user.user_id,
             "is_favorite": True
         }).sort("timestamp", -1))
+        
+        # Deduplicate by recipe_name — keep only the most recent entry per recipe
+        seen_recipes = set()
+        favorite_entries = []
+        for entry in all_favorites:
+            recipe_key = (entry.get('recipe_name', '') or '').strip().lower()
+            if not recipe_key:
+                # Fallback: use original_ingredients as key
+                recipe_key = ','.join(sorted(entry.get('original_ingredients', [])))
+            if recipe_key and recipe_key not in seen_recipes:
+                seen_recipes.add(recipe_key)
+                favorite_entries.append(entry)
         
         # Get unique categories used by the user
         categories = sorted(list(set(entry.get('category', 'General') for entry in favorite_entries)))
