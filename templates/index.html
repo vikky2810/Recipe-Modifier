@@ -227,6 +227,29 @@
         </div>
     </div>
 
+    <!-- Warning Confirmation Modal -->
+    <div id="warningConfirmModal" class="confirm-overlay" style="display: none;">
+        <div class="confirm-card">
+            <div class="confirm-icon-wrap">
+                <div class="confirm-icon-circle">
+                    <i data-lucide="alert-triangle" class="w-8 h-8"></i>
+                </div>
+            </div>
+            <h3 class="confirm-title">Profile Warnings Detected</h3>
+            <p class="confirm-subtitle">This recipe conflicts with your profile preferences:</p>
+            <div class="confirm-warnings-list" id="confirmWarningsList"></div>
+            <p class="confirm-question">Are you sure you want to proceed anyway?</p>
+            <div class="confirm-buttons">
+                <button type="button" class="confirm-btn confirm-btn-back" id="confirmGoBack">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i> Go Back & Edit
+                </button>
+                <button type="button" class="confirm-btn confirm-btn-proceed" id="confirmProceed">
+                    Proceed Anyway <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <style>
         .loading-overlay {
             position: fixed;
@@ -497,6 +520,174 @@
             font-weight: 500;
         }
 
+        /* Confirmation Modal Styles */
+        .confirm-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(6px);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            animation: confirmFadeIn 0.25s ease;
+        }
+
+        @keyframes confirmFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .confirm-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2.5rem 2rem 2rem;
+            max-width: 460px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+            animation: confirmSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+        }
+
+        @keyframes confirmSlideUp {
+            from { opacity: 0; transform: translateY(40px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .confirm-icon-wrap {
+            margin-bottom: 1.25rem;
+        }
+
+        .confirm-icon-circle {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #d97706;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.25);
+            animation: iconPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes iconPulse {
+            0%, 100% { box-shadow: 0 4px 15px rgba(245, 158, 11, 0.25); }
+            50% { box-shadow: 0 4px 25px rgba(245, 158, 11, 0.45); }
+        }
+
+        .confirm-title {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin-bottom: 0.35rem;
+        }
+
+        .confirm-subtitle {
+            font-size: 0.875rem;
+            color: #64748b;
+            margin-bottom: 1rem;
+        }
+
+        .confirm-warnings-list {
+            text-align: left;
+            max-height: 180px;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            padding: 0 0.25rem;
+        }
+
+        .confirm-warning-item {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.6rem 0.85rem;
+            border-radius: 10px;
+            font-size: 0.825rem;
+            font-weight: 600;
+        }
+
+        .confirm-warning-item.danger {
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+        }
+
+        .confirm-warning-item.warning {
+            background: #fffbeb;
+            color: #d97706;
+            border: 1px solid #fde68a;
+        }
+
+        .confirm-warning-item.info {
+            background: #eff6ff;
+            color: #2563eb;
+            border: 1px solid #bfdbfe;
+        }
+
+        .confirm-warning-item i {
+            flex-shrink: 0;
+        }
+
+        .confirm-question {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 1.25rem;
+        }
+
+        .confirm-buttons {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .confirm-btn {
+            flex: 1;
+            padding: 0.85rem 1.25rem;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Inter', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+        }
+
+        .confirm-btn-back {
+            background: #f1f5f9;
+            color: #475569;
+            border: 2px solid #e2e8f0;
+        }
+
+        .confirm-btn-back:hover {
+            background: #e2e8f0;
+            border-color: #cbd5e1;
+            transform: translateY(-1px);
+        }
+
+        .confirm-btn-proceed {
+            background: linear-gradient(135deg, #f59e0b, #ef4444);
+            color: white;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        }
+
+        .confirm-btn-proceed:hover {
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.45);
+            transform: translateY(-1px);
+        }
+
         .pw-loading .spinner {
             width: 16px;
             height: 16px;
@@ -652,6 +843,9 @@
                 });
             }
 
+            // Track if user confirmed the warning
+            let warningConfirmed = false;
+
             // Form submit loading with client-side validation
             if (form && submitBtn) {
                 form.addEventListener("submit", function (e) {
@@ -682,6 +876,16 @@
                         return false;
                     }
 
+                    // --- Check for active profile warnings ---
+                    if (!warningConfirmed && warningsContainer && warningsContainer.style.display !== 'none') {
+                        const activeWarnings = warningsContainer.querySelectorAll('.profile-warning-card');
+                        if (activeWarnings.length > 0) {
+                            e.preventDefault();
+                            showWarningConfirmation(activeWarnings);
+                            return false;
+                        }
+                    }
+
                     // Prevent double submission
                     if (submitBtn.dataset.submitting === "true") return false;
                     submitBtn.dataset.submitting = "true";
@@ -689,10 +893,74 @@
                     submitBtn.innerHTML = '<span class="spinner"></span> Processing...';
                     if (aiFillButton) aiFillButton.disabled = true;
 
+                    // Reset confirmed flag for next use
+                    warningConfirmed = false;
+
                     // Show loading overlay with progress simulation
                     showLoadingOverlay();
                 });
             }
+
+            // Show the confirmation modal with active warning summaries
+            function showWarningConfirmation(activeWarnings) {
+                const modal = document.getElementById('warningConfirmModal');
+                const listEl = document.getElementById('confirmWarningsList');
+
+                // Build warning summary list
+                let listHtml = '';
+                activeWarnings.forEach(card => {
+                    const title = card.querySelector('.pw-title')?.textContent || 'Warning';
+                    const severity = card.classList.contains('danger') ? 'danger'
+                                   : card.classList.contains('warning') ? 'warning' : 'info';
+                    const iconName = severity === 'danger' ? 'shield-alert'
+                                   : severity === 'warning' ? 'alert-triangle' : 'info';
+                    listHtml += `<div class="confirm-warning-item ${severity}">
+                        <i data-lucide="${iconName}" class="w-4 h-4"></i>
+                        <span>${title}</span>
+                    </div>`;
+                });
+                listEl.innerHTML = listHtml;
+
+                // Show modal
+                modal.style.display = 'flex';
+                lucide.createIcons();
+
+                // Focus the Go Back button for accessibility
+                setTimeout(() => document.getElementById('confirmGoBack').focus(), 100);
+            }
+
+            // Go Back button - close modal
+            document.getElementById('confirmGoBack')?.addEventListener('click', function () {
+                document.getElementById('warningConfirmModal').style.display = 'none';
+                warningConfirmed = false;
+            });
+
+            // Proceed Anyway button - set flag and re-submit
+            document.getElementById('confirmProceed')?.addEventListener('click', function () {
+                document.getElementById('warningConfirmModal').style.display = 'none';
+                warningConfirmed = true;
+                // Trigger the form submit again (this time warningConfirmed = true so it passes through)
+                form.requestSubmit(submitBtn);
+            });
+
+            // Close modal on overlay click (outside card)
+            document.getElementById('warningConfirmModal')?.addEventListener('click', function (e) {
+                if (e.target === this) {
+                    this.style.display = 'none';
+                    warningConfirmed = false;
+                }
+            });
+
+            // Close modal on Escape key
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') {
+                    const modal = document.getElementById('warningConfirmModal');
+                    if (modal && modal.style.display !== 'none') {
+                        modal.style.display = 'none';
+                        warningConfirmed = false;
+                    }
+                }
+            });
 
             // Loading overlay progress simulation
             function showLoadingOverlay() {
