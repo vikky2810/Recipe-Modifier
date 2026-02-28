@@ -74,7 +74,7 @@ project/
 ### Step 1: Clone/Download the Project
 ```bash
 # If using git
-git clone <repository-url>
+git clone https://github.com/vikky2810/Recipe-Modifier.git
 cd Recipe-Modifier
 
 # Or download and extract the project files
