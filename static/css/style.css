@@ -4261,10 +4261,15 @@ section {
 }
 
 .fav-action-btn.active {
-    background: linear-gradient(135deg, var(--primary-500, #00b0b0), var(--secondary-500, #3b82f6)) !important;
-    color: white !important;
-    border-color: var(--primary-500, #00b0b0) !important;
-    box-shadow: 0 4px 12px rgba(0, 176, 176, 0.3);
+    background: white !important;
+    color: var(--primary-600, #008080) !important;
+    border-color: white !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+    backdrop-filter: none;
+}
+
+.fav-action-btn.active i {
+    color: var(--primary-500, #00b0b0);
 }
 
 .fav-icon-btn {

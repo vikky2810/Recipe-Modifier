@@ -837,6 +837,16 @@ def check_ingredients_route():
     if current_user.is_authenticated:
         profile_warnings = generate_profile_warnings(ingredients, current_user)
     
+    # Check if this recipe is already saved in cookbook
+    is_already_saved = False
+    if current_user.is_authenticated and recipe_name:
+        existing_fav = get_food_entries().find_one({
+            "patient_id": current_user.user_id,
+            "is_favorite": True,
+            "recipe_name": {"$regex": f"^{recipe_name.strip()}$", "$options": "i"}
+        })
+        is_already_saved = existing_fav is not None
+    
     return render_template('result.html', 
                          harmful=harmful, 
                          safe=modified_ingredients, 
@@ -849,6 +859,7 @@ def check_ingredients_route():
                          modified_ingredients_json=json.dumps(modified_ingredients),
                          recipe_name=recipe_name,
                          profile_warnings=profile_warnings,
+                         is_already_saved=is_already_saved,
                          moment=datetime.now().strftime('%B %d, %Y at %I:%M %p'))
 
 @app.route('/generate_report/<patient_id>')
@@ -1738,8 +1749,49 @@ def toggle_favorite(entry_id):
         entry = get_food_entries().find_one({"_id": ObjectId(entry_id), "patient_id": current_user.user_id})
         if not entry:
             return jsonify({"error": "Entry not found"}), 404
+        
+        data = request.get_json(force=True, silent=True) or {}
+        force_replace = data.get('force', False)
+        
+        # If currently not a favorite and user wants to save it
+        current_fav = entry.get('is_favorite', False)
+        if not current_fav:
+            # Check if another entry with the same recipe_name is already favorited
+            recipe_name = (entry.get('recipe_name', '') or '').strip().lower()
+            if recipe_name and not force_replace:
+                existing = get_food_entries().find_one({
+                    "patient_id": current_user.user_id,
+                    "is_favorite": True,
+                    "_id": {"$ne": ObjectId(entry_id)},
+                    "$expr": {
+                        "$eq": [{"$toLower": {"$trim": {"input": {"$ifNull": ["$recipe_name", ""]}}}}, recipe_name]
+                    }
+                })
+                if existing:
+                    return jsonify({
+                        "success": False,
+                        "already_exists": True,
+                        "existing_id": str(existing["_id"]),
+                        "existing_category": existing.get("category", "General"),
+                        "existing_date": existing.get("timestamp", "").strftime("%b %d, %Y") if existing.get("timestamp") else "Unknown"
+                    })
             
-        new_status = not entry.get('is_favorite', False)
+            # If force_replace, un-favorite existing entries with the same recipe name
+            if force_replace and recipe_name:
+                same_name_entries = get_food_entries().find({
+                    "patient_id": current_user.user_id,
+                    "is_favorite": True,
+                    "_id": {"$ne": ObjectId(entry_id)}
+                })
+                for e in same_name_entries:
+                    e_name = (e.get('recipe_name', '') or '').strip().lower()
+                    if e_name == recipe_name:
+                        get_food_entries().update_one(
+                            {"_id": e["_id"]},
+                            {"$set": {"is_favorite": False}}
+                        )
+            
+        new_status = not current_fav
         get_food_entries().update_one(
             {"_id": ObjectId(entry_id)},
             {"$set": {"is_favorite": new_status}}
