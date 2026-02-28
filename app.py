@@ -832,6 +832,11 @@ def check_ingredients_route():
     # Format recipe for better display and sanitize HTML to prevent XSS
     formatted_recipe = sanitize_html(format_recipe_html(recipe))
     
+    # Generate profile-based warnings for the result page
+    profile_warnings = []
+    if current_user.is_authenticated:
+        profile_warnings = generate_profile_warnings(ingredients, current_user)
+    
     return render_template('result.html', 
                          harmful=harmful, 
                          safe=modified_ingredients, 
@@ -843,6 +848,7 @@ def check_ingredients_route():
                          nutrition_warnings=[],
                          modified_ingredients_json=json.dumps(modified_ingredients),
                          recipe_name=recipe_name,
+                         profile_warnings=profile_warnings,
                          moment=datetime.now().strftime('%B %d, %Y at %I:%M %p'))
 
 @app.route('/generate_report/<patient_id>')
@@ -1044,6 +1050,247 @@ def spell_check_recipe_name():
     except Exception as e:
         print(f"Spell check error: {e}")
         return jsonify({"suggestions": [], "is_correct": True})
+
+# --- Profile-Aware Warning System ---
+# Non-veg ingredients list for diet-type checking
+NON_VEG_INGREDIENTS = {
+    'chicken', 'mutton', 'lamb', 'beef', 'pork', 'fish', 'salmon', 'tuna', 'shrimp', 'prawn',
+    'prawns', 'crab', 'lobster', 'squid', 'octopus', 'sardine', 'sardines', 'mackerel', 'anchovy',
+    'anchovies', 'bacon', 'ham', 'sausage', 'salami', 'pepperoni', 'steak', 'turkey', 'duck',
+    'goat', 'venison', 'bison', 'quail', 'rabbit', 'meat', 'meatball', 'meatballs', 'liver',
+    'kidney', 'bone marrow', 'bone broth', 'gelatin', 'lard', 'suet', 'oyster', 'oysters',
+    'clam', 'clams', 'mussel', 'mussels', 'scallop', 'scallops', 'calamari', 'caviar',
+    'roe', 'surimi', 'cuttlefish', 'eel', 'frog', 'snail', 'escargot', 'tripe',
+    'jerky', 'bresaola', 'prosciutto', 'chorizo', 'hotdog', 'hot dog', 'kebab',
+    'tandoori chicken', 'butter chicken', 'chicken tikka', 'keema', 'biryani chicken',
+    'fish sauce', 'oyster sauce', 'worcestershire sauce', 'bonito', 'dashi',
+}
+
+# Egg-based ingredients (for vegan checks)
+EGG_INGREDIENTS = {'egg', 'eggs', 'egg white', 'egg yolk', 'mayonnaise', 'meringue', 'custard'}
+
+# Dairy ingredients (for vegan checks)
+DAIRY_INGREDIENTS = {
+    'milk', 'cheese', 'butter', 'cream', 'yogurt', 'yoghurt', 'curd', 'paneer',
+    'ghee', 'whey', 'casein', 'cream cheese', 'sour cream', 'cottage cheese',
+    'mozzarella', 'cheddar', 'parmesan', 'ricotta', 'brie', 'gouda',
+    'heavy cream', 'whipped cream', 'condensed milk', 'evaporated milk',
+    'buttermilk', 'half and half', 'ice cream',
+}
+
+# Common allergen categories
+ALLERGEN_MAP = {
+    'peanut': {'peanut', 'peanuts', 'peanut butter', 'peanut oil', 'groundnut', 'groundnuts'},
+    'tree nut': {'almond', 'almonds', 'walnut', 'walnuts', 'cashew', 'cashews', 'pistachio',
+                 'pistachios', 'pecan', 'pecans', 'hazelnut', 'hazelnuts', 'macadamia',
+                 'brazil nut', 'brazil nuts', 'pine nut', 'pine nuts', 'chestnut', 'chestnuts'},
+    'shellfish': {'shrimp', 'prawn', 'prawns', 'crab', 'lobster', 'crayfish', 'clam', 'clams',
+                  'mussel', 'mussels', 'oyster', 'oysters', 'scallop', 'scallops', 'squid',
+                  'octopus', 'calamari'},
+    'dairy': DAIRY_INGREDIENTS,
+    'egg': EGG_INGREDIENTS,
+    'gluten': {'wheat', 'flour', 'bread', 'pasta', 'noodles', 'barley', 'rye', 'couscous',
+               'semolina', 'spelt', 'farro', 'bulgur', 'seitan', 'soy sauce',
+               'breadcrumbs', 'croutons', 'tortilla', 'pita', 'naan', 'biscuit', 'cake',
+               'cookie', 'cracker', 'muffin', 'pancake', 'waffle', 'cereal', 'oats'},
+    'soy': {'soy', 'soya', 'soy sauce', 'tofu', 'tempeh', 'edamame', 'miso', 'soy milk',
+            'soy protein', 'soybean', 'soybeans', 'soy lecithin'},
+    'fish': {'fish', 'salmon', 'tuna', 'sardine', 'sardines', 'mackerel', 'cod', 'trout',
+             'anchovy', 'anchovies', 'tilapia', 'catfish', 'halibut', 'herring', 'bass',
+             'swordfish', 'mahi mahi', 'snapper', 'grouper', 'fish sauce', 'bonito'},
+    'sesame': {'sesame', 'sesame oil', 'sesame seeds', 'tahini'},
+    'mustard': {'mustard', 'mustard seeds', 'mustard oil', 'mustard powder'},
+    'celery': {'celery', 'celeriac', 'celery salt', 'celery seed'},
+}
+
+def generate_profile_warnings(ingredients, user):
+    """Generate warnings based on user profile data and ingredients.
+    
+    Returns a list of warning dicts with keys: type, severity, title, message, icon, ingredients
+    """
+    warnings = []
+    if not user or not ingredients:
+        return warnings
+    
+    ingredients_lower = [i.strip().lower() for i in ingredients if i and i.strip()]
+    
+    # 1. Diet Type Warnings
+    diet_type = getattr(user, 'diet_type', '') or ''
+    diet_type_lower = diet_type.strip().lower()
+    
+    if diet_type_lower:
+        # Vegetarian check
+        if any(kw in diet_type_lower for kw in ['veg', 'vegetarian', 'lacto', 'ovo']):
+            nonveg_found = []
+            for ing in ingredients_lower:
+                # Check if ingredient matches or contains a non-veg item
+                for nv in NON_VEG_INGREDIENTS:
+                    if nv in ing or ing in nv:
+                        nonveg_found.append(ing)
+                        break
+            if nonveg_found:
+                warnings.append({
+                    'type': 'diet_conflict',
+                    'severity': 'warning',
+                    'title': f'Non-Vegetarian Ingredients Detected',
+                    'message': f'Your diet preference is "{diet_type}", but this recipe contains non-vegetarian ingredients. Consider replacing them with plant-based alternatives.',
+                    'icon': 'leaf',
+                    'ingredients': list(set(nonveg_found))
+                })
+        
+        # Vegan check — also flag dairy and eggs
+        if 'vegan' in diet_type_lower:
+            nonvegan_found = []
+            for ing in ingredients_lower:
+                for nv in (NON_VEG_INGREDIENTS | EGG_INGREDIENTS | DAIRY_INGREDIENTS):
+                    if nv in ing or ing in nv:
+                        nonvegan_found.append(ing)
+                        break
+            if nonvegan_found:
+                warnings.append({
+                    'type': 'diet_conflict',
+                    'severity': 'danger',
+                    'title': 'Non-Vegan Ingredients Detected',
+                    'message': f'Your diet preference is "{diet_type}", but this recipe contains animal-derived ingredients. Try plant-based substitutes.',
+                    'icon': 'vegan',
+                    'ingredients': list(set(nonvegan_found))
+                })
+        
+        # Keto check — flag high-carb ingredients
+        if 'keto' in diet_type_lower:
+            high_carb = {'sugar', 'flour', 'bread', 'rice', 'pasta', 'potato', 'potatoes',
+                        'corn', 'cornstarch', 'honey', 'maple syrup', 'jaggery', 'molasses',
+                        'noodles', 'oats', 'cereal', 'wheat', 'banana', 'mango', 'grape',
+                        'pineapple', 'dates', 'raisins', 'juice', 'soda', 'candy'}
+            carb_found = []
+            for ing in ingredients_lower:
+                for hc in high_carb:
+                    if hc in ing or ing in hc:
+                        carb_found.append(ing)
+                        break
+            if carb_found:
+                warnings.append({
+                    'type': 'diet_conflict',
+                    'severity': 'warning',
+                    'title': 'High-Carb Ingredients Detected',
+                    'message': f'Your diet preference is "{diet_type}". These high-carb ingredients may not be suitable for a ketogenic diet.',
+                    'icon': 'wheat-off',
+                    'ingredients': list(set(carb_found))
+                })
+    
+    # 2. Allergy Warnings
+    allergies_text = getattr(user, 'allergies', '') or ''
+    if allergies_text.strip():
+        user_allergies = [a.strip().lower() for a in allergies_text.split(',') if a.strip()]
+        allergen_found = []
+        matched_allergens = []
+        
+        for allergy in user_allergies:
+            # Direct match with ingredients
+            for ing in ingredients_lower:
+                if allergy in ing or ing in allergy:
+                    allergen_found.append(ing)
+                    matched_allergens.append(allergy)
+            
+            # Check against allergen map
+            for allergen_name, allergen_items in ALLERGEN_MAP.items():
+                if allergy in allergen_name or allergen_name in allergy:
+                    for ing in ingredients_lower:
+                        for ai in allergen_items:
+                            if ai in ing or ing in ai:
+                                allergen_found.append(ing)
+                                matched_allergens.append(allergy)
+                                break
+        
+        if allergen_found:
+            warnings.append({
+                'type': 'allergy_alert',
+                'severity': 'danger',
+                'title': '⚠️ Allergy Alert!',
+                'message': f'You have listed allergies to: {allergies_text}. This recipe contains ingredients that may trigger your allergies. Please exercise extreme caution!',
+                'icon': 'shield-alert',
+                'ingredients': list(set(allergen_found))
+            })
+    
+    # 3. Goal-Based Warnings
+    goal = getattr(user, 'goal', '') or ''
+    if goal:
+        high_cal_ingredients = {'butter', 'ghee', 'cream', 'cheese', 'oil', 'sugar',
+                               'chocolate', 'fried', 'deep fried', 'mayonnaise',
+                               'coconut cream', 'heavy cream', 'lard', 'shortening'}
+        
+        if goal in ('lose_weight',):
+            high_cal_found = []
+            for ing in ingredients_lower:
+                for hc in high_cal_ingredients:
+                    if hc in ing:
+                        high_cal_found.append(ing)
+                        break
+            if high_cal_found:
+                warnings.append({
+                    'type': 'goal_conflict',
+                    'severity': 'info',
+                    'title': 'Weight Loss Goal Reminder',
+                    'message': 'Your goal is to lose weight. This recipe contains calorie-dense ingredients. Consider using smaller portions or lighter alternatives.',
+                    'icon': 'flame',
+                    'ingredients': list(set(high_cal_found))
+                })
+        
+        if goal in ('gain_muscle',):
+            low_protein_warning = True
+            protein_sources = {'chicken', 'fish', 'egg', 'eggs', 'tofu', 'paneer', 'lentils',
+                             'dal', 'beans', 'chickpeas', 'protein', 'whey', 'yogurt', 'milk',
+                             'cheese', 'nuts', 'seeds', 'quinoa', 'soy', 'tempeh', 'turkey',
+                             'salmon', 'tuna', 'shrimp', 'beef', 'lamb', 'pork'}
+            for ing in ingredients_lower:
+                for ps in protein_sources:
+                    if ps in ing:
+                        low_protein_warning = False
+                        break
+                if not low_protein_warning:
+                    break
+            if low_protein_warning:
+                warnings.append({
+                    'type': 'goal_suggestion',
+                    'severity': 'info',
+                    'title': 'Muscle Gain Tip',
+                    'message': 'Your goal is to gain muscle. This recipe appears low in protein. Consider adding protein-rich ingredients like eggs, lentils, tofu, chicken, or yogurt.',
+                    'icon': 'dumbbell',
+                    'ingredients': []
+                })
+    
+    # 4. Calorie Target Warning (informational)
+    calorie_target = getattr(user, 'calorie_target', None)
+    if calorie_target and calorie_target > 0:
+        warnings.append({
+            'type': 'calorie_reminder',
+            'severity': 'info',
+            'title': 'Daily Calorie Target',
+            'message': f'Your daily calorie target is {calorie_target} kcal. Check the nutrition summary below to see how this recipe fits into your daily plan.',
+            'icon': 'target',
+            'ingredients': []
+        })
+    
+    return warnings
+
+@app.route('/api/profile-warnings', methods=['POST'])
+def get_profile_warnings():
+    """API endpoint to check ingredients against user profile and return warnings."""
+    if not current_user.is_authenticated:
+        return jsonify({'warnings': []}), 200
+    
+    try:
+        data = request.get_json(force=True, silent=True) or {}
+        ingredients = data.get('ingredients', [])
+        
+        if not ingredients:
+            return jsonify({'warnings': []}), 200
+        
+        warnings = generate_profile_warnings(ingredients, current_user)
+        return jsonify({'warnings': warnings}), 200
+    except Exception as e:
+        print(f"Profile warnings error: {e}")
+        return jsonify({'warnings': []}), 200
 
 @app.route('/api/nutrition', methods=['POST'])
 def get_nutrition_data():
