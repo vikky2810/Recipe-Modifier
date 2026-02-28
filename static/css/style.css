@@ -4238,25 +4238,26 @@ section {
     align-items: center;
     gap: 0.5rem;
     padding: 0.6rem 1.2rem;
-    background: white;
-    border: 1px solid #e2e8f0;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
     border-radius: 0.75rem;
-    color: #64748b;
+    color: white;
     font-weight: 600;
     font-size: 0.875rem;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
     height: 42px;
     box-sizing: border-box;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .fav-action-btn:hover {
-    border-color: rgba(255, 255, 255, 0.6);
-    color: white;
-    background: rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(4px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    transform: translateY(-1px);
+    background: rgba(255, 255, 255, 0.35);
+    border-color: rgba(255, 255, 255, 0.7);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
 }
 
 .fav-action-btn.active {
@@ -4303,10 +4304,12 @@ section {
     align-items: center;
     gap: 0.5rem;
     padding: 0.6rem 1.2rem;
-    background: white;
-    border: 1px solid #e2e8f0;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
     border-radius: 0.75rem;
-    color: #64748b;
+    color: white;
     font-weight: 600;
     font-size: 0.875rem;
     cursor: pointer;
@@ -4315,15 +4318,14 @@ section {
     box-sizing: border-box;
     font-family: inherit;
     outline: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .custom-dropdown-trigger:hover {
-    border-color: rgba(255, 255, 255, 0.6);
-    color: white;
-    background: rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(4px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    transform: translateY(-1px);
+    background: rgba(255, 255, 255, 0.35);
+    border-color: rgba(255, 255, 255, 0.7);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
 }
 
 .custom-dropdown.open .custom-dropdown-trigger {
