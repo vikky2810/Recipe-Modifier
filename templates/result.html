@@ -304,16 +304,43 @@
                                 <i data-lucide="heart" class="w-5 h-5"></i>
                                 <span class="btn-text">Save to Cookbook</span>
                             </button>
-                            <div class="category-selector-wrapper">
-                                <select id="resultCategory" class="category-select-mini" onchange="updateResultCategory('{{ entry_id }}')">
-                                    <option value="General">Category</option>
-                                    <option value="Weekday Dinners">Weekday Dinners</option>
-                                    <option value="Kids' Favorites">Kids' Favorites</option>
-                                    <option value="Holiday Specials">Holiday Specials</option>
-                                    <option value="Breakfast">Breakfast</option>
-                                    <option value="Lunch">Lunch</option>
-                                    <option value="Dinner">Dinner</option>
-                                </select>
+                            <div class="custom-dropdown" id="categoryDropdown">
+                                <input type="hidden" id="resultCategory" value="General">
+                                <button type="button" class="custom-dropdown-trigger" onclick="toggleDropdown()">
+                                    <i data-lucide="folder" class="w-4 h-4"></i>
+                                    <span class="dropdown-label">Category</span>
+                                    <i data-lucide="chevron-down" class="w-4 h-4 dropdown-arrow"></i>
+                                </button>
+                                <div class="custom-dropdown-menu" id="categoryMenu">
+                                    <div class="dropdown-item active" data-value="General" onclick="selectCategory(this, '{{ entry_id }}')">
+                                        <i data-lucide="layers" class="w-4 h-4"></i><span>General</span>
+                                        <i data-lucide="check" class="w-4 h-4 check-icon"></i>
+                                    </div>
+                                    <div class="dropdown-item" data-value="Weekday Dinners" onclick="selectCategory(this, '{{ entry_id }}')">
+                                        <i data-lucide="calendar" class="w-4 h-4"></i><span>Weekday Dinners</span>
+                                        <i data-lucide="check" class="w-4 h-4 check-icon"></i>
+                                    </div>
+                                    <div class="dropdown-item" data-value="Kids' Favorites" onclick="selectCategory(this, '{{ entry_id }}')">
+                                        <i data-lucide="smile" class="w-4 h-4"></i><span>Kids' Favorites</span>
+                                        <i data-lucide="check" class="w-4 h-4 check-icon"></i>
+                                    </div>
+                                    <div class="dropdown-item" data-value="Holiday Specials" onclick="selectCategory(this, '{{ entry_id }}')">
+                                        <i data-lucide="gift" class="w-4 h-4"></i><span>Holiday Specials</span>
+                                        <i data-lucide="check" class="w-4 h-4 check-icon"></i>
+                                    </div>
+                                    <div class="dropdown-item" data-value="Breakfast" onclick="selectCategory(this, '{{ entry_id }}')">
+                                        <i data-lucide="coffee" class="w-4 h-4"></i><span>Breakfast</span>
+                                        <i data-lucide="check" class="w-4 h-4 check-icon"></i>
+                                    </div>
+                                    <div class="dropdown-item" data-value="Lunch" onclick="selectCategory(this, '{{ entry_id }}')">
+                                        <i data-lucide="utensils" class="w-4 h-4"></i><span>Lunch</span>
+                                        <i data-lucide="check" class="w-4 h-4 check-icon"></i>
+                                    </div>
+                                    <div class="dropdown-item" data-value="Dinner" onclick="selectCategory(this, '{{ entry_id }}')">
+                                        <i data-lucide="moon" class="w-4 h-4"></i><span>Dinner</span>
+                                        <i data-lucide="check" class="w-4 h-4 check-icon"></i>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         {% endif %}
@@ -600,11 +627,37 @@
             }
         }
 
-        // Update Category from Results Page
-        async function updateResultCategory(entryId) {
-            const categorySelect = document.getElementById('resultCategory');
-            const category = categorySelect.value;
-            
+        // Custom Dropdown Logic
+        function toggleDropdown() {
+            const dropdown = document.getElementById('categoryDropdown');
+            dropdown.classList.toggle('open');
+            lucide.createIcons();
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('categoryDropdown');
+            if (dropdown && !dropdown.contains(e.target)) {
+                dropdown.classList.remove('open');
+            }
+        });
+
+        // Select category from custom dropdown
+        async function selectCategory(item, entryId) {
+            const dropdown = document.getElementById('categoryDropdown');
+            const hiddenInput = document.getElementById('resultCategory');
+            const label = dropdown.querySelector('.dropdown-label');
+            const category = item.dataset.value;
+
+            // Update UI
+            dropdown.querySelectorAll('.dropdown-item').forEach(i => i.classList.remove('active'));
+            item.classList.add('active');
+            hiddenInput.value = category;
+            label.textContent = category;
+            dropdown.classList.remove('open');
+            lucide.createIcons();
+
+            // API call
             try {
                 const response = await fetch(`/api/categorize/${entryId}`, {
                     method: 'POST',
@@ -615,7 +668,6 @@
                 
                 if (data.success) {
                     showToast(`Recipe saved to ${category}!`, 'success');
-                    // Automatically mark as favorite in UI
                     const favBtn = document.getElementById('favoriteBtn');
                     favBtn.classList.add('active');
                     favBtn.querySelector('i').classList.add('fill-current');
